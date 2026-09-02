@@ -1,0 +1,249 @@
+/**
+ * End-to-end smoke suite. Drives a real browser over every built route and
+ * asserts the things that silently break on a static site:
+ *
+ *   1. Every route renders — no console errors, no horizontal overflow,
+ *      exactly one <h1>, no image without alt, no link without a name.
+ *   2. No broken internal links (each is actually fetched).
+ *   3. The theme toggle cycles system → light → dark and persists across pages.
+ *   4. The mobile menu opens and closes on Escape.
+ *   5. The work-page filter narrows the grid.
+ *   6. The scroll reveal fires — nothing stays invisible in the viewport.
+ *   7. RSS, sitemap, robots.txt, OG tags and the Person schema are intact.
+ *
+ * Usage:
+ *   npm run build && npm run preview &
+ *   npm run verify
+ *
+ * Set BASE_URL to point at a deployed site instead of the local preview.
+ */
+import { chromium } from 'playwright';
+import { mkdir } from 'node:fs/promises';
+
+const ORIGIN = process.env.BASE_URL ?? 'http://localhost:4321';
+const BASE_PATH = process.env.BASE_PATH ?? '/personal-website';
+const BASE = `${ORIGIN}${BASE_PATH}`;
+const OUT = process.env.SHOT_DIR ?? '.screenshots';
+await mkdir(OUT, { recursive: true });
+
+const routes = [
+  '/',
+  '/about',
+  '/work',
+  '/writing',
+  '/stack',
+  '/contact',
+  '/404',
+  '/work/apadua',
+  '/work/exam-results-bot',
+  '/work/telemed',
+  '/work/rag-chatbot',
+  '/work/short-et',
+  '/work/fantasy-pl',
+  '/work/amharic-bot',
+  '/work/jeopardy',
+  '/work/fchat',
+  '/work/restaurant-ios',
+  '/work/utilities',
+  '/writing/what-senior-means',
+  '/writing/the-handover-is-the-product',
+  '/writing/rag-in-production',
+  '/writing/amharic-is-not-hard',
+  '/writing/freelancers-to-company',
+];
+
+const browser = await chromium.launch({
+  // Honour a preinstalled browser when one is provided (CI images, sandboxes).
+  executablePath: process.env.CHROMIUM_PATH || undefined,
+});
+const issues = [];
+
+// 1. Every route renders, no console errors, no broken internal links, no overflow.
+for (const [w, h, tag] of [
+  [1440, 900, 'desktop'],
+  [768, 1024, 'tablet'],
+  [375, 812, 'mobile'],
+]) {
+  const ctx = await browser.newContext({ viewport: { width: w, height: h }, colorScheme: 'dark' });
+  const page = await ctx.newPage();
+  page.on('pageerror', (e) => issues.push(`[${tag}] pageerror: ${e.message}`));
+  page.on('console', (m) => {
+    if (m.type() === 'error') issues.push(`[${tag}] console: ${m.text()}`);
+  });
+
+  for (const route of routes) {
+    const res = await page.goto(BASE + route, { waitUntil: 'load', timeout: 20000 });
+    if (!res || res.status() >= 400) {
+      issues.push(`[${tag}] ${route} -> HTTP ${res?.status()}`);
+      continue;
+    }
+
+    const check = await page.evaluate(() => {
+      const out = { overflow: null, h1: 0, imgNoAlt: 0, emptyLinks: [], internal: [] };
+      if (document.documentElement.scrollWidth > window.innerWidth + 1) {
+        out.overflow = `${document.documentElement.scrollWidth}px > ${window.innerWidth}px`;
+      }
+      out.h1 = document.querySelectorAll('h1').length;
+      out.imgNoAlt = [...document.querySelectorAll('img')].filter(
+        (i) => !i.hasAttribute('alt'),
+      ).length;
+      out.emptyLinks = [...document.querySelectorAll('a')]
+        .filter(
+          (a) =>
+            !a.textContent.trim() &&
+            !a.getAttribute('aria-label') &&
+            !a.querySelector('[aria-label]'),
+        )
+        .map((a) => a.getAttribute('href'));
+      out.internal = [...document.querySelectorAll('a[href^="/"]')].map((a) =>
+        a.getAttribute('href'),
+      );
+      return out;
+    });
+
+    if (check.overflow) issues.push(`[${tag}] ${route} horizontal overflow: ${check.overflow}`);
+    if (check.h1 !== 1) issues.push(`[${tag}] ${route} has ${check.h1} <h1>`);
+    if (check.imgNoAlt) issues.push(`[${tag}] ${route} ${check.imgNoAlt} img without alt`);
+    if (check.emptyLinks.length)
+      issues.push(`[${tag}] ${route} link with no accessible name: ${check.emptyLinks.join(', ')}`);
+
+    if (tag === 'desktop') {
+      for (const link of new Set(check.internal)) {
+        const r = await page.request.get(`${ORIGIN}${link}`);
+        if (r.status() >= 400)
+          issues.push(`broken internal link on ${route}: ${link} -> ${r.status()}`);
+      }
+    }
+  }
+  await ctx.close();
+}
+
+// 2. Theme toggle cycles and persists.
+{
+  const ctx = await browser.newContext({
+    viewport: { width: 1280, height: 900 },
+    colorScheme: 'dark',
+  });
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load' });
+  const seq = [];
+  for (let i = 0; i < 4; i++) {
+    seq.push(await page.evaluate(() => document.documentElement.dataset.theme));
+    await page.click('#theme-toggle');
+    await page.waitForTimeout(120);
+  }
+  if (seq.join(',') !== 'system,light,dark,system')
+    issues.push(`theme cycle wrong: ${seq.join(',')}`);
+
+  // The loop above left the toggle one step past 'system', i.e. on 'light'.
+  await page.goto(BASE + '/about', { waitUntil: 'load' });
+  const persisted = await page.evaluate(() => ({
+    theme: document.documentElement.dataset.theme,
+    dark: document.documentElement.classList.contains('dark'),
+  }));
+  if (persisted.theme !== 'light' || persisted.dark) {
+    issues.push(`theme did not persist across navigation: ${JSON.stringify(persisted)}`);
+  }
+  await ctx.close();
+}
+
+// 3. Mobile menu opens, is keyboard-dismissable, and links out.
+{
+  const ctx = await browser.newContext({ viewport: { width: 375, height: 812 } });
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load' });
+  await page.click('#menu-toggle');
+  await page.waitForTimeout(200);
+  if (!(await page.isVisible('#mobile-menu'))) issues.push('mobile menu did not open');
+  await page.screenshot({ path: `${OUT}/mobile-menu-open.png` });
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(200);
+  if (await page.isVisible('#mobile-menu')) issues.push('mobile menu did not close on Escape');
+  await ctx.close();
+}
+
+// 4. Work-page filtering.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/work', { waitUntil: 'load' });
+  const before = await page.locator('#project-grid article:visible').count();
+  await page.click('.filter-btn[data-filter="Tool"]');
+  await page.waitForTimeout(250);
+  const after = await page.locator('#project-grid article:visible').count();
+  if (!(after > 0 && after < before))
+    issues.push(`work filter did not narrow: ${before} -> ${after}`);
+  await ctx.close();
+}
+
+// 5. Reveal animation actually fires (motion on, excluding the intentional bottom band).
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load' });
+  for (const frac of [0.3, 0.55, 0.8]) {
+    await page.evaluate((f) => window.scrollTo(0, document.body.scrollHeight * f), frac);
+    await page.waitForTimeout(1100);
+  }
+  const stuck = await page.evaluate(() => {
+    const trigger = window.innerHeight * 0.94; // matches the observer's -6% rootMargin
+    return [...document.querySelectorAll('[data-reveal].reveal-pending:not(.is-visible)')].filter(
+      (el) => {
+        const r = el.getBoundingClientRect();
+        return r.top < trigger && r.bottom > 0;
+      },
+    ).length;
+  });
+  if (stuck) issues.push(`${stuck} in-view element(s) still hidden after scrolling`);
+  await ctx.close();
+}
+
+// 6. SEO / feed sanity.
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  for (const [path, must] of [
+    ['/rss.xml', ['<rss', 'What ‘senior’', '<language>en-us</language>']],
+    ['/sitemap-index.xml', ['<sitemapindex']],
+    ['/robots.txt', ['Sitemap:', 'User-agent: *']],
+  ]) {
+    const r = await page.request.get(`${BASE}${path}`);
+    if (r.status() !== 200) {
+      issues.push(`${path} -> HTTP ${r.status()}`);
+      continue;
+    }
+    const body = await r.text();
+    for (const m of must) if (!body.includes(m)) issues.push(`${path} missing: ${m}`);
+  }
+  await page.goto(BASE + '/', { waitUntil: 'load' });
+  const meta = await page.evaluate(() => ({
+    title: document.title,
+    desc: document.querySelector('meta[name="description"]')?.content,
+    og: document.querySelector('meta[property="og:image"]')?.content,
+    canonical: document.querySelector('link[rel="canonical"]')?.href,
+    ld: document.querySelector('script[type="application/ld+json"]')?.textContent,
+  }));
+  if (!meta.title?.includes('Samuel Mussie')) issues.push('title missing name');
+  if (!meta.desc) issues.push('missing meta description');
+  if (!meta.og?.endsWith('/og.png')) issues.push(`og:image wrong: ${meta.og}`);
+  if (!meta.canonical?.includes('/personal-website'))
+    issues.push(`canonical wrong: ${meta.canonical}`);
+  try {
+    const ld = JSON.parse(meta.ld);
+    if (ld['@type'] !== 'Person' || ld.name !== 'Samuel Mussie') issues.push('Person schema wrong');
+  } catch {
+    issues.push('Person JSON-LD is not valid JSON');
+  }
+  const ogRes = await page.request.get(`${BASE}/og.png`);
+  if (ogRes.status() !== 200) issues.push(`og.png -> HTTP ${ogRes.status()}`);
+  await ctx.close();
+}
+
+await browser.close();
+console.log(
+  issues.length
+    ? `${issues.length} ISSUE(S):\n` + [...new Set(issues)].join('\n')
+    : '✓ All checks passed.',
+);
+
+if (issues.length) process.exitCode = 1;

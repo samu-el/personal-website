@@ -1,0 +1,181 @@
+---
+import { nav, site } from '@/lib/site';
+import { href, isActive } from '@/lib/paths';
+import ThemeToggle from './ThemeToggle.astro';
+
+const current = Astro.url.pathname;
+---
+
+<a
+  href="#main"
+  class="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-full focus:bg-fg focus:px-4 focus:py-2 focus:text-sm focus:text-bg"
+>
+  Skip to content
+</a>
+
+<header
+  id="site-header"
+  class="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur-xl transition-shadow duration-300 data-[scrolled]:shadow-[0_1px_0_0_var(--color-line)]"
+>
+  <div class="wrap flex h-16 items-center justify-between gap-4">
+    <!-- Wordmark -->
+    <a
+      href={href('/')}
+      class="group flex items-center gap-2.5 -ml-1 rounded-full px-1 py-1"
+      aria-label={`${site.name} — home`}
+    >
+      <span
+        class="grid size-8 place-items-center rounded-full border border-line-strong font-mono text-[11px] font-medium tracking-tight text-fg transition-colors duration-300 group-hover:border-accent group-hover:text-accent"
+        aria-hidden="true">{site.initials}</span
+      >
+      <span class="flex flex-col leading-none">
+        <span class="text-[0.9375rem] font-medium tracking-tight">{site.name}</span>
+        <span class="mt-0.5 hidden font-mono text-2xs tracking-wider text-subtle sm:block"
+          >{site.role} · {site.company}</span
+        >
+      </span>
+    </a>
+
+    <!-- Desktop nav -->
+    <nav aria-label="Primary" class="hidden items-center gap-0.5 md:flex">
+      {
+        nav.slice(1).map((item) => {
+          const active = isActive(current, href(item.href));
+          return (
+            <a
+              href={href(item.href)}
+              aria-current={active ? 'page' : undefined}
+              class:list={[
+                'relative rounded-full px-3.5 py-2 text-sm transition-colors duration-200',
+                active ? 'text-fg' : 'text-muted hover:text-fg',
+              ]}
+            >
+              {item.label}
+              {active && (
+                <span class="absolute inset-x-3.5 -bottom-px h-px bg-accent" aria-hidden="true" />
+              )}
+            </a>
+          );
+        })
+      }
+    </nav>
+
+    <div class="flex items-center gap-2">
+      <ThemeToggle />
+      <a
+        href={href('/contact')}
+        class="btn btn-primary hidden !px-4 !py-2 !text-[0.8125rem] md:inline-flex"
+      >
+        Get in touch
+      </a>
+
+      <!-- Mobile menu trigger -->
+      <button
+        type="button"
+        id="menu-toggle"
+        class="grid size-9 place-items-center rounded-full border border-line text-muted transition-colors hover:border-line-strong hover:text-fg md:hidden"
+        aria-label="Open menu"
+        aria-expanded="false"
+        aria-controls="mobile-menu"
+      >
+        <svg
+          class="size-[17px]"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.7"
+          stroke-linecap="round"
+          aria-hidden="true"
+        >
+          <path class="menu-bar-top" d="M4 8h16"></path>
+          <path class="menu-bar-bottom" d="M4 16h16"></path>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobile-menu" hidden class="border-t border-line bg-bg md:hidden">
+    <nav aria-label="Mobile" class="wrap flex flex-col py-2">
+      {
+        nav.map((item) => {
+          const active = isActive(current, href(item.href));
+          return (
+            <a
+              href={href(item.href)}
+              aria-current={active ? 'page' : undefined}
+              class:list={[
+                'flex items-baseline gap-3 border-b border-line py-3.5 text-lg tracking-tight transition-colors last:border-b-0',
+                active ? 'text-accent' : 'text-fg',
+              ]}
+            >
+              <span class="font-mono text-2xs text-subtle">{item.index}</span>
+              {item.label}
+            </a>
+          );
+        })
+      }
+      <a href={`mailto:${site.email}`} class="btn btn-primary my-4 w-full">{site.email}</a>
+    </nav>
+  </div>
+</header>
+
+<style>
+  .menu-bar-top,
+  .menu-bar-bottom {
+    transition: transform 0.3s var(--ease-out-quint);
+    transform-origin: center;
+  }
+  #menu-toggle[aria-expanded='true'] .menu-bar-top {
+    transform: translateY(4px) rotate(45deg);
+  }
+  #menu-toggle[aria-expanded='true'] .menu-bar-bottom {
+    transform: translateY(-4px) rotate(-45deg);
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    function init() {
+      const btn = document.getElementById('menu-toggle');
+      const menu = document.getElementById('mobile-menu');
+      const header = document.getElementById('site-header');
+      if (!btn || !menu || btn.dataset.bound === '1') return;
+      btn.dataset.bound = '1';
+
+      const setOpen = (open) => {
+        btn.setAttribute('aria-expanded', String(open));
+        btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        menu.hidden = !open;
+      };
+
+      btn.addEventListener('click', () => {
+        setOpen(btn.getAttribute('aria-expanded') !== 'true');
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && btn.getAttribute('aria-expanded') === 'true') {
+          setOpen(false);
+          btn.focus();
+        }
+      });
+
+      // Close when the viewport grows past the mobile breakpoint.
+      window.matchMedia('(min-width: 48rem)').addEventListener('change', (e) => {
+        if (e.matches) setOpen(false);
+      });
+
+      if (header) {
+        const onScroll = () => {
+          if (window.scrollY > 8) header.setAttribute('data-scrolled', '');
+          else header.removeAttribute('data-scrolled');
+        };
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+      }
+    }
+
+    init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

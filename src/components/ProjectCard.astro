@@ -1,0 +1,118 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { href } from '@/lib/paths';
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  /** Larger treatment for the first item in a list. */
+  feature?: boolean;
+  index?: number;
+}
+
+const { project, feature = false, index } = Astro.props;
+const { title, blurb, period, kind, status, stack, demo, repo } = project.data;
+
+const statusTone: Record<string, string> = {
+  Live: 'text-jade',
+  Ongoing: 'text-jade',
+  Shipped: 'text-muted',
+  Experiment: 'text-accent',
+  Archived: 'text-subtle',
+};
+---
+
+<article
+  class:list={['card group flex flex-col rounded-lg', feature ? 'p-7 lg:p-9' : 'p-6 lg:p-7']}
+  data-reveal
+  style={index !== undefined ? `--reveal-delay:${Math.min(index, 6) * 70}ms` : undefined}
+>
+  <div class="flex items-start justify-between gap-4">
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+      <span class="font-mono text-2xs uppercase tracking-[0.12em] text-subtle">{kind}</span>
+      <span class="text-line-strong" aria-hidden="true">·</span>
+      <span class="font-mono text-2xs tracking-wide text-subtle">{period}</span>
+    </div>
+    <span
+      class:list={[
+        'flex shrink-0 items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em]',
+        statusTone[status] ?? 'text-muted',
+      ]}
+    >
+      {
+        (status === 'Live' || status === 'Ongoing') && (
+          <span class="relative flex size-1.5">
+            <span class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-60" />
+            <span class="relative inline-flex size-1.5 rounded-full bg-jade" />
+          </span>
+        )
+      }
+      {status}
+    </span>
+  </div>
+
+  <h3
+    class:list={[
+      'mt-5 font-medium tracking-tight',
+      feature ? 'text-[clamp(1.5rem,3vw,2rem)]' : 'text-xl',
+    ]}
+  >
+    <a href={href(`/work/${project.id}`)} class="group/link">
+      <span class="link">{title}</span>
+      <Icon
+        name="lucide:arrow-up-right"
+        class="ml-0.5 inline-block size-[0.8em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-1 group-hover/link:text-accent"
+        aria-hidden="true"
+      />
+    </a>
+  </h3>
+
+  <p
+    class:list={[
+      'mt-3 leading-relaxed text-muted',
+      feature ? 'max-w-2xl text-[0.9375rem] lg:text-base' : 'text-[0.9375rem]',
+    ]}
+  >
+    {blurb}
+  </p>
+
+  <div class="mt-auto pt-6">
+    {
+      stack.length > 0 && (
+        <ul class="flex flex-wrap gap-1.5" aria-label="Stack">
+          {stack.slice(0, feature ? 6 : 4).map((s) => (
+            <li class="chip">{s}</li>
+          ))}
+        </ul>
+      )
+    }
+    {
+      (demo || repo) && (
+        <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-5">
+          {demo && (
+            <a
+              href={demo}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent"
+            >
+              <Icon name="lucide:external-link" class="size-3" aria-hidden="true" />
+              Live
+            </a>
+          )}
+          {repo && (
+            <a
+              href={repo}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-muted transition-colors hover:text-accent"
+            >
+              <Icon name="simple-icons:github" class="size-3" aria-hidden="true" />
+              Source
+            </a>
+          )}
+        </div>
+      )
+    }
+  </div>
+</article>

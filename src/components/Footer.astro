@@ -1,0 +1,149 @@
+---
+import { nav, site, socials } from '@/lib/site';
+import { href } from '@/lib/paths';
+import { Icon } from 'astro-icon/components';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="mt-32 border-t border-line bg-sunken">
+  <div class="wrap py-16 lg:py-20">
+    <div class="grid gap-12 lg:grid-cols-12 lg:gap-8">
+      <!-- Call to action -->
+      <div class="lg:col-span-5">
+        <p class="eyebrow">Open to work</p>
+        <h2 class="display mt-5 text-[clamp(1.9rem,4.4vw,2.75rem)]">
+          Need a senior team, or a second opinion on an architecture?
+        </h2>
+        <p class="mt-5 max-w-md text-[0.9375rem] leading-relaxed text-muted">
+          I read every message myself. If it is a fit I will say so within a day, and if it is not I
+          will tell you that too — usually with a name of someone better placed.
+        </p>
+        <div class="mt-7 flex flex-wrap gap-3">
+          <a href={`mailto:${site.email}`} class="btn btn-primary">
+            <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
+            {site.email}
+          </a>
+          <a href={href('/contact')} class="btn btn-ghost">More ways to reach me</a>
+        </div>
+      </div>
+
+      <div class="lg:col-span-2 lg:col-start-7">
+        <h3 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Pages</h3>
+        <ul class="mt-5 space-y-2.5">
+          {
+            nav.map((item) => (
+              <li>
+                <a
+                  href={href(item.href)}
+                  class="text-sm text-muted transition-colors hover:text-fg"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="lg:col-span-2">
+        <h3 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Elsewhere</h3>
+        <ul class="mt-5 space-y-2.5">
+          {
+            socials.map((s) => (
+              <li>
+                <a
+                  href={s.href}
+                  class="group inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+                  rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
+                  target={s.href.startsWith('http') ? '_blank' : undefined}
+                >
+                  <Icon name={s.icon} class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+                  {s.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="lg:col-span-2">
+        <h3 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">This site</h3>
+        <ul class="mt-5 space-y-2.5">
+          <li>
+            <a
+              href={href('/rss.xml')}
+              class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+            >
+              <Icon name="lucide:rss" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+              RSS feed
+            </a>
+          </li>
+          <li>
+            <a
+              href="https://github.com/samu-el/personal-website"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+            >
+              <Icon
+                name="lucide:code-xml"
+                class="size-3.5 shrink-0 opacity-70"
+                aria-hidden="true"
+              />
+              Source
+            </a>
+          </li>
+          <li>
+            <a
+              href={href('/stack')}
+              class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+            >
+              <Icon name="lucide:layers" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+              Built with
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="rule mt-14"></div>
+
+    <div
+      class="mt-6 flex flex-col gap-3 font-mono text-2xs tracking-wide text-subtle sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p>© {year} {site.name}. All rights reserved.</p>
+      <p class="flex items-center gap-2">
+        <span class="inline-block size-1.5 rounded-full bg-jade" aria-hidden="true"></span>
+        <span>{site.location}</span>
+        <span aria-hidden="true" class="text-line-strong">/</span>
+        <span><time id="local-time" datetime="">EAT</time></span>
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script is:inline>
+  (() => {
+    function tick() {
+      const el = document.getElementById('local-time');
+      if (!el) return;
+      const now = new Date();
+      const time = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Africa/Addis_Ababa',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false,
+      }).format(now);
+      el.textContent = `${time} EAT`;
+      el.setAttribute('datetime', now.toISOString());
+    }
+    function init() {
+      tick();
+      window.clearInterval(window.__clock);
+      window.__clock = window.setInterval(tick, 30000);
+    }
+    init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

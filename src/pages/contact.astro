@@ -1,0 +1,231 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { site, socials } from '@/lib/site';
+import { href } from '@/lib/paths';
+import { services } from '@/data/stack';
+import { Icon } from 'astro-icon/components';
+
+const title = 'Contact';
+const description =
+  'Get in touch with Samuel Mussie — co-founder and CTO of Mereb Technologies, Addis Ababa. Engineering teams, architecture reviews, AI features, delivery rescue.';
+
+const routes = [
+  {
+    heading: 'You need a senior engineering team',
+    body: 'Tell me the product, the stack, and what is currently not getting shipped. I will tell you honestly whether we are the right shape for it, and roughly what it costs, in the first reply.',
+    icon: 'lucide:users-round',
+    cta: 'Email me the brief',
+    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Engineering team enquiry')}`,
+  },
+  {
+    heading: 'You want a second opinion',
+    body: 'A stack choice, a migration, a hiring plan, or an AI feature someone has promised a board. Short engagements, written output, tradeoffs stated rather than an opinion delivered.',
+    icon: 'lucide:drafting-compass',
+    cta: 'Book a conversation',
+    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Architecture / advisory')}`,
+  },
+  {
+    heading: 'You are an engineer in Addis',
+    body: 'We hire at six-plus years and we mean it. Send me something you have built and the decision in it you are proudest of — not a CV. I read these myself.',
+    icon: 'lucide:code-xml',
+    cta: 'Show me your work',
+    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Engineer — work sample')}`,
+  },
+  {
+    heading: 'Something else entirely',
+    body: 'Podcast, panel, a student who wants to know how to get started, or a disagreement with something I wrote. The last one is the most welcome.',
+    icon: 'lucide:message-square-quote',
+    cta: 'Just say hello',
+    ctaHref: `mailto:${site.email}`,
+  },
+];
+---
+
+<Layout {title} {description} path="/contact" bareFooter>
+  <section class="relative overflow-hidden border-b border-line">
+    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
+    </div>
+    <div class="wrap relative py-16 lg:py-24">
+      <p class="eyebrow" data-reveal>06 &nbsp;Contact</p>
+      <div class="mt-7 grid gap-10 lg:grid-cols-12 lg:gap-8">
+        <div class="lg:col-span-7">
+          <h1
+            class="display text-[clamp(2.4rem,6.6vw,4.25rem)]"
+            data-reveal
+            style="--reveal-delay:60ms"
+          >
+            One inbox, read by me,<br class="hidden lg:block" />
+            <em class="italic text-accent">answered within a day.</em>
+          </h1>
+          <div class="mt-8 flex flex-wrap gap-3" data-reveal style="--reveal-delay:120ms">
+            <a href={`mailto:${site.email}`} class="btn btn-primary">
+              <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
+              {site.email}
+            </a>
+            <button type="button" id="copy-email" class="btn btn-ghost">
+              <Icon name="lucide:copy" class="size-4" aria-hidden="true" />
+              <span data-copy-label>Copy address</span>
+            </button>
+          </div>
+        </div>
+        <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
+          <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:180ms">
+            No contact form, no funnel, no discovery call before the discovery call. If we are not a
+            fit I will say so and usually name someone better placed — that is cheaper for both of
+            us than three weeks of scoping.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Routes -->
+  <div class="wrap py-16 lg:py-20">
+    <div class="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
+      {
+        routes.map((r, i) => (
+          <div
+            class="group flex flex-col bg-surface p-7 transition-colors duration-300 hover:bg-surface-2 lg:p-9"
+            data-reveal
+            style={`--reveal-delay:${i * 70}ms`}
+          >
+            <Icon
+              name={r.icon}
+              class="size-5 text-subtle transition-colors duration-300 group-hover:text-accent"
+              aria-hidden="true"
+            />
+            <h2 class="mt-5 text-lg font-medium tracking-tight lg:text-xl">{r.heading}</h2>
+            <p class="mt-3 text-[0.9375rem] leading-relaxed text-muted">{r.body}</p>
+            <a
+              href={r.ctaHref}
+              class="mt-6 inline-flex items-center gap-2 self-start font-mono text-2xs uppercase tracking-[0.12em] text-muted transition-colors hover:text-accent"
+            >
+              {r.cta}
+              <Icon
+                name="lucide:arrow-right"
+                class="size-3 transition-transform duration-300 group-hover:translate-x-0.5"
+                aria-hidden="true"
+              />
+            </a>
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- Practical details -->
+    <div class="mt-16 grid gap-10 border-t border-line pt-12 lg:grid-cols-12 lg:gap-8">
+      <div class="lg:col-span-4">
+        <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Where to find me</h2>
+        <ul class="mt-5 space-y-3">
+          {
+            socials.map((s) => (
+              <li>
+                <a
+                  href={s.href}
+                  target={s.href.startsWith('http') ? '_blank' : undefined}
+                  rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
+                  class="group flex items-center justify-between gap-4 border-b border-line pb-3 text-[0.9375rem] text-fg transition-colors"
+                >
+                  <span class="inline-flex items-center gap-2.5">
+                    <Icon
+                      name={s.icon}
+                      class="size-4 text-subtle transition-colors group-hover:text-accent"
+                      aria-hidden="true"
+                    />
+                    {s.label}
+                  </span>
+                  <span class="font-mono text-2xs text-subtle transition-colors group-hover:text-accent">
+                    {s.handle}
+                  </span>
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="lg:col-span-4">
+        <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Practicalities</h2>
+        <dl class="mt-5 space-y-4 text-[0.9375rem]">
+          <div>
+            <dt class="text-subtle">Working hours</dt>
+            <dd class="mt-1 text-fg">
+              09:00 – 18:00 EAT (GMT+3). Overlaps a full European working day and the first half of
+              a US East Coast one.
+            </dd>
+          </div>
+          <div>
+            <dt class="text-subtle">Contracting</dt>
+            <dd class="mt-1 text-fg">
+              Mereb engagements are contracted through an EU entity. Invoicing in EUR or USD.
+            </dd>
+          </div>
+          <div>
+            <dt class="text-subtle">References</dt>
+            <dd class="mt-1 text-fg">
+              Available on request — I will connect you directly with a CTO we work for rather than
+              send a testimonial.
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div class="lg:col-span-4">
+        <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">What I do</h2>
+        <ul class="mt-5 space-y-3">
+          {
+            services.map((s) => (
+              <li class="relative pl-5 text-[0.9375rem] leading-relaxed text-muted">
+                <span
+                  class="absolute left-0 top-[0.72em] h-px w-2.5 bg-accent"
+                  aria-hidden="true"
+                />
+                <span class="text-fg">{s.title}</span>
+              </li>
+            ))
+          }
+        </ul>
+        <a href={href('/work')} class="btn btn-ghost mt-7 !px-4 !py-2 !text-[0.8125rem]">
+          See the work
+          <Icon name="lucide:arrow-right" class="size-3.5" aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer class="border-t border-line bg-sunken">
+    <div
+      class="wrap flex flex-col gap-3 py-8 font-mono text-2xs tracking-wide text-subtle sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
+      <p class="flex items-center gap-2">
+        <span class="inline-block size-1.5 rounded-full bg-jade" aria-hidden="true"></span>
+        {site.location}
+      </p>
+    </div>
+  </footer>
+</Layout>
+
+<script is:inline define:vars={{ email: site.email }}>
+  (() => {
+    function init() {
+      const btn = document.getElementById('copy-email');
+      if (!btn || btn.dataset.bound === '1') return;
+      btn.dataset.bound = '1';
+      const label = btn.querySelector('[data-copy-label]');
+      btn.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(email);
+          if (label) label.textContent = 'Copied';
+        } catch {
+          if (label) label.textContent = email;
+        }
+        window.setTimeout(() => {
+          if (label) label.textContent = 'Copy address';
+        }, 2200);
+      });
+    }
+    init();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

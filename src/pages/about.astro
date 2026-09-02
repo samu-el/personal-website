@@ -1,0 +1,317 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import Section from '@/components/Section.astro';
+import { site, socials } from '@/lib/site';
+import { href } from '@/lib/paths';
+import { roles, principles } from '@/data/experience';
+import { Icon } from 'astro-icon/components';
+
+const title = 'About';
+const description =
+  'Samuel Mussie — co-founder and CTO of Mereb Technologies in Addis Ababa. A decade of shipping software, five years building the engineering organisation behind it.';
+---
+
+<Layout {title} {description} path="/about" type="profile">
+  <!-- ── Header ───────────────────────────────────────────────────── -->
+  <section class="relative overflow-hidden border-b border-line">
+    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
+    </div>
+    <div class="wrap relative py-16 lg:py-24">
+      <p class="eyebrow" data-reveal>02 &nbsp;About</p>
+      <div class="mt-7 grid gap-10 lg:grid-cols-12 lg:gap-8">
+        <div class="lg:col-span-7">
+          <h1
+            class="display text-[clamp(2.4rem,6.6vw,4.25rem)]"
+            data-reveal
+            style="--reveal-delay:60ms"
+          >
+            Ten years of code. Five of them<br class="hidden lg:block" />
+            <em class="italic text-accent">answering for other people’s.</em>
+          </h1>
+        </div>
+        <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
+          <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
+            I write less code than I used to and think about hiring more than about architecture.
+            That was the correct trade, and it took me a year to stop resenting it.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Narrative ────────────────────────────────────────────────── -->
+  <div class="wrap py-16 lg:py-24">
+    <div class="grid gap-12 lg:grid-cols-12 lg:gap-10">
+      <div class="lg:col-span-7">
+        <div class="prose" data-reveal>
+          <p>
+            I’m Samuel Mussie. I co-founded <a
+              href={site.companyUrl}
+              target="_blank"
+              rel="noopener noreferrer">Mereb Technologies</a
+            > and I run engineering there — the hiring bar, the delivery model, and the architecture decisions
+            behind every team we place.
+          </p>
+          <p>
+            The short version of what we do: we give SaaS companies in Europe and the US dedicated
+            senior engineering teams, contracted through an EU entity, delivered from Addis Ababa.
+            The teams work inside the client’s process, on the client’s board, in the client’s
+            codebase. From the outside it looks like an in-house hire. That is the point.
+          </p>
+
+          <h2>How this started</h2>
+          <p>
+            Before Mereb was a company it was a handful of us in Addis Ababa taking contracts
+            individually. Node and Python services, React front ends, iOS and Flutter apps, a few
+            Telegram bots that solved distinctly Ethiopian problems. Good work, no shortage of it.
+          </p>
+          <p>
+            In 2021 we stopped doing that and built a company instead, because freelancing has a
+            ceiling and it sits in three specific places: you cannot bid on the two-year embedded
+            engagements that are the most interesting work; you cannot say no in a way that means
+            anything; and you cannot build a quality bar that survives you.
+          </p>
+          <p>
+            That last one is what decided it. Individually, quality is a fact about you.
+            Collectively, it has to become something written, teachable and enforceable — or it
+            regresses to the mean of whoever you hired last.
+          </p>
+
+          <h2>What the job actually is</h2>
+          <p>
+            Mostly writing, which I did not expect. A distributed engineering organisation running
+            across six time zones is functionally a writing organisation: the decisions that survive
+            are the written ones, and the engineers who compound fastest are the ones who explain
+            themselves well.
+          </p>
+          <p>The rest of it comes down to three things I hold strictly:</p>
+          <ul>
+            <li>
+              <strong>The bar is not negotiable.</strong> Six-plus years of production experience, and
+              no juniors on client work. That policy has cost us deals, which is how I know it is a policy
+              and not a page on a website.
+            </li>
+            <li>
+              <strong>Continuity is an architecture problem.</strong> After six months inside a client’s
+              system, an engineer knows which service has the undocumented retry and why a table has a
+              nullable column that should never be null. None of that is in the repository. Rotating them
+              out deletes it, so retention is something I design around.
+            </li>
+            <li>
+              <strong>The reference call is the product.</strong> Nobody in Berlin buys an Ethiopian engineering
+              team from a website. They buy it because another CTO told them it worked — which makes every
+              engagement a sales asset or a liability, with no third category.
+            </li>
+          </ul>
+
+          <h2>Where I still get my hands dirty</h2>
+          <p>
+            Enough to have opinions I can defend. I built a full retrieval-augmented chat system end
+            to end before advising a single client on an AI feature, because I refuse to advise from
+            blog posts. I wrote a Flutter chat app in 2019 and a native Swift app in 2020 so that my
+            answer on cross-platform tradeoffs comes from having shipped both, with the same feature
+            set, eighteen months apart.
+          </p>
+          <p>
+            The side projects are the same instinct. Fantasy Premier League tooling I use every
+            week, a Jeopardy game for team nights, a URL shortener built twice to see what the
+            second attempt taught me. If a pattern survives a Saturday when everyone opens the app
+            at once, it is probably ready for someone’s production.
+          </p>
+
+          <h2>The thing underneath all of it</h2>
+          <p>
+            In 2020 I built a Telegram bot that <em>tried</em> to translate text into Amharic. I have
+            never edited that word out of the repository description, because it was accurate and it dates
+            a position I still hold: the AI capability gap for African languages is a data and incentive
+            problem, not a model problem.
+          </p>
+          <p>
+            Which is the same sentence I end up writing about most things. There is no shortage of
+            engineers in this city who could close that gap, or hold their own on any team in
+            Europe. There is a shortage of companies who have looked.
+          </p>
+          <p>Mereb is my argument that the looking is worth it.</p>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <aside class="lg:col-span-4 lg:col-start-9">
+        <div class="sticky top-24 space-y-8" data-reveal style="--reveal-delay:80ms">
+          <div class="card rounded-lg p-6">
+            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">At a glance</h2>
+            <dl class="mt-5 space-y-3.5 text-sm">
+              <div class="flex justify-between gap-4">
+                <dt class="text-subtle">Role</dt>
+                <dd class="text-right text-fg">{site.role}</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-subtle">Company</dt>
+                <dd class="text-right text-fg">
+                  <a href={site.companyUrl} target="_blank" rel="noopener noreferrer" class="link"
+                    >Mereb Technologies</a
+                  >
+                </dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-subtle">Based in</dt>
+                <dd class="text-right text-fg">Addis Ababa, ET</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-subtle">Studied at</dt>
+                <dd class="text-right text-fg">Addis Ababa University</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-subtle">Languages</dt>
+                <dd class="text-right text-fg">Amharic, English</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-subtle">Timezone</dt>
+                <dd class="text-right text-fg">EAT / GMT+3</dd>
+              </div>
+            </dl>
+            <div class="rule my-5"></div>
+            <ul class="space-y-2.5">
+              {
+                socials.map((s) => (
+                  <li>
+                    <a
+                      href={s.href}
+                      target={s.href.startsWith('http') ? '_blank' : undefined}
+                      rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
+                      class="group flex items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-fg"
+                    >
+                      <span class="inline-flex items-center gap-2">
+                        <Icon name={s.icon} class="size-3.5 opacity-70" aria-hidden="true" />
+                        {s.label}
+                      </span>
+                      <span class="font-mono text-2xs text-subtle group-hover:text-accent">
+                        {s.handle}
+                      </span>
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
+
+          <div class="card rounded-lg p-6">
+            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">
+              Beyond the desk
+            </h2>
+            <ul class="mt-5 space-y-3 text-[0.9375rem] leading-relaxed text-muted">
+              <li>
+                Fantasy Premier League, seriously enough to have <a
+                  href={href('/work/fantasy-pl')}
+                  class="link">built tooling for it</a
+                >.
+              </li>
+              <li>
+                The <a href={site.companyUrl} target="_blank" rel="noopener noreferrer" class="link"
+                  >Mereb Podcast</a
+                > — our Amharic-language show putting Ethiopian engineers and founders on record.
+              </li>
+              <li>Advent of Code every December, in Python, badly, happily.</li>
+              <li>Arguing that PHP runs more of the world than anyone admits.</li>
+            </ul>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <!-- ── Timeline ─────────────────────────────────────────────────── -->
+  <Section
+    index="05"
+    eyebrow="Timeline"
+    title="Where the time went."
+    lede="Anything I cannot verify publicly is left general rather than dressed up. If you need exact dates for a due-diligence process, ask and I will send them."
+    id="timeline"
+  >
+    <ol class="space-y-px overflow-hidden rounded-lg border border-line bg-line">
+      {
+        roles.map((role, i) => (
+          <li class="bg-surface p-7 lg:p-9" data-reveal style={`--reveal-delay:${i * 80}ms`}>
+            <div class="grid gap-6 lg:grid-cols-12 lg:gap-8">
+              <div class="lg:col-span-3">
+                <p class="flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-subtle">
+                  {role.from && role.to ? `${role.from} — ${role.to}` : 'Earlier'}
+                  {role.current && (
+                    <span class="relative flex size-1.5">
+                      <span class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-70" />
+                      <span class="relative inline-flex size-1.5 rounded-full bg-jade" />
+                    </span>
+                  )}
+                </p>
+                <p class="mt-2 text-[0.8125rem] leading-snug text-subtle">{role.location}</p>
+              </div>
+
+              <div class="lg:col-span-9">
+                <h3 class="text-xl font-medium tracking-tight lg:text-[1.375rem]">{role.title}</h3>
+                <p class="mt-1.5 text-[0.9375rem] text-accent">
+                  {role.url ? (
+                    <a
+                      href={role.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="link link-accent"
+                    >
+                      {role.org}
+                    </a>
+                  ) : (
+                    role.org
+                  )}
+                </p>
+                <p class="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-muted">
+                  {role.summary}
+                </p>
+                {role.highlights.length > 0 && (
+                  <ul class="mt-5 space-y-2.5">
+                    {role.highlights.map((h) => (
+                      <li class="relative max-w-2xl pl-5 text-[0.9375rem] leading-relaxed text-muted">
+                        <span
+                          class="absolute left-0 top-[0.72em] h-px w-2.5 bg-accent"
+                          aria-hidden="true"
+                        />
+                        {h}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {role.tags.length > 0 && (
+                  <ul class="mt-6 flex flex-wrap gap-1.5" aria-label="Focus areas">
+                    {role.tags.map((t) => (
+                      <li class="chip">{t}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
+  <!-- ── Principles ───────────────────────────────────────────────── -->
+  <Section
+    index="06"
+    eyebrow="Positions"
+    title="What I will argue about."
+    lede="Each of these has cost us something at least once. That is the test."
+  >
+    <div class="grid gap-x-10 gap-y-12 sm:grid-cols-2">
+      {
+        principles.map((p, i) => (
+          <div class="border-t border-line pt-6" data-reveal style={`--reveal-delay:${i * 70}ms`}>
+            <div class="flex items-center gap-3">
+              <Icon name={p.icon} class="size-4 text-accent" aria-hidden="true" />
+              <h3 class="text-[1.0625rem] font-medium tracking-tight">{p.title}</h3>
+            </div>
+            <p class="mt-3.5 max-w-lg text-[0.9375rem] leading-relaxed text-muted">{p.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+</Layout>

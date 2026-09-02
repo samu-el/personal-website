@@ -1,0 +1,58 @@
+---
+interface Props {
+  /** Monospace index shown in the eyebrow, e.g. "03". */
+  index?: string;
+  eyebrow?: string;
+  title?: string;
+  lede?: string;
+  id?: string;
+  /** Renders the top hairline rule. */
+  divider?: boolean;
+  class?: string;
+}
+
+const { index, eyebrow, title, lede, id, divider = true, class: className = '' } = Astro.props;
+---
+
+<section id={id} class:list={['scroll-mt-24', className]}>
+  {divider && <div class="rule" />}
+  <div class="wrap py-16 lg:py-24">
+    {
+      (eyebrow || title || lede) && (
+        <div class="grid gap-6 lg:grid-cols-12 lg:gap-8">
+          <div class="lg:col-span-5">
+            {eyebrow && (
+              <p class="eyebrow" data-reveal>
+                {index && <span class="text-accent">{index}</span>}
+                {eyebrow}
+              </p>
+            )}
+            {title && (
+              <h2
+                class="display mt-5 text-[clamp(2rem,5vw,3.15rem)]"
+                data-reveal
+                style="--reveal-delay:60ms"
+              >
+                {title}
+              </h2>
+            )}
+          </div>
+          {lede && (
+            <div class="lg:col-span-6 lg:col-start-7 lg:pt-2">
+              <p
+                class="max-w-xl text-base leading-relaxed text-muted lg:text-[1.0625rem]"
+                data-reveal
+                style="--reveal-delay:120ms"
+              >
+                {lede}
+              </p>
+            </div>
+          )}
+        </div>
+      )
+    }
+    <div class:list={[(eyebrow || title || lede) && 'mt-14 lg:mt-16']}>
+      <slot />
+    </div>
+  </div>
+</section>
