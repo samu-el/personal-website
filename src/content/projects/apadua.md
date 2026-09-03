@@ -1,51 +1,53 @@
 ---
-title: 'Apadua'
-blurb: 'A dedicated Mereb engineering team embedded in a German procurement-intelligence SaaS company, shipping on their board and in their codebase.'
+title: 'Procurement Intelligence Platform'
+blurb: 'Long-running engineering work on a German B2B SaaS product — the schema, services and front end behind procurement data that enterprise buyers make decisions from.'
 period: 'Ongoing'
-weight: 100
+weight: 80
 kind: 'Client work'
-role: 'CTO — engagement architecture, hiring, delivery model'
+role: 'Software engineer — data model, services, front end'
 status: 'Ongoing'
 stack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'AWS']
-tags: ['SaaS', 'Embedded team', 'Europe', 'Enterprise']
-demo: 'https://www.mereb.tech/case-studies/apadua-gmbh'
+tags: ['SaaS', 'B2B', 'Data modelling', 'Europe']
 featured: true
 stats:
-  - { label: 'Model', value: 'Embedded team' }
-  - { label: 'Client base', value: 'Germany' }
-  - { label: 'Contract', value: 'EU entity' }
+  - { label: 'Domain', value: 'Procurement' }
+  - { label: 'Market', value: 'Germany / EU' }
+  - { label: 'Shape', value: 'Multi-tenant SaaS' }
 ---
 
-Apadua is a German procurement-intelligence platform. They came to Mereb with the problem
-almost every mid-stage European SaaS company eventually has: more roadmap than engineers, a
-local hiring market that takes six months per senior hire, and no appetite for the
-agency-quality lottery.
+Client work for [Apadua](https://www.apadua.com), a German procurement-intelligence platform.
+Most of what I build now ships under someone else's name, so this entry is about the class of
+engineering rather than a feature list.
 
-## What we actually did
+## What this kind of product actually demands
 
-We did not sell them a project. We placed a team.
+Enterprise B2B SaaS looks unglamorous from outside and is the most unforgiving thing to model
+well. Three things dominate:
 
-The engagement is structured as an **embedded team** — Mereb engineers work inside Apadua’s
-process, on Apadua’s board, reviewing each other’s code alongside Apadua’s own engineers. From
-the client’s side, the only difference from an in-house hire is which entity issues the
-contract.
+**Multi-tenancy is a schema decision, not a middleware one.** Every table either belongs to a
+tenant or explicitly does not, and getting that wrong is the one bug class you cannot ship. Row
+scoping has to be structural — enforced by the data model and the query layer — because a
+filter that a developer must remember to add is a filter that will eventually be forgotten.
 
-That model only works if three things are true, and my job is making sure they are:
+**The data model outlives every opinion about the UI.** Procurement data has a real-world shape
+that predates the software: suppliers, categories, contracts, evaluations, and the
+relationships between them that clients will disagree about. Screens get redesigned yearly;
+badly-named columns are still there in five years, with dashboards depending on them. So the
+modelling work gets the argument, and the front end gets the iteration.
 
-- **The engineers are genuinely senior.** Every person on this engagement clears the same bar
-  we hold internally — six-plus years of production experience, and the ability to take an
-  ambiguous ticket and come back with a decision rather than a question.
-- **The handover is written.** Six time zones and two cultures between a team and its
-  stakeholders means anything undocumented gets lost. Decisions land in writing, changes land
-  small, and no meeting exists that a document could have replaced.
-- **Continuity is protected.** Rotating people through a long-running engagement destroys the
-  context that makes the team valuable. Retention is a technical concern, not an HR one.
+**Enterprise buyers care about audit, not features.** Who changed this, when, and what did it
+say before. That is a design constraint from day one — append-only history where it matters,
+and mutation paths narrow enough to be logged honestly — not something you retrofit when the
+first customer asks for it.
 
-## Why it matters beyond one client
+## What I do on it
 
-Apadua is one of 50-plus companies we work with, but it is the reference we point at most,
-because it settles the argument. A senior engineering team in Addis Ababa can hold its own
-inside a European product org — not as a cost-saving compromise, but as the version of the
-team the client would have hired locally if the local market had the people.
+Data model and migrations, service boundaries and API contracts, the TypeScript/React front end
+against those contracts, and the deploy path. The parts of the job that show up as tickets are
+the smaller half; the useful half is being the person who has to explain, two years later, why
+a boundary is where it is.
 
-That is the entire thesis of the company, tested against a real P&L.
+Working six time zones from the stakeholders also settles a stylistic question by force. Every
+non-obvious decision goes in the pull request — what I chose, what I rejected, what would make
+me revisit it — because a reasoning chain that exists only in my head is unavailable to
+everyone who needs it while I am asleep.

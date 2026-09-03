@@ -8,7 +8,7 @@ import { Icon } from 'astro-icon/components';
 
 const title = 'About';
 const description =
-  'Samuel Mussie — co-founder and CTO of Mereb Technologies in Addis Ababa. A decade of shipping software, five years building the engineering organisation behind it.';
+  'Samuel Mussie — software engineer in Addis Ababa. Ten years building web and mobile products end to end, across eight languages and three platforms.';
 ---
 
 <Layout {title} {description} path="/about" type="profile">
@@ -25,14 +25,14 @@ const description =
             data-reveal
             style="--reveal-delay:60ms"
           >
-            Ten years of code. Five of them<br class="hidden lg:block" />
-            <em class="italic text-accent">answering for other people’s.</em>
+            Ten years of code.<br class="hidden lg:block" />
+            <em class="italic text-accent">Eight languages, three platforms.</em>
           </h1>
         </div>
         <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
           <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
-            I write less code than I used to and think about hiring more than about architecture.
-            That was the correct trade, and it took me a year to stop resenting it.
+            None of that range was a plan. It came from working on other people&rsquo;s stacks,
+            which is also where I learned that most projects fail on scoping rather than on code.
           </p>
         </div>
       </div>
@@ -45,81 +45,76 @@ const description =
       <div class="lg:col-span-7">
         <div class="prose" data-reveal>
           <p>
-            I’m Samuel Mussie. I co-founded <a
-              href={site.companyUrl}
-              target="_blank"
-              rel="noopener noreferrer">Mereb Technologies</a
-            > and I run engineering there — the hiring bar, the delivery model, and the architecture decisions
-            behind every team we place.
+            I&rsquo;m Samuel Mussie, a software engineer in Addis Ababa. I build web and mobile
+            products end to end — which means I am as comfortable arguing about a foreign key as
+            about a keyboard-avoidance animation, and I think being unable to do both is a liability
+            rather than a specialism.
           </p>
           <p>
-            The short version of what we do: we give SaaS companies in Europe and the US dedicated
-            senior engineering teams, contracted through an EU entity, delivered from Addis Ababa.
-            The teams work inside the client’s process, on the client’s board, in the client’s
-            codebase. From the outside it looks like an in-house hire. That is the point.
+            Currently at <a href={site.companyUrl} target="_blank" rel="noopener noreferrer"
+              >Mereb Technologies</a
+            >, building products for clients in Europe and the US: multi-tenant SaaS platforms,
+            procurement and telemedicine systems, mobile apps, and the AI features people now expect
+            all of those to have.
           </p>
 
-          <h2>How this started</h2>
+          <h2>How the range happened</h2>
           <p>
-            Before Mereb was a company it was a handful of us in Addis Ababa taking contracts
-            individually. Node and Python services, React front ends, iOS and Flutter apps, a few
-            Telegram bots that solved distinctly Ethiopian problems. Good work, no shortage of it.
+            Before that I spent four years contracting, and contracting does not let you pick your
+            stack. A client is already on Java, or PHP, or has an iOS app and no Android one, and
+            the job is to be useful inside that — not to explain what you would have chosen.
           </p>
           <p>
-            In 2021 we stopped doing that and built a company instead, because freelancing has a
-            ceiling and it sits in three specific places: you cannot bid on the two-year embedded
-            engagements that are the most interesting work; you cannot say no in a way that means
-            anything; and you cannot build a quality bar that survives you.
+            So: Node and Python services, React front ends, a Flutter app, a native Swift app, PHP
+            where PHP was already running, and a handful of Telegram bots that solved distinctly
+            Ethiopian problems. Eight languages in production is not a badge. It is just what
+            happens if you say yes for long enough and refuse to be bad at the unfamiliar half.
           </p>
           <p>
-            That last one is what decided it. Individually, quality is a fact about you.
-            Collectively, it has to become something written, teachable and enforceable — or it
-            regresses to the mean of whoever you hired last.
+            What it did give me is calibration. When someone asks whether to go native or
+            cross-platform, I have shipped both within eighteen months of each other with comparable
+            scope, and my answer changes depending on their product rather than on my preference.
           </p>
 
-          <h2>What the job actually is</h2>
-          <p>
-            Mostly writing, which I did not expect. A distributed engineering organisation running
-            across six time zones is functionally a writing organisation: the decisions that survive
-            are the written ones, and the engineers who compound fastest are the ones who explain
-            themselves well.
-          </p>
-          <p>The rest of it comes down to three things I hold strictly:</p>
+          <h2>What I am actually good at</h2>
           <ul>
             <li>
-              <strong>The bar is not negotiable.</strong> Six-plus years of production experience, and
-              no juniors on client work. That policy has cost us deals, which is how I know it is a policy
-              and not a page on a website.
+              <strong>Data modelling that survives the UI.</strong> Screens get redesigned yearly; a badly-named
+              column is still there in five years with dashboards depending on it. The schema gets the
+              argument, and the front end gets the iteration.
             </li>
             <li>
-              <strong>Continuity is an architecture problem.</strong> After six months inside a client’s
-              system, an engineer knows which service has the undocumented retry and why a table has a
-              nullable column that should never be null. None of that is in the repository. Rotating them
-              out deletes it, so retention is something I design around.
+              <strong>Making failure legible.</strong> Observability, honest error messages, and reproductions
+              before fixes. A bug that went away is a bug that is still there.
             </li>
             <li>
-              <strong>The reference call is the product.</strong> Nobody in Berlin buys an Ethiopian engineering
-              team from a website. They buy it because another CTO told them it worked — which makes every
-              engagement a sales asset or a liability, with no third category.
+              <strong>Shipping thin slices all the way through.</strong> I would rather own a feature
+              from migration to deploy than a thick layer of one tier, because that is where you find
+              out what your API contract actually cost the client.
+            </li>
+            <li>
+              <strong>AI features that are mostly plumbing.</strong> Retrieval, chunking, citations, evaluation
+              sets, and a hard boundary between the model and anything that writes to a database. I built
+              a full RAG system end to end before advising anyone on one, because I refuse to advise from
+              blog posts.
             </li>
           </ul>
 
-          <h2>Where I still get my hands dirty</h2>
+          <h2>Where I still get my hands dirty on my own time</h2>
           <p>
-            Enough to have opinions I can defend. I built a full retrieval-augmented chat system end
-            to end before advising a single client on an AI feature, because I refuse to advise from
-            blog posts. I wrote a Flutter chat app in 2019 and a native Swift app in 2020 so that my
-            answer on cross-platform tradeoffs comes from having shipped both, with the same feature
-            set, eighteen months apart.
+            The side projects are the same instinct as the Flutter-versus-Swift experiment. Fantasy
+            Premier League tooling I use every week, a Jeopardy game for team nights, a URL
+            shortener built twice to see what the second attempt taught me. If a caching strategy
+            survives a Saturday when everyone opens the app at once, it is probably ready for
+            someone&rsquo;s production.
           </p>
           <p>
-            The side projects are the same instinct. Fantasy Premier League tooling I use every
-            week, a Jeopardy game for team nights, a URL shortener built twice to see what the
-            second attempt taught me. If a pattern survives a Saturday when everyone opens the app
-            at once, it is probably ready for someone’s production.
+            They are public for two reasons. Small complete programs teach better than large
+            incomplete ones. And a commit history going back to 2016 is a more honest CV than
+            anything I could write about myself.
           </p>
 
-          <h2>The thing underneath all of it</h2>
+          <h2>The one I keep coming back to</h2>
           <p>
             In 2020 I built a Telegram bot that <em>tried</em> to translate text into Amharic. I have
             never edited that word out of the repository description, because it was accurate and it dates
@@ -127,11 +122,11 @@ const description =
             problem, not a model problem.
           </p>
           <p>
-            Which is the same sentence I end up writing about most things. There is no shortage of
-            engineers in this city who could close that gap, or hold their own on any team in
-            Europe. There is a shortage of companies who have looked.
+            Five years and several model generations later, Amharic is still meaningfully behind —
+            not because it is harder than Hebrew or Arabic, but because far fewer people have been
+            paid to work on it. That is fixable, largely by people who speak the language, which is
+            a reasonable argument for where engineering capacity should sit.
           </p>
-          <p>Mereb is my argument that the looking is worth it.</p>
         </div>
       </div>
 
@@ -146,12 +141,8 @@ const description =
                 <dd class="text-right text-fg">{site.role}</dd>
               </div>
               <div class="flex justify-between gap-4">
-                <dt class="text-subtle">Company</dt>
-                <dd class="text-right text-fg">
-                  <a href={site.companyUrl} target="_blank" rel="noopener noreferrer" class="link"
-                    >Mereb Technologies</a
-                  >
-                </dd>
+                <dt class="text-subtle">Focus</dt>
+                <dd class="text-right text-fg">Full-stack, web &amp; mobile</dd>
               </div>
               <div class="flex justify-between gap-4">
                 <dt class="text-subtle">Based in</dt>
@@ -160,6 +151,10 @@ const description =
               <div class="flex justify-between gap-4">
                 <dt class="text-subtle">Studied at</dt>
                 <dd class="text-right text-fg">Addis Ababa University</dd>
+              </div>
+              <div class="flex justify-between gap-4">
+                <dt class="text-subtle">Since</dt>
+                <dd class="text-right text-fg">2016</dd>
               </div>
               <div class="flex justify-between gap-4">
                 <dt class="text-subtle">Languages</dt>
@@ -207,9 +202,8 @@ const description =
                 >.
               </li>
               <li>
-                The <a href={site.companyUrl} target="_blank" rel="noopener noreferrer" class="link"
-                  >Mereb Podcast</a
-                > — our Amharic-language show putting Ethiopian engineers and founders on record.
+                Reading other people&rsquo;s codebases for fun, which is a strange hobby and the
+                most useful one I have.
               </li>
               <li>Advent of Code every December, in Python, badly, happily.</li>
               <li>Arguing that PHP runs more of the world than anyone admits.</li>
@@ -225,7 +219,7 @@ const description =
     index="05"
     eyebrow="Timeline"
     title="Where the time went."
-    lede="Anything I cannot verify publicly is left general rather than dressed up. If you need exact dates for a due-diligence process, ask and I will send them."
+    lede="Anything I cannot verify publicly is left general rather than dressed up. If you need exact dates or a formal CV, ask and I will send one."
     id="timeline"
   >
     <ol class="space-y-px overflow-hidden rounded-lg border border-line bg-line">
@@ -298,7 +292,7 @@ const description =
     index="06"
     eyebrow="Positions"
     title="What I will argue about."
-    lede="Each of these has cost us something at least once. That is the test."
+    lede="Each of these has cost me a weekend at least once. That is the test."
   >
     <div class="grid gap-x-10 gap-y-12 sm:grid-cols-2">
       {

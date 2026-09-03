@@ -7,33 +7,33 @@ import { Icon } from 'astro-icon/components';
 
 const title = 'Contact';
 const description =
-  'Get in touch with Samuel Mussie — co-founder and CTO of Mereb Technologies, Addis Ababa. Engineering teams, architecture reviews, AI features, delivery rescue.';
+  'Get in touch with Samuel Mussie — software engineer in Addis Ababa. Full-stack product work, AI features, mobile, and making an existing codebase safe to change.';
 
 const routes = [
   {
-    heading: 'You need a senior engineering team',
-    body: 'Tell me the product, the stack, and what is currently not getting shipped. I will tell you honestly whether we are the right shape for it, and roughly what it costs, in the first reply.',
-    icon: 'lucide:users-round',
-    cta: 'Email me the brief',
-    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Engineering team enquiry')}`,
+    heading: 'You need something built',
+    body: 'Tell me the problem, the stack, and what is currently not getting shipped. I will tell you honestly whether I am the right person, and roughly what it takes, in the first reply.',
+    icon: 'lucide:package-check',
+    cta: 'Send me the brief',
+    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Project enquiry')}`,
   },
   {
-    heading: 'You want a second opinion',
-    body: 'A stack choice, a migration, a hiring plan, or an AI feature someone has promised a board. Short engagements, written output, tradeoffs stated rather than an opinion delivered.',
-    icon: 'lucide:drafting-compass',
-    cta: 'Book a conversation',
-    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Architecture / advisory')}`,
+    heading: 'Your codebase has become frightening',
+    body: 'Changes take a week that used to take a day, nobody trusts the test suite, and the last deploy went badly. Types, tests, CI and observability, applied in the order that buys the most confidence soonest.',
+    icon: 'lucide:wrench',
+    cta: 'Describe the mess',
+    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Codebase hardening')}`,
   },
   {
-    heading: 'You are an engineer in Addis',
-    body: 'We hire at six-plus years and we mean it. Send me something you have built and the decision in it you are proudest of — not a CV. I read these myself.',
-    icon: 'lucide:code-xml',
-    cta: 'Show me your work',
-    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Engineer — work sample')}`,
+    heading: 'You want an AI feature that works',
+    body: 'Retrieval, evaluation sets, guardrails and cost control around a real product surface — not a demo. Usually the answer is a smaller model and better retrieval, and I can show you why.',
+    icon: 'lucide:sparkles',
+    cta: 'Talk about it',
+    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('AI feature')}`,
   },
   {
     heading: 'Something else entirely',
-    body: 'Podcast, panel, a student who wants to know how to get started, or a disagreement with something I wrote. The last one is the most welcome.',
+    body: 'A role you think fits, a podcast, a student who wants to know how to start, or a disagreement with something I wrote. The last one is the most welcome.',
     icon: 'lucide:message-square-quote',
     cta: 'Just say hello',
     ctaHref: `mailto:${site.email}`,
@@ -55,7 +55,7 @@ const routes = [
             style="--reveal-delay:60ms"
           >
             One inbox, read by me,<br class="hidden lg:block" />
-            <em class="italic text-accent">answered within a day.</em>
+            <em class="italic text-accent">and no discovery call first.</em>
           </h1>
           <div class="mt-8 flex flex-wrap gap-3" data-reveal style="--reveal-delay:120ms">
             <a href={`mailto:${site.email}`} class="btn btn-primary">
@@ -155,23 +155,26 @@ const routes = [
             </dd>
           </div>
           <div>
-            <dt class="text-subtle">Contracting</dt>
+            <dt class="text-subtle">Availability</dt>
             <dd class="mt-1 text-fg">
-              Mereb engagements are contracted through an EU entity. Invoicing in EUR or USD.
+              Open to contract work and to the right full-time role. Remote, with travel for
+              anything that genuinely needs a room.
             </dd>
           </div>
           <div>
-            <dt class="text-subtle">References</dt>
+            <dt class="text-subtle">Code samples</dt>
             <dd class="mt-1 text-fg">
-              Available on request — I will connect you directly with a CTO we work for rather than
-              send a testimonial.
+              Thirty-odd public repositories going back to 2016 — start with the
+              <a href={href('/work')} class="link">work</a> page. A formal CV on request.
             </dd>
           </div>
         </dl>
       </div>
 
       <div class="lg:col-span-4">
-        <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">What I do</h2>
+        <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">
+          What I&rsquo;m hired for
+        </h2>
         <ul class="mt-5 space-y-3">
           {
             services.map((s) => (

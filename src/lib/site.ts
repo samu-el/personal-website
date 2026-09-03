@@ -7,18 +7,19 @@ export const site = {
   name: 'Samuel Mussie',
   shortName: 'Samuel',
   initials: 'SM',
-  role: 'Co-founder & CTO',
+  role: 'Software Engineer',
+  location: 'Addis Ababa, Ethiopia',
+  /** Current employer. Referenced in the timeline only — not part of the pitch. */
   company: 'Mereb Technologies',
   companyUrl: 'https://www.mereb.tech',
-  location: 'Addis Ababa, Ethiopia',
   locale: 'en',
   timezone: 'Africa/Addis_Ababa',
   email: 'samuel@mereb.tech',
   /** Used in <title> suffix and OG site name. */
-  title: 'Samuel Mussie — Co-founder & CTO, Mereb Technologies',
-  tagline: 'Building senior engineering teams out of Addis Ababa.',
+  title: 'Samuel Mussie — Software Engineer',
+  tagline: 'I ship the boring version of hard problems.',
   description:
-    'Samuel Mussie is co-founder and CTO of Mereb Technologies in Addis Ababa, where he builds dedicated senior engineering teams for SaaS companies in Europe and the US.',
+    'Samuel Mussie is a software engineer in Addis Ababa. A decade of building web and mobile products end to end — Python and TypeScript services, React and Next.js front ends, Flutter and native mobile, and the retrieval systems behind AI features that hold up in production.',
 } as const;
 
 export type NavItem = { label: string; href: string; index: string };
@@ -41,27 +42,21 @@ export type Social = {
 
 export const socials: Social[] = [
   {
-    label: 'LinkedIn',
-    handle: 'in/samu-el',
-    href: 'https://www.linkedin.com/in/samu-el/',
-    icon: 'simple-icons:linkedin',
-  },
-  {
     label: 'GitHub',
     handle: '@samu-el',
     href: 'https://github.com/samu-el',
     icon: 'simple-icons:github',
   },
   {
+    label: 'LinkedIn',
+    handle: 'in/samu-el',
+    href: 'https://www.linkedin.com/in/samu-el/',
+    icon: 'simple-icons:linkedin',
+  },
+  {
     label: 'Email',
     handle: site.email,
     href: `mailto:${site.email}`,
     icon: 'lucide:mail',
-  },
-  {
-    label: 'Mereb',
-    handle: 'mereb.tech',
-    href: 'https://www.mereb.tech',
-    icon: 'lucide:building-2',
   },
 ];

@@ -26,31 +26,21 @@ const BASE = `${ORIGIN}${BASE_PATH}`;
 const OUT = process.env.SHOT_DIR ?? '.screenshots';
 await mkdir(OUT, { recursive: true });
 
+// Routes are read from the built sitemap, so adding a page or renaming a post
+// cannot leave this suite silently checking a stale list.
+const sitemapRes = await fetch(`${BASE}/sitemap-0.xml`);
+if (!sitemapRes.ok) throw new Error(`sitemap-0.xml -> HTTP ${sitemapRes.status}`);
+const sitemap = await sitemapRes.text();
 const routes = [
-  '/',
-  '/about',
-  '/work',
-  '/writing',
-  '/stack',
-  '/contact',
+  ...new Set(
+    [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
+      .map((m) => new URL(m[1]).pathname.replace(BASE_PATH, '') || '/')
+      .map((p) => (p.length > 1 ? p.replace(/\/$/, '') : p)),
+  ),
   '/404',
-  '/work/apadua',
-  '/work/exam-results-bot',
-  '/work/telemed',
-  '/work/rag-chatbot',
-  '/work/short-et',
-  '/work/fantasy-pl',
-  '/work/amharic-bot',
-  '/work/jeopardy',
-  '/work/fchat',
-  '/work/restaurant-ios',
-  '/work/utilities',
-  '/writing/what-senior-means',
-  '/writing/the-handover-is-the-product',
-  '/writing/rag-in-production',
-  '/writing/amharic-is-not-hard',
-  '/writing/freelancers-to-company',
 ];
+if (routes.length < 20) throw new Error(`sitemap yielded only ${routes.length} routes`);
+console.log(`Checking ${routes.length} routes…`);
 
 const browser = await chromium.launch({
   // Honour a preinstalled browser when one is provided (CI images, sandboxes).
@@ -203,7 +193,7 @@ for (const [w, h, tag] of [
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   for (const [path, must] of [
-    ['/rss.xml', ['<rss', 'What ‘senior’', '<language>en-us</language>']],
+    ['/rss.xml', ['<rss', '<language>en-us</language>', '<item>']],
     ['/sitemap-index.xml', ['<sitemapindex']],
     ['/robots.txt', ['Sitemap:', 'User-agent: *']],
   ]) {

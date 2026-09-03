@@ -14,7 +14,7 @@ const projects = (await getCollection('projects', ({ data }) => isPublished(data
 const kinds = [...new Set(projects.map((p) => p.data.kind))].sort();
 const title = 'Work';
 const description =
-  'Client engagements, products and open-source tools by Samuel Mussie — embedded engineering teams, telemedicine, RAG systems, and a decade of small sharp utilities.';
+  'Client work, products and open-source tools by Samuel Mussie — telemedicine and SaaS platforms, RAG systems, mobile apps, and a decade of small sharp utilities.';
 ---
 
 <Layout {title} {description} path="/work">
@@ -79,9 +79,10 @@ const description =
 
     <div class="mt-16 border-t border-line pt-10">
       <p class="max-w-2xl text-[0.9375rem] leading-relaxed text-muted">
-        Most of what I build now ships under a client’s name and stays there. If you want to talk
-        about work that is not on this page, the reference calls are the better route —
-        <a href={href('/contact')} class="link">ask me</a> and I will connect you with a CTO we work for.
+        Most of what I build now ships under a client’s name and stays there, so this page leans on
+        the work I can show. If you want to talk about the rest —
+        <a href={href('/contact')} class="link">ask me</a>, and I can walk you through it or put you
+        in touch with someone I have built for.
       </p>
       <a
         href="https://github.com/samu-el?tab=repositories"

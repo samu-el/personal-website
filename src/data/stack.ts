@@ -92,10 +92,10 @@ export const stack: StackGroup[] = [
     ],
   },
   {
-    title: 'How the work runs',
+    title: 'Day to day',
     index: '06',
     blurb:
-      'Running a distributed engineering org is mostly a writing problem. These are the tools that make the writing stick.',
+      'Most of engineering at distance is a writing problem. These are the tools that make the writing stick.',
     items: [
       { name: 'Git', note: 'small commits, honest messages', icon: 'simple-icons:git' },
       { name: 'Linear', note: 'one queue, ruthlessly groomed', icon: 'simple-icons:linear' },
@@ -109,26 +109,26 @@ export const stack: StackGroup[] = [
 
 export type Service = { title: string; body: string; icon: string };
 
-/** What people actually come to me for. */
+/** What people actually hire me for. */
 export const services: Service[] = [
   {
-    title: 'Embedded engineering teams',
-    body: 'A senior team that works inside your process on your board and your codebase, under an EU contract, from Addis Ababa. Scoped in weeks, not quarters.',
-    icon: 'lucide:users-round',
+    title: 'Product engineering, end to end',
+    body: 'Take a problem to a shipped product: schema, API, front end, deploy pipeline, and the notes that let someone else operate it. I would rather own a thin slice all the way through than a thick slice of one layer.',
+    icon: 'lucide:package-check',
   },
   {
-    title: 'Fractional CTO & architecture review',
-    body: 'For founders who need the call made on a stack, a migration, or a hiring plan — and want it written down with the tradeoffs, not delivered as an opinion.',
-    icon: 'lucide:drafting-compass',
-  },
-  {
-    title: 'AI features that survive contact with users',
-    body: 'Retrieval, evals, guardrails and cost controls around a real product surface. Usually the answer is a smaller model and better retrieval.',
+    title: 'AI features that survive real users',
+    body: 'Retrieval, evaluation sets, guardrails and cost control around an actual product surface. Usually the answer is a smaller model and better retrieval — most of the work is plumbing, not prompting.',
     icon: 'lucide:sparkles',
   },
   {
-    title: 'Delivery rescue',
-    body: 'A late project, an unhappy client, a team that has stopped shipping. I have been on both sides of that call and can tell you which of the three it actually is.',
-    icon: 'lucide:life-buoy',
+    title: 'Mobile, either way',
+    body: 'Flutter when one team has to ship both platforms and the UI is yours to define; native when the product lives or dies on platform feel. I have shipped both within eighteen months of each other, so the recommendation comes from experience rather than a keynote.',
+    icon: 'lucide:smartphone',
+  },
+  {
+    title: 'Making a codebase safe to change again',
+    body: 'Types, tests, CI, and the boring observability that turns an unreproducible incident into a failing test. The goal is not elegance — it is that the next change stops being frightening.',
+    icon: 'lucide:wrench',
   },
 ];

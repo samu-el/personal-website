@@ -1,8 +1,7 @@
 # samuelmussie — personal site
 
-The personal site of **Samuel Mussie**, co-founder and CTO of
-[Mereb Technologies](https://www.mereb.tech) in Addis Ababa: bio, selected work, writing, and
-the stack behind it.
+The personal site of **Samuel Mussie**, a software engineer in Addis Ababa: bio, selected work,
+writing, and the stack behind it.
 
 Built with [Astro](https://astro.build) and [Tailwind CSS](https://tailwindcss.com), shipped as
 static HTML, deployed to GitHub Pages by GitHub Actions. No client framework — the JavaScript on
@@ -89,6 +88,9 @@ Body in Markdown.
 ```
 
 Reading time is computed from the body; set `readingTime` to override it.
+
+The smoke suite reads its route list from the built sitemap, so a new page or a renamed post is
+covered automatically.
 
 ### Adding a project
 
