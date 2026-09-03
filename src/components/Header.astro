@@ -2,6 +2,8 @@
 import { nav, site } from '@/lib/site';
 import { href, isActive } from '@/lib/paths';
 import { hasWriting, visibleNav } from '@/lib/posts';
+import { Image } from 'astro:assets';
+import avatar from '@/assets/avatar.jpg';
 import ThemeToggle from './ThemeToggle.astro';
 
 const current = Astro.url.pathname;
@@ -29,10 +31,14 @@ const items = await visibleNav();
       class="group flex items-center gap-2.5 -ml-1 rounded-full px-1 py-1"
       aria-label={`${site.name} — home`}
     >
-      <span
-        class="grid size-8 place-items-center rounded-full border border-line-strong font-mono text-[11px] font-medium tracking-tight text-fg transition-colors duration-300 group-hover:border-accent group-hover:text-accent"
-        aria-hidden="true">{site.initials}</span
-      >
+      <Image
+        src={avatar}
+        alt=""
+        width={72}
+        height={72}
+        loading="eager"
+        class="size-8 shrink-0 rounded-full object-cover ring-1 ring-line-strong transition-[box-shadow] duration-300 group-hover:ring-accent"
+      />
       <span class="flex flex-col leading-none">
         <span class="text-[0.9375rem] font-medium tracking-tight">{site.name}</span>
         <span
