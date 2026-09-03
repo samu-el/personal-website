@@ -1,0 +1,6 @@
+Posts go here as Markdown files. The Writing section — its nav link, the home
+page section, the RSS feed and the sitemap entry — appears automatically the
+moment a publishable post exists, and disappears when none do.
+
+A post with `aiWritten: true` or `draft: true` in its frontmatter is never
+rendered in production. See src/content.config.ts for the full schema.

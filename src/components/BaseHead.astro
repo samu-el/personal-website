@@ -1,6 +1,7 @@
 ---
 import { site } from '@/lib/site';
 import { href } from '@/lib/paths';
+import { hasWriting } from '@/lib/posts';
 import '@/styles/global.css';
 
 interface Props {
@@ -28,6 +29,8 @@ const {
   tags = [],
   noindex = false,
 } = Astro.props;
+
+const hasFeed = await hasWriting();
 
 const canonical = new URL(href(path), Astro.site ?? 'https://samu-el.github.io');
 const ogImage = new URL(href(image), Astro.site ?? 'https://samu-el.github.io');
@@ -88,12 +91,16 @@ const personSchema = {
 <link rel="icon" href={href('/favicon.svg')} type="image/svg+xml" />
 <link rel="apple-touch-icon" href={href('/apple-touch-icon.png')} />
 <link rel="manifest" href={href('/manifest.webmanifest')} />
-<link
-  rel="alternate"
-  type="application/rss+xml"
-  title={`${site.name} — Writing`}
-  href={href('/rss.xml')}
-/>
+{
+  hasFeed && (
+    <link
+      rel="alternate"
+      type="application/rss+xml"
+      title={`${site.name} — Writing`}
+      href={href('/rss.xml')}
+    />
+  )
+}
 <link rel="sitemap" href={href('/sitemap-index.xml')} />
 
 <!-- Open Graph -->

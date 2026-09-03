@@ -5,6 +5,7 @@ import Section from '@/components/Section.astro';
 import ProjectCard from '@/components/ProjectCard.astro';
 import PostCard from '@/components/PostCard.astro';
 import { site, socials } from '@/lib/site';
+import { publishedPosts } from '@/lib/posts';
 import { href } from '@/lib/paths';
 import { metrics, principles } from '@/data/experience';
 import { services } from '@/data/stack';
@@ -16,9 +17,7 @@ const projects = (await getCollection('projects', ({ data }) => isPublished(data
   .filter((p) => p.data.featured && !p.data.hidden)
   .sort((a, b) => b.data.weight - a.data.weight);
 
-const posts = (await getCollection('posts', ({ data }) => isPublished(data)))
-  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-  .slice(0, 3);
+const posts = (await publishedPosts()).slice(0, 3);
 
 const marquee = [
   'TypeScript',
@@ -264,26 +263,32 @@ const marquee = [
     </div>
   </Section>
 
-  <!-- ── Writing ──────────────────────────────────────────────────── -->
-  <Section
-    index="04"
-    eyebrow="Writing"
-    title="Notes from the unglamorous half."
-    lede="Systems design, mobile tradeoffs, and what actually breaks when AI features meet real users. Written because I had to work it out and could not find the honest version anywhere."
-    id="writing"
-  >
-    <div>
-      {posts.map((post, i) => <PostCard post={post} index={i} />)}
-    </div>
-    <div class="mt-10 flex flex-wrap gap-3">
-      <a href={href('/writing')} class="btn btn-ghost">
-        All writing
-        <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
-      </a>
-      <a href={href('/rss.xml')} class="btn btn-ghost">
-        <Icon name="lucide:rss" class="size-4" aria-hidden="true" />
-        RSS
-      </a>
-    </div>
-  </Section>
+  <!-- ── Writing (only when there is something published) ──────────── -->
+  {
+    posts.length > 0 && (
+      <Section
+        index="04"
+        eyebrow="Writing"
+        title="Notes from the unglamorous half."
+        lede="Systems design, mobile tradeoffs, and what actually breaks when AI features meet real users. Written because I had to work it out and could not find the honest version anywhere."
+        id="writing"
+      >
+        <div>
+          {posts.map((post, i) => (
+            <PostCard post={post} index={i} />
+          ))}
+        </div>
+        <div class="mt-10 flex flex-wrap gap-3">
+          <a href={href('/writing')} class="btn btn-ghost">
+            All writing
+            <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
+          </a>
+          <a href={href('/rss.xml')} class="btn btn-ghost">
+            <Icon name="lucide:rss" class="size-4" aria-hidden="true" />
+            RSS
+          </a>
+        </div>
+      </Section>
+    )
+  }
 </Layout>

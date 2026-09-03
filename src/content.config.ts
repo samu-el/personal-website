@@ -45,6 +45,13 @@ const posts = defineCollection({
     readingTime: z.number().optional(),
     featured: z.boolean().default(false),
     draft: z.boolean().default(false),
+    /**
+     * Written or drafted by an AI rather than by Samuel. Treated exactly like
+     * `draft` in production: never rendered, never in the feed or sitemap.
+     * The flag exists so the policy is enforced by the build rather than
+     * remembered — flip it to false only for something you actually wrote.
+     */
+    aiWritten: z.boolean().default(false),
   }),
 });
 

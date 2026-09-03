@@ -1,5 +1,6 @@
 ---
 import Layout from '@/layouts/Layout.astro';
+import { navIndex } from '@/lib/posts';
 import Section from '@/components/Section.astro';
 import { site, socials } from '@/lib/site';
 import { href } from '@/lib/paths';
@@ -9,6 +10,8 @@ import { Icon } from 'astro-icon/components';
 const title = 'About';
 const description =
   'Samuel Mussie — software engineer in Addis Ababa. Ten years building web and mobile products end to end, across eight languages and three platforms.';
+
+const index = await navIndex('/about');
 ---
 
 <Layout {title} {description} path="/about" type="profile">
@@ -17,7 +20,7 @@ const description =
     <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
     </div>
     <div class="wrap relative py-16 lg:py-24">
-      <p class="eyebrow" data-reveal>02 &nbsp;About</p>
+      <p class="eyebrow" data-reveal>{index} &nbsp;About</p>
       <div class="mt-7 grid gap-10 lg:grid-cols-12 lg:gap-8">
         <div class="lg:col-span-7">
           <h1
