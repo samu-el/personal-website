@@ -58,7 +58,7 @@ const routes = [
             style="--reveal-delay:60ms"
           >
             Get in touch.
-            <em class="block italic text-accent">One inbox, read by me.</em>
+            <em class="block italic text-accent">samuel@mereb.tech</em>
           </h1>
           <div class="mt-8 flex flex-wrap gap-3" data-reveal style="--reveal-delay:120ms">
             <a href={`mailto:${site.email}`} class="btn btn-primary">
@@ -152,8 +152,8 @@ const routes = [
           <div>
             <dt class="text-subtle">Working hours</dt>
             <dd class="mt-1 text-fg">
-              09:00 – 18:00 EAT (GMT+3). Overlaps a full European working day and the first half of
-              a US East Coast one.
+              09:00 – 18:00 EAT (GMT+3). Overlaps European working hours and the first half of the
+              US East Coast day.
             </dd>
           </div>
           <div>
@@ -176,9 +176,7 @@ const routes = [
       </div>
 
       <div class="lg:col-span-4">
-        <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">
-          What I&rsquo;m hired for
-        </h2>
+        <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Types of work</h2>
         <ul class="mt-5 space-y-3">
           {
             services.map((s) => (
@@ -193,7 +191,7 @@ const routes = [
           }
         </ul>
         <a href={href('/work')} class="btn btn-ghost mt-7 !px-4 !py-2 !text-[0.8125rem]">
-          See the work
+          Selected work
           <Icon name="lucide:arrow-right" class="size-3.5" aria-hidden="true" />
         </a>
       </div>
