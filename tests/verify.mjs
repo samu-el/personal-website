@@ -229,12 +229,19 @@ const hasPosts = await (async () => {
   }
 
   await page.goto(`${BASE}/work`, { waitUntil: 'load' });
-  const counts = await page.evaluate(() => ({
+  const workPage = await page.evaluate(() => ({
     cards: document.querySelectorAll('article').length,
-    repoLinks: document.querySelectorAll('a[href*="github.com/samu-el/"]').length,
+    // Hidden projects are not re-listed here; the page points at GitHub instead.
+    hiddenListed: document.querySelectorAll('main ul a[href*="github.com/samu-el/"]').length,
+    exploreLink: [...document.querySelectorAll('a')].some((a) =>
+      /github\.com\/samu-el\?tab=repositories/.test(a.href),
+    ),
   }));
-  if (counts.cards !== 1) issues.push(`/work shows ${counts.cards} project cards, expected 1`);
-  if (counts.repoLinks < 5) issues.push(`/work lists only ${counts.repoLinks} repo links`);
+  if (workPage.cards !== 1) issues.push(`/work shows ${workPage.cards} project cards, expected 1`);
+  if (workPage.hiddenListed > 0) {
+    issues.push(`/work re-lists ${workPage.hiddenListed} hidden projects`);
+  }
+  if (!workPage.exploreLink) issues.push('/work has no link out to the GitHub profile');
   await ctx.close();
 }
 
