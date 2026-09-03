@@ -1,0 +1,8 @@
+# Build output and dependencies
+dist/
+.astro/
+node_modules/
+package-lock.json
+
+# Prose is authored by hand — let the line breaks be intentional.
+src/content/

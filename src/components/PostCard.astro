@@ -1,0 +1,67 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { href } from '@/lib/paths';
+import { formatDate, readingTime } from '@/lib/format';
+import { Icon } from 'astro-icon/components';
+
+interface Props {
+  post: CollectionEntry<'posts'>;
+  index?: number;
+  /** Compact single-line variant for sidebars and "more reading" lists. */
+  compact?: boolean;
+}
+
+const { post, index, compact = false } = Astro.props;
+const minutes = post.data.readingTime ?? readingTime(post.body);
+---
+
+{
+  compact ? (
+    <a
+      href={href(`/writing/${post.id}`)}
+      class="group flex items-baseline justify-between gap-6 border-b border-line py-4 transition-colors last:border-b-0"
+    >
+      <span class="text-[0.9375rem] tracking-tight text-fg transition-colors group-hover:text-accent">
+        {post.data.title}
+      </span>
+      <span class="shrink-0 font-mono text-2xs tracking-wide text-subtle">
+        {formatDate(post.data.pubDate, { day: undefined, month: 'short' })}
+      </span>
+    </a>
+  ) : (
+    <article
+      class="group border-b border-line py-8 first:pt-0"
+      data-reveal
+      style={index !== undefined ? `--reveal-delay:${Math.min(index, 6) * 70}ms` : undefined}
+    >
+      <a href={href(`/writing/${post.id}`)} class="grid gap-4 lg:grid-cols-12 lg:gap-8">
+        <div class="lg:col-span-3">
+          <p class="flex items-center gap-2.5 font-mono text-2xs uppercase tracking-[0.12em] text-subtle">
+            <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
+          </p>
+          <p class="mt-1.5 font-mono text-2xs tracking-wide text-subtle">{minutes} min read</p>
+        </div>
+        <div class="lg:col-span-9">
+          <h3 class="text-[clamp(1.25rem,2.4vw,1.6rem)] font-medium leading-snug tracking-tight">
+            <span class="link">{post.data.title}</span>
+            <Icon
+              name="lucide:arrow-up-right"
+              class="ml-0.5 inline-block size-[0.75em] -translate-y-px text-subtle transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-1 group-hover:text-accent"
+              aria-hidden="true"
+            />
+          </h3>
+          <p class="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-muted">
+            {post.data.description}
+          </p>
+          {post.data.tags.length > 0 && (
+            <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="Tags">
+              {post.data.tags.map((t) => (
+                <li class="chip">{t}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </a>
+    </article>
+  )
+}

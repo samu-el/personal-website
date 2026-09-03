@@ -1,0 +1,290 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import Section from '@/components/Section.astro';
+import ProjectCard from '@/components/ProjectCard.astro';
+import PostCard from '@/components/PostCard.astro';
+import { site, socials } from '@/lib/site';
+import { href } from '@/lib/paths';
+import { metrics, principles } from '@/data/experience';
+import { services } from '@/data/stack';
+import { Icon } from 'astro-icon/components';
+
+const isPublished = (d: { draft?: boolean }) => import.meta.env.DEV || !d.draft;
+
+const projects = (await getCollection('projects', ({ data }) => isPublished(data)))
+  .filter((p) => p.data.featured)
+  .sort((a, b) => b.data.weight - a.data.weight)
+  .slice(0, 4);
+
+const posts = (await getCollection('posts', ({ data }) => isPublished(data)))
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+  .slice(0, 3);
+
+const marquee = [
+  'TypeScript',
+  'Python',
+  'React',
+  'Next.js',
+  'FastAPI',
+  'PostgreSQL',
+  'AWS',
+  'Flutter',
+  'Docker',
+  'RAG',
+  'Swift',
+  'Terraform',
+];
+---
+
+<Layout title={site.title} description={site.description} path="/" type="profile">
+  <!-- ── Hero ─────────────────────────────────────────────────────── -->
+  <section class="relative overflow-hidden">
+    <!-- Quarter-column hairlines, echoing the grid the layout is built on -->
+    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
+    </div>
+    <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-line" aria-hidden="true"></div>
+
+    <div class="wrap relative pb-16 pt-14 lg:pb-24 lg:pt-24">
+      <p class="eyebrow" data-reveal>
+        <span class="flex items-center gap-2">
+          <span class="relative flex size-1.5">
+            <span
+              class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-70"
+            ></span>
+            <span class="relative inline-flex size-1.5 rounded-full bg-jade"></span>
+          </span>
+          Available for work
+        </span>
+        <span class="hidden text-line-strong sm:inline" aria-hidden="true">/</span>
+        <span class="hidden sm:inline">{site.location}</span>
+      </p>
+
+      <h1
+        class="display mt-8 text-[clamp(2.35rem,7.9vw,6.25rem)]"
+        data-reveal
+        style="--reveal-delay:60ms"
+      >
+        No software engineering problem<br />
+        <em class="italic text-accent">is too big to solve.</em>
+      </h1>
+
+      <div class="mt-12 grid gap-12 lg:mt-16 lg:grid-cols-12 lg:gap-10">
+        <div class="lg:col-span-7">
+          <div class="max-w-2xl space-y-4" data-reveal style="--reveal-delay:140ms">
+            <p class="text-[1.0625rem] leading-relaxed text-muted lg:text-lg">
+              I&rsquo;m <strong class="font-medium text-fg">Samuel Mussie</strong>, a software
+              engineer in Addis Ababa. Ten years of building web and mobile products end to end —
+              Python and TypeScript services, React and Next.js front ends, Flutter and native
+              mobile, and the retrieval systems behind AI features that hold up once real users
+              arrive.
+            </p>
+            <p class="text-[0.9375rem] leading-relaxed text-subtle">
+              I like the unfashionable parts: the schema, the failure modes, the error message
+              someone reads on the worst day of their week.
+            </p>
+          </div>
+
+          <div class="mt-9 flex flex-wrap gap-3" data-reveal style="--reveal-delay:200ms">
+            <a href={href('/work')} class="btn btn-primary">
+              See the work
+              <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
+            </a>
+            <a href={href('/about')} class="btn btn-ghost">Read the long version</a>
+          </div>
+
+          <ul class="mt-9 flex flex-wrap gap-x-6 gap-y-3" data-reveal style="--reveal-delay:260ms">
+            {
+              socials.map((s) => (
+                <li>
+                  <a
+                    href={s.href}
+                    target={s.href.startsWith('http') ? '_blank' : undefined}
+                    rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
+                    class="group inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-fg"
+                  >
+                    <Icon name={s.icon} class="size-3.5" aria-hidden="true" />
+                    {s.handle}
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <!-- "Currently" panel -->
+        <aside class="lg:col-span-4 lg:col-start-9" data-reveal style="--reveal-delay:320ms">
+          <div class="card rounded-lg p-6">
+            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Currently</h2>
+            <dl class="mt-5 space-y-4 text-sm">
+              <div>
+                <dt class="text-subtle">Doing</dt>
+                <dd class="mt-1 leading-snug text-fg">
+                  Full-stack product engineering — TypeScript, Python, React, PostgreSQL.
+                </dd>
+              </div>
+              <div class="rule"></div>
+              <div>
+                <dt class="text-subtle">Based in</dt>
+                <dd class="mt-1 leading-snug text-fg">
+                  Addis Ababa, Ethiopia
+                  <span class="ml-1 font-mono text-2xs text-subtle">(GMT+3)</span>
+                </dd>
+              </div>
+              <div class="rule"></div>
+              <div>
+                <dt class="text-subtle">Learning</dt>
+                <dd class="mt-1 leading-snug text-fg">
+                  Where retrieval quality beats model size, and how to evaluate it before shipping
+                  rather than after.
+                </dd>
+              </div>
+              <div class="rule"></div>
+              <div>
+                <dt class="text-subtle">Available for</dt>
+                <dd class="mt-1 leading-snug text-fg">
+                  Contract and full-time work, remote across EU and US hours.
+                </dd>
+              </div>
+            </dl>
+            <a
+              href={href('/contact')}
+              class="mt-6 inline-flex w-full items-center justify-between rounded-md border border-line px-4 py-3 text-sm transition-colors hover:border-accent hover:text-accent"
+            >
+              Start a conversation
+              <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
+            </a>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- Stack marquee -->
+    <div class="relative border-y border-line bg-sunken py-4">
+      <div class="mask-fade-r flex overflow-hidden" aria-hidden="true">
+        <ul class="flex shrink-0 animate-marquee items-center gap-10 pr-10">
+          {
+            [...marquee, ...marquee].map((m) => (
+              <li class="whitespace-nowrap font-mono text-2xs uppercase tracking-[0.18em] text-subtle">
+                {m}
+                <span class="ml-10 text-line-strong">◆</span>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+      <p class="sr-only">
+        Core stack: {marquee.join(', ')}.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Metrics ──────────────────────────────────────────────────── -->
+  <div class="wrap py-14 lg:py-16">
+    <dl class="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
+      {
+        metrics.map((m, i) => (
+          <div data-reveal style={`--reveal-delay:${i * 70}ms`}>
+            <dt class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">{m.label}</dt>
+            <dd class="display mt-2 text-[clamp(2rem,4.5vw,2.9rem)] text-fg">{m.value}</dd>
+            {m.note && <p class="mt-1.5 text-[0.8125rem] leading-snug text-subtle">{m.note}</p>}
+          </div>
+        ))
+      }
+    </dl>
+  </div>
+
+  <!-- ── Services ─────────────────────────────────────────────────── -->
+  <Section
+    index="01"
+    eyebrow="What I’m hired for"
+    title="Four things people hire me to do."
+    lede="I work across the stack rather than specialising into a corner, because the interesting bugs live at the seams. I would rather tell you a job is the wrong fit than take it and find out together."
+    id="services"
+  >
+    <div class="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
+      {
+        services.map((s, i) => (
+          <div
+            class="group relative bg-surface p-7 transition-colors duration-300 hover:bg-surface-2 lg:p-8"
+            data-reveal
+            style={`--reveal-delay:${i * 70}ms`}
+          >
+            <Icon
+              name={s.icon}
+              class="size-5 text-subtle transition-colors duration-300 group-hover:text-accent"
+              aria-hidden="true"
+            />
+            <h3 class="mt-5 text-lg font-medium tracking-tight">{s.title}</h3>
+            <p class="mt-3 text-[0.9375rem] leading-relaxed text-muted">{s.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <!-- ── Selected work ────────────────────────────────────────────── -->
+  <Section
+    index="02"
+    eyebrow="Selected work"
+    title="Things I have built."
+    lede="Client work, products, and the side projects I use to keep an honest opinion about a stack. Every repository linked here is public — including the ones that did not work."
+    id="work"
+  >
+    <div class="grid gap-5 lg:grid-cols-2">
+      {projects.map((p, i) => <ProjectCard project={p} index={i} feature={i === 0} />)}
+    </div>
+    <div class="mt-10 flex justify-start">
+      <a href={href('/work')} class="btn btn-ghost">
+        All work
+        <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
+      </a>
+    </div>
+  </Section>
+
+  <!-- ── Principles ───────────────────────────────────────────────── -->
+  <Section
+    index="03"
+    eyebrow="How I think"
+    title="Four positions I will defend."
+    lede="Not values on a wall. Each of these has cost me a weekend at least once, which is the only way to find out whether you actually hold it."
+    id="principles"
+  >
+    <div class="grid gap-x-10 gap-y-12 sm:grid-cols-2">
+      {
+        principles.map((p, i) => (
+          <div class="border-t border-line pt-6" data-reveal style={`--reveal-delay:${i * 70}ms`}>
+            <div class="flex items-center gap-3">
+              <Icon name={p.icon} class="size-4 text-accent" aria-hidden="true" />
+              <h3 class="text-[1.0625rem] font-medium tracking-tight">{p.title}</h3>
+            </div>
+            <p class="mt-3.5 max-w-lg text-[0.9375rem] leading-relaxed text-muted">{p.body}</p>
+          </div>
+        ))
+      }
+    </div>
+  </Section>
+
+  <!-- ── Writing ──────────────────────────────────────────────────── -->
+  <Section
+    index="04"
+    eyebrow="Writing"
+    title="Notes from the unglamorous half."
+    lede="Systems design, mobile tradeoffs, and what actually breaks when AI features meet real users. Written because I had to work it out and could not find the honest version anywhere."
+    id="writing"
+  >
+    <div>
+      {posts.map((post, i) => <PostCard post={post} index={i} />)}
+    </div>
+    <div class="mt-10 flex flex-wrap gap-3">
+      <a href={href('/writing')} class="btn btn-ghost">
+        All writing
+        <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
+      </a>
+      <a href={href('/rss.xml')} class="btn btn-ghost">
+        <Icon name="lucide:rss" class="size-4" aria-hidden="true" />
+        RSS
+      </a>
+    </div>
+  </Section>
+</Layout>

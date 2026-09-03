@@ -1,0 +1,48 @@
+---
+import Layout from '@/layouts/Layout.astro';
+import { nav } from '@/lib/site';
+import { href } from '@/lib/paths';
+import { Icon } from 'astro-icon/components';
+---
+
+<Layout title="Not found" description="That page does not exist." path="/404" noindex>
+  <section class="relative flex min-h-[70dvh] items-center overflow-hidden">
+    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
+    </div>
+    <div class="wrap relative py-20">
+      <p class="eyebrow">Error 404</p>
+      <h1 class="display mt-6 text-[clamp(3.5rem,14vw,9rem)]">
+        Not <em class="italic text-accent">found.</em>
+      </h1>
+      <p class="mt-6 max-w-lg text-[1.0625rem] leading-relaxed text-muted">
+        Either I moved it, or you typed it from memory. Both are recoverable — here is everything
+        that does exist:
+      </p>
+
+      <ul
+        class="mt-10 grid max-w-2xl gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2"
+      >
+        {
+          nav.map((item) => (
+            <li>
+              <a
+                href={href(item.href)}
+                class="group flex items-baseline gap-3 bg-surface px-5 py-4 transition-colors hover:bg-surface-2"
+              >
+                <span class="font-mono text-2xs text-subtle">{item.index}</span>
+                <span class="text-[0.9375rem] transition-colors group-hover:text-accent">
+                  {item.label}
+                </span>
+                <Icon
+                  name="lucide:arrow-right"
+                  class="ml-auto size-3.5 self-center text-subtle transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-accent"
+                  aria-hidden="true"
+                />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+</Layout>

@@ -1,0 +1,118 @@
+---
+/**
+ * Three-state theme control: system → light → dark → system.
+ * The applied theme is set before first paint by the inline script in Layout.astro,
+ * so there is no flash on load or navigation.
+ */
+---
+
+<button
+  type="button"
+  id="theme-toggle"
+  class="group relative grid h-9 w-9 place-items-center rounded-full border border-line text-muted transition-colors hover:border-line-strong hover:text-fg"
+  aria-label="Change colour theme"
+  title="Change colour theme"
+>
+  <!-- Each icon is shown by the data-theme attribute on <html> -->
+  <svg
+    class="theme-icon theme-icon--system size-[15px]"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    aria-hidden="true"
+  >
+    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+    <path d="M8 21h8m-4-4v4"></path>
+  </svg>
+  <svg
+    class="theme-icon theme-icon--light size-[15px]"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    aria-hidden="true"
+  >
+    <circle cx="12" cy="12" r="4"></circle>
+    <path
+      d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2 1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"
+    ></path>
+  </svg>
+  <svg
+    class="theme-icon theme-icon--dark size-[15px]"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="1.7"
+    stroke-linecap="round"
+    aria-hidden="true"
+  >
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path>
+  </svg>
+  <span class="sr-only" id="theme-state">System theme</span>
+</button>
+
+<style>
+  .theme-icon {
+    display: none;
+  }
+  :global(html[data-theme='system']) .theme-icon--system,
+  :global(html:not([data-theme])) .theme-icon--system {
+    display: block;
+  }
+  :global(html[data-theme='light']) .theme-icon--light {
+    display: block;
+  }
+  :global(html[data-theme='dark']) .theme-icon--dark {
+    display: block;
+  }
+</style>
+
+<script is:inline>
+  (() => {
+    const order = ['system', 'light', 'dark'];
+    const labels = {
+      system: 'System theme',
+      light: 'Light theme',
+      dark: 'Dark theme',
+    };
+
+    function apply(pref) {
+      const root = document.documentElement;
+      const isDark =
+        pref === 'dark' ||
+        (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      root.classList.toggle('dark', isDark);
+      root.dataset.theme = pref;
+      const state = document.getElementById('theme-state');
+      if (state) state.textContent = labels[pref];
+    }
+
+    function bind() {
+      const btn = document.getElementById('theme-toggle');
+      if (!btn || btn.dataset.bound === '1') return;
+      btn.dataset.bound = '1';
+      btn.addEventListener('click', () => {
+        const current = document.documentElement.dataset.theme || 'system';
+        const next = order[(order.indexOf(current) + 1) % order.length];
+        try {
+          if (next === 'system') localStorage.removeItem('theme');
+          else localStorage.setItem('theme', next);
+        } catch {
+          /* private mode — the choice just won't persist */
+        }
+        apply(next);
+      });
+    }
+
+    // Keep `system` honest when the OS preference changes mid-session.
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+      if ((document.documentElement.dataset.theme || 'system') === 'system') apply('system');
+    });
+
+    bind();
+    document.addEventListener('astro:page-load', bind);
+  })();
+</script>

@@ -1,0 +1,79 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '@/layouts/Layout.astro';
+import PostCard from '@/components/PostCard.astro';
+import { href } from '@/lib/paths';
+import { Icon } from 'astro-icon/components';
+
+const posts = (await getCollection('posts', ({ data }) => import.meta.env.DEV || !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+);
+
+const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
+const title = 'Writing';
+const description =
+  'Essays by Samuel Mussie on hiring senior engineers, running distributed teams, shipping RAG systems, and why African-language AI is an unfunded problem rather than a hard one.';
+---
+
+<Layout {title} {description} path="/writing">
+  <section class="relative overflow-hidden border-b border-line">
+    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
+    </div>
+    <div class="wrap relative py-16 lg:py-24">
+      <p class="eyebrow" data-reveal>04 &nbsp;Writing</p>
+      <div class="mt-7 grid gap-10 lg:grid-cols-12 lg:gap-8">
+        <div class="lg:col-span-7">
+          <h1
+            class="display text-[clamp(2.4rem,6.6vw,4.25rem)]"
+            data-reveal
+            style="--reveal-delay:60ms"
+          >
+            Things I had to figure out<br class="hidden lg:block" />
+            <em class="italic text-accent">and could not find written down.</em>
+          </h1>
+        </div>
+        <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
+          <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
+            Hiring, handovers, and what breaks when AI features meet real users. No cadence, no
+            newsletter — I publish when I have something I would defend in an argument.
+          </p>
+          <div class="mt-6 flex flex-wrap gap-3" data-reveal style="--reveal-delay:180ms">
+            <a href={href('/rss.xml')} class="btn btn-ghost !px-4 !py-2 !text-[0.8125rem]">
+              <Icon name="lucide:rss" class="size-3.5" aria-hidden="true" />
+              Subscribe via RSS
+            </a>
+          </div>
+        </div>
+      </div>
+
+      {
+        tags.length > 0 && (
+          <ul
+            class="mt-12 flex flex-wrap items-center gap-2"
+            aria-label="Topics"
+            data-reveal
+            style="--reveal-delay:220ms"
+          >
+            <li class="mr-1 font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Topics</li>
+            {tags.map((t) => (
+              <li class="chip">{t}</li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
+  </section>
+
+  <div class="wrap py-16 lg:py-20">
+    <div class="grid lg:grid-cols-12">
+      <div class="lg:col-span-10">
+        {posts.map((post, i) => <PostCard post={post} index={i} />)}
+      </div>
+    </div>
+    {
+      posts.length === 0 && (
+        <p class="py-16 text-muted">Nothing published yet. The drafts are worse than nothing.</p>
+      )
+    }
+  </div>
+</Layout>
