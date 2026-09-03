@@ -7,7 +7,7 @@ import { Icon } from 'astro-icon/components';
 
 const title = 'Stack';
 const description =
-  'The languages, frameworks and tools Samuel Mussie actually reaches for — ordered by how often, not by how impressive.';
+  'Languages, frameworks and tools used by Samuel Mussie in production: TypeScript, Python, React, Next.js, PostgreSQL, Flutter, AWS.';
 const total = stack.reduce((n, g) => n + g.items.length, 0);
 
 const index = await navIndex('/stack');
@@ -26,14 +26,13 @@ const index = await navIndex('/stack');
             data-reveal
             style="--reveal-delay:60ms"
           >
-            What I reach for,
-            <em class="block italic text-accent">and why it is usually boring.</em>
+            Languages, frameworks
+            <em class="block italic text-accent">and tools.</em>
           </h1>
         </div>
         <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
           <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
-            {total} tools across six groups. Spend the novelty budget where a user can feel it; everything
-            underneath should be the version a new engineer can debug in their first week.
+            {total} entries across six groups, covering production work in web, mobile and AI.
           </p>
         </div>
       </div>
@@ -95,26 +94,20 @@ const index = await navIndex('/stack');
     <section class="mt-20 border-t border-line pt-12 lg:mt-28">
       <div class="grid gap-8 lg:grid-cols-12 lg:gap-10">
         <div class="lg:col-span-4">
-          <p class="eyebrow" data-reveal>07 &nbsp;This site</p>
+          <p class="eyebrow" data-reveal>This site</p>
         </div>
         <div class="lg:col-span-7">
           <div class="prose" data-reveal style="--reveal-delay:60ms">
             <p>
-              Astro with content collections, Tailwind, and no client framework — the JavaScript on
-              this page is a theme toggle, a mobile menu, a scroll observer and a clock. Everything
-              else is HTML that was already finished when it arrived.
+              Astro with content collections, Tailwind CSS, and no client framework. The JavaScript
+              on a page is a theme toggle, a mobile menu, a scroll observer and a clock; there is no
+              JS bundle. Fonts are self-hosted.
             </p>
             <p>
-              Statically built, deployed by GitHub Actions to GitHub Pages, and <a
+              Built to static HTML, deployed to GitHub Pages by GitHub Actions, and <a
                 href="https://github.com/samu-el/personal-website"
                 target="_blank"
                 rel="noopener noreferrer">open source</a
-              >. Type scale, colour tokens and dark mode are defined once in one stylesheet, which
-              is the only way a design system survives contact with a second contributor.
-            </p>
-            <p>
-              If you want the same discipline applied to something of yours, <a
-                href={href('/contact')}>that is the job</a
               >.
             </p>
           </div>

@@ -8,40 +8,40 @@ import { Icon } from 'astro-icon/components';
 
 const title = 'Contact';
 const description =
-  'Get in touch with Samuel Mussie — software engineer in Addis Ababa. Full-stack product work, AI features, mobile, and making an existing codebase safe to change.';
+  'Contact Samuel Mussie — software engineer in Addis Ababa, Ethiopia. Available for contract and full-time work, remote across EU and US hours.';
+
+const index = await navIndex('/contact');
 
 const routes = [
   {
-    heading: 'You need something built',
-    body: 'Tell me the problem, the stack, and what is currently not getting shipped. I will tell you honestly whether I am the right person, and roughly what it takes, in the first reply.',
+    heading: 'Project work',
+    body: 'Full-stack web and mobile development: schema and services through to front end and deployment.',
     icon: 'lucide:package-check',
-    cta: 'Send me the brief',
+    cta: 'Email about a project',
     ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Project enquiry')}`,
   },
   {
-    heading: 'Your codebase has become frightening',
-    body: 'Changes take a week that used to take a day, nobody trusts the test suite, and the last deploy went badly. Types, tests, CI and observability, applied in the order that buys the most confidence soonest.',
-    icon: 'lucide:wrench',
-    cta: 'Describe the mess',
-    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Codebase hardening')}`,
+    heading: 'Roles',
+    body: 'Open to contract and full-time positions, remote. Formal CV and references on request.',
+    icon: 'lucide:briefcase',
+    cta: 'Email about a role',
+    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Role enquiry')}`,
   },
   {
-    heading: 'You want an AI feature that works',
-    body: 'Retrieval, evaluation sets, guardrails and cost control around a real product surface — not a demo. Usually the answer is a smaller model and better retrieval, and I can show you why.',
+    heading: 'AI features',
+    body: 'Retrieval pipelines, vector search, evaluation sets, cost and safety boundaries.',
     icon: 'lucide:sparkles',
-    cta: 'Talk about it',
+    cta: 'Email about AI work',
     ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('AI feature')}`,
   },
   {
-    heading: 'Something else entirely',
-    body: 'A role you think fits, a podcast, a student who wants to know how to start, or a disagreement with something I wrote. The last one is the most welcome.',
+    heading: 'Anything else',
+    body: 'Questions, corrections, or a note about something on this site.',
     icon: 'lucide:message-square-quote',
-    cta: 'Just say hello',
+    cta: 'Send a message',
     ctaHref: `mailto:${site.email}`,
   },
 ];
-
-const index = await navIndex('/contact');
 ---
 
 <Layout {title} {description} path="/contact" bareFooter>
@@ -57,8 +57,8 @@ const index = await navIndex('/contact');
             data-reveal
             style="--reveal-delay:60ms"
           >
-            One inbox, read by me,
-            <em class="block italic text-accent">and no discovery call first.</em>
+            Get in touch.
+            <em class="block italic text-accent">One inbox, read by me.</em>
           </h1>
           <div class="mt-8 flex flex-wrap gap-3" data-reveal style="--reveal-delay:120ms">
             <a href={`mailto:${site.email}`} class="btn btn-primary">
@@ -73,9 +73,8 @@ const index = await navIndex('/contact');
         </div>
         <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
           <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:180ms">
-            No contact form, no funnel, no discovery call before the discovery call. If we are not a
-            fit I will say so and usually name someone better placed — that is cheaper for both of
-            us than three weeks of scoping.
+            Email is the fastest route. Open to contract and full-time work, remote across EU and US
+            hours.
           </p>
         </div>
       </div>
@@ -159,16 +158,18 @@ const index = await navIndex('/contact');
           </div>
           <div>
             <dt class="text-subtle">Availability</dt>
-            <dd class="mt-1 text-fg">
-              Open to contract work and to the right full-time role. Remote, with travel for
-              anything that genuinely needs a room.
-            </dd>
+            <dd class="mt-1 text-fg">Contract and full-time, remote.</dd>
           </div>
           <div>
             <dt class="text-subtle">Code samples</dt>
             <dd class="mt-1 text-fg">
-              Thirty-odd public repositories going back to 2016 — start with the
-              <a href={href('/work')} class="link">work</a> page. A formal CV on request.
+              Around thirty public repositories at{' '}
+              <a
+                href="https://github.com/samu-el"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="link">github.com/samu-el</a
+              >. Formal CV on request.
             </dd>
           </div>
         </dl>

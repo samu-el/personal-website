@@ -7,7 +7,7 @@ import PostCard from '@/components/PostCard.astro';
 import { site, socials } from '@/lib/site';
 import { publishedPosts } from '@/lib/posts';
 import { href } from '@/lib/paths';
-import { metrics, principles } from '@/data/experience';
+import { metrics } from '@/data/experience';
 import { services } from '@/data/stack';
 import { Icon } from 'astro-icon/components';
 
@@ -69,26 +69,21 @@ const marquee = [
 
       <div class="mt-12 grid gap-12 lg:mt-16 lg:grid-cols-12 lg:gap-10">
         <div class="lg:col-span-7">
-          <div class="max-w-2xl space-y-4" data-reveal style="--reveal-delay:140ms">
+          <div class="max-w-2xl" data-reveal style="--reveal-delay:140ms">
             <p class="text-[1.0625rem] leading-relaxed text-muted lg:text-lg">
-              I&rsquo;m <strong class="font-medium text-fg">Samuel Mussie</strong>, a software
-              engineer in Addis Ababa. Ten years of building web and mobile products end to end —
-              Python and TypeScript services, React and Next.js front ends, Flutter and native
-              mobile, and the retrieval systems behind AI features that hold up once real users
-              arrive.
-            </p>
-            <p class="text-[0.9375rem] leading-relaxed text-subtle">
-              I like the unfashionable parts: the schema, the failure modes, the error message
-              someone reads on the worst day of their week.
+              <strong class="font-medium text-fg">Samuel Mussie</strong> — software engineer based in
+              Addis Ababa, Ethiopia. Ten years building web and mobile products: Python and TypeScript
+              services, React and Next.js front ends, Flutter and native iOS, and retrieval-augmented
+              AI features.
             </p>
           </div>
 
           <div class="mt-9 flex flex-wrap gap-3" data-reveal style="--reveal-delay:200ms">
             <a href={href('/work')} class="btn btn-primary">
-              See the work
+              Work
               <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
             </a>
-            <a href={href('/about')} class="btn btn-ghost">Read the long version</a>
+            <a href={href('/about')} class="btn btn-ghost">About</a>
           </div>
 
           <ul class="mt-9 flex flex-wrap gap-x-6 gap-y-3" data-reveal style="--reveal-delay:260ms">
@@ -116,10 +111,8 @@ const marquee = [
             <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Currently</h2>
             <dl class="mt-5 space-y-4 text-sm">
               <div>
-                <dt class="text-subtle">Doing</dt>
-                <dd class="mt-1 leading-snug text-fg">
-                  Full-stack product engineering — TypeScript, Python, React, PostgreSQL.
-                </dd>
+                <dt class="text-subtle">Role</dt>
+                <dd class="mt-1 leading-snug text-fg">Software Engineer</dd>
               </div>
               <div class="rule"></div>
               <div>
@@ -131,10 +124,9 @@ const marquee = [
               </div>
               <div class="rule"></div>
               <div>
-                <dt class="text-subtle">Learning</dt>
+                <dt class="text-subtle">Focus</dt>
                 <dd class="mt-1 leading-snug text-fg">
-                  Where retrieval quality beats model size, and how to evaluate it before shipping
-                  rather than after.
+                  Full-stack web and mobile — TypeScript, Python, React, PostgreSQL.
                 </dd>
               </div>
               <div class="rule"></div>
@@ -195,9 +187,9 @@ const marquee = [
   <!-- ── Services ─────────────────────────────────────────────────── -->
   <Section
     index="01"
-    eyebrow="What I’m hired for"
-    title="Four things people hire me to do."
-    lede="I work across the stack rather than specialising into a corner, because the interesting bugs live at the seams. I would rather tell you a job is the wrong fit than take it and find out together."
+    eyebrow="Work"
+    title="Types of work."
+    lede="Full-stack, across web and mobile."
     id="services"
   >
     <div class="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
@@ -225,8 +217,8 @@ const marquee = [
   <Section
     index="02"
     eyebrow="Selected work"
-    title="What I build when nobody is asking."
-    lede="Most of what I ship now lives under a client’s name. This one is mine end to end — and it is where a pattern gets tried before it touches anyone’s production system."
+    title="Projects."
+    lede="Client work ships under other names. This is the public one."
     id="work"
   >
     <div class="grid gap-5">
@@ -234,45 +226,16 @@ const marquee = [
     </div>
     <div class="mt-10 flex justify-start">
       <a href={href('/work')} class="btn btn-ghost">
-        More about it
+        Details
         <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
       </a>
-    </div>
-  </Section>
-
-  <!-- ── Principles ───────────────────────────────────────────────── -->
-  <Section
-    index="03"
-    eyebrow="How I think"
-    title="Four positions I will defend."
-    lede="Not values on a wall. Each of these has cost me a weekend at least once, which is the only way to find out whether you actually hold it."
-    id="principles"
-  >
-    <div class="grid gap-x-10 gap-y-12 sm:grid-cols-2">
-      {
-        principles.map((p, i) => (
-          <div class="border-t border-line pt-6" data-reveal style={`--reveal-delay:${i * 70}ms`}>
-            <div class="flex items-center gap-3">
-              <Icon name={p.icon} class="size-4 text-accent" aria-hidden="true" />
-              <h3 class="text-[1.0625rem] font-medium tracking-tight">{p.title}</h3>
-            </div>
-            <p class="mt-3.5 max-w-lg text-[0.9375rem] leading-relaxed text-muted">{p.body}</p>
-          </div>
-        ))
-      }
     </div>
   </Section>
 
   <!-- ── Writing (only when there is something published) ──────────── -->
   {
     posts.length > 0 && (
-      <Section
-        index="04"
-        eyebrow="Writing"
-        title="Notes from the unglamorous half."
-        lede="Systems design, mobile tradeoffs, and what actually breaks when AI features meet real users. Written because I had to work it out and could not find the honest version anywhere."
-        id="writing"
-      >
+      <Section index="03" eyebrow="Writing" title="Writing." lede="Posts." id="writing">
         <div>
           {posts.map((post, i) => (
             <PostCard post={post} index={i} />

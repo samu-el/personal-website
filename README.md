@@ -65,7 +65,7 @@ src/
 │   └── posts/*.md        # one file per post   → /writing/<slug>
 ├── content.config.ts     # frontmatter schemas (build fails on a bad field)
 ├── data/
-│   ├── experience.ts     # timeline, metrics, principles
+│   ├── experience.ts     # timeline, metrics
 │   └── stack.ts          # tools by group, services
 ├── lib/
 │   ├── site.ts           # name, role, email, nav, social links

@@ -32,72 +32,60 @@ set. Descriptions, languages and periods come from the repos themselves.
 
 ## Needs your confirmation
 
-None of these are false as far as I can tell — but they are yours to sign off.
+The site has been stripped to verifiable facts — role, stack, timeline, links — with the voice
+removed so you can write your own. What remains that still needs checking:
 
-1. **Degree and dates at Addis Ababa University.** `src/data/experience.ts` says
-   "Undergraduate studies" with no dates, because only the institution is public. Replace with
-   your actual degree and years.
-2. **"Ten years", "eight languages", "three platforms".** Derived from your public commit
-   history (account 2016, earliest repo 2017) and the languages across your repos: TypeScript,
-   Python, JavaScript, Dart, Swift, PHP, Java, plus SQL. Adjust if you started professionally
-   earlier or want SQL excluded from the count.
-3. **The 2016–2020 independent period.** Framed as contracting, from the "freelancers → company"
-   story Mereb tells publicly. If you had named employers in that window, list them instead.
-4. **The client-work entry** (`src/content/projects/client-saas-platform.md`). Anonymised at
-   your request: no client name, no country, no outbound link, and marked `hidden: true`, so it
-   neither renders nor appears in the sitemap. The _stack_ and engineering description are my
-   inference from the product category. If you ever unhide it, re-read it first — it is the one
-   entry not grounded in a public repository of yours.
-5. **What you do at Mereb day to day.** The timeline says data modelling, service boundaries,
-   front end, deploys, AI work, on-call. Plausible for your role but not publicly documented.
-6. **The stack page.** `src/data/stack.ts` is assembled from the languages in your repos plus
-   what an engineer in your position typically runs. Some entries — Terraform, Linear, Redis,
-   MongoDB, Cloudflare — are plausible rather than evidenced. Delete anything you don't use;
-   a stack page listing a tool you can't discuss is a liability in an interview.
-7. **Commitments the site now makes for you.** "Answered within a day", working hours
-   09:00–18:00 EAT, "open to contract work and the right full-time role", "a formal CV on
-   request", "I can put you in touch with someone I have built for". Keep only what you'll
-   honour. If you are not looking, change the hero eyebrow ("Open to engagements") and the
-   footer ("Open to work").
-8. **There is no Writing section.** I had written five essays in your voice; you did not want
-   AI-written articles on your site, so they are deleted. The section's plumbing survives — drop
-   a Markdown file into `src/content/posts/` and the nav link, home-page section, RSS feed and
-   sitemap entry all reappear on the next build.
-
-   A post carrying `aiWritten: true` is never rendered in production, in any environment. That
-   is enforced in `src/lib/posts.ts` and covered by the smoke suite, so the policy holds without
-   anyone having to remember it.
-
-9. **The rest of the site copy is still mine, not yours.** The hero, the About narrative, the
-   principles, the stack notes, the contact routes and the fantasy.et write-up were all written
-   by me from public sources. That is a different thing from a bylined article, which is why
-   deleting the essays did not touch them — but if you want the site to be your words
-   throughout, this is the list to rewrite. Everything editable is in `src/content/`,
-   `src/data/` and the page files.
-
----
+1. **Degree and dates at Addis Ababa University.** Listed as "Undergraduate studies" with no
+   dates, because only the institution is public. Add the real degree and years.
+2. **"Ten years", "eight languages", "three platforms", "30+ repositories".** Derived from your
+   public commit history (account 2016, earliest repo 2017) and the languages across your repos:
+   TypeScript, Python, JavaScript, Dart, Swift, PHP, Java, SQL. Adjust if you started
+   professionally earlier or want SQL excluded from the count.
+3. **The 2016–2020 independent period.** Framed as contract work, from the freelance-to-company
+   story Mereb tells publicly. If you had named employers then, list them instead.
+4. **What you do at Mereb.** The timeline lists data modelling, service boundaries, front ends,
+   mobile, retrieval pipelines, deploys and on-call. Plausible for your role but not publicly
+   documented — confirm or trim.
+5. **The stack page.** Some entries are inferred rather than evidenced: Terraform, Linear,
+   Redis, MongoDB, Cloudflare, FastAPI, pgvector. Delete anything you do not actually use — a
+   stack page listing a tool you cannot discuss is a liability in an interview.
+6. **The client-work entry** (`src/content/projects/client-saas-platform.md`). Anonymised and
+   `hidden: true`, so it does not render or appear in the sitemap. The stack is inferred from the
+   product category. Re-read it before ever unhiding it.
+7. **Commitments the site makes.** "Available for contract and full-time work, remote across EU
+   and US hours", working hours 09:00–18:00 EAT, "formal CV and references on request". Keep
+   only what is true. If you are not looking, change the hero eyebrow ("Available for work") and
+   the footer.
+8. **The About bio is a placeholder.** Three short factual paragraphs plus Languages, Education
+   and Code headings. It is accurate but deliberately flat — no opinions, no anecdotes, no claims
+   about how you think. **This is the piece to rewrite in your own voice**, in
+   `src/pages/about.astro`.
 
 ## Deliberately left out
 
-- No photograph — I had no rights-cleared image of you. Drop one in `public/` and add it to the
-  About page and `BaseHead`'s OG tags.
-- No phone number, no exact address, no rates.
-- No testimonials or client quotes I couldn't attribute.
-- No X/Twitter link — I found no account I could confirm was yours. Add it to `src/lib/site.ts`.
-- No years-of-experience claim beyond what the commit history shows.
-
----
+- **All voice.** The opinionated copy is gone: the four "positions I will defend", the essays,
+  the services pitch, the invented anecdotes, and the case-study reasoning in the fantasy.et
+  write-up (which also removes the two technical claims about it I could not verify). What is
+  left states facts and stops.
+- **No photograph** — I had no rights-cleared image of you. Drop one in `public/` and add it to
+  the About page and `BaseHead`'s OG tags.
+- **No phone number, address or rates.**
+- **No testimonials or client names.**
+- **No X/Twitter link** — no account I could confirm was yours. Add it to `src/lib/site.ts`.
+- **Nine project files deleted.** They rendered nowhere once the enumerated list came off
+  `/work`, and their bodies were invented prose in a public repo. Git history has them if you
+  want any back.
 
 ## Where to edit what
 
 | You want to change…                  | Edit                                            |
 | ------------------------------------ | ----------------------------------------------- |
 | Name, role, email, nav, social links | `src/lib/site.ts`                               |
-| Timeline, metrics, principles        | `src/data/experience.ts`                        |
-| Tools, what you're hired for         | `src/data/stack.ts`                             |
+| Timeline, metrics                    | `src/data/experience.ts`                        |
+| Tools, types of work                 | `src/data/stack.ts`                             |
 | A project                            | `src/content/projects/<slug>.md`                |
 | An essay                             | `src/content/posts/<slug>.md`                   |
-| The About narrative                  | `src/pages/about.astro`                         |
+| The About bio (the placeholder)      | `src/pages/about.astro`                         |
 | Hero copy                            | `src/pages/index.astro`                         |
 | Contact routes and practicalities    | `src/pages/contact.astro`                       |
 | Colours, type scale                  | `src/styles/global.css`                         |

@@ -28,14 +28,14 @@ const index = await navIndex('/about');
             data-reveal
             style="--reveal-delay:60ms"
           >
-            Ten years of code.
-            <em class="block italic text-accent">Eight languages, three platforms.</em>
+            Software engineer,
+            <em class="block italic text-accent">Addis Ababa.</em>
           </h1>
         </div>
         <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
           <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
-            None of that range was a plan. It came from working on other people&rsquo;s stacks,
-            which is also where I learned that most projects fail on scoping rather than on code.
+            Ten years of web and mobile development across eight languages and three platforms.
+            Currently at Mereb Technologies, building products for clients in Europe and the US.
           </p>
         </div>
       </div>
@@ -48,73 +48,36 @@ const index = await navIndex('/about');
       <div class="lg:col-span-7">
         <div class="prose" data-reveal>
           <p>
-            I&rsquo;m Samuel Mussie, a software engineer in Addis Ababa. I build web and mobile
-            products end to end — which means I am as comfortable arguing about a foreign key as
-            about a keyboard-avoidance animation, and I think being unable to do both is a liability
-            rather than a specialism.
+            Samuel Mussie is a software engineer based in Addis Ababa, Ethiopia. He works across the
+            stack on web and mobile products — data modelling and services through to front ends and
+            deployment.
           </p>
           <p>
-            Currently at <a href={site.companyUrl} target="_blank" rel="noopener noreferrer"
+            He is currently at <a href={site.companyUrl} target="_blank" rel="noopener noreferrer"
               >Mereb Technologies</a
-            >, building products for clients in Europe and the US: multi-tenant SaaS platforms,
-            procurement and telemedicine systems, mobile apps, and the AI features people now expect
-            all of those to have.
+            >, where the work covers multi-tenant SaaS platforms, procurement and telemedicine
+            systems, mobile applications, and retrieval-augmented AI features for clients in Europe
+            and the US. Before that, four years of independent contract development on client
+            stacks: Node and Python services, React front ends, iOS and Flutter applications, and
+            Telegram bots.
           </p>
 
-          <h2>How the range happened</h2>
+          <h2>Languages and platforms</h2>
           <p>
-            Before that I spent four years contracting, and contracting does not let you pick your
-            stack. A client is already on Java, or PHP, or has an iOS app and no Android one, and
-            the job is to be useful inside that — not to explain what you would have chosen.
-          </p>
-          <p>
-            So: Node and Python services, React front ends, a Flutter app, a native Swift app, PHP
-            where PHP was already running, and a handful of Telegram bots that solved distinctly
-            Ethiopian problems. Eight languages in production is not a badge. It is just what
-            happens if you say yes for long enough and refuse to be bad at the unfamiliar half.
-          </p>
-          <p>
-            What it did give me is calibration. When someone asks whether to go native or
-            cross-platform, I have shipped both within eighteen months of each other with comparable
-            scope, and my answer changes depending on their product rather than on my preference.
+            Production experience in TypeScript, Python, JavaScript, Dart, Swift, PHP, Java and SQL.
+            Web, iOS and Android. A full list of tools is on the <a href={href('/stack')}>stack</a> page.
           </p>
 
-          <h2>What I am actually good at</h2>
-          <ul>
-            <li>
-              <strong>Data modelling that survives the UI.</strong> Screens get redesigned yearly; a badly-named
-              column is still there in five years with dashboards depending on it. The schema gets the
-              argument, and the front end gets the iteration.
-            </li>
-            <li>
-              <strong>Making failure legible.</strong> Observability, honest error messages, and reproductions
-              before fixes. A bug that went away is a bug that is still there.
-            </li>
-            <li>
-              <strong>Shipping thin slices all the way through.</strong> I would rather own a feature
-              from migration to deploy than a thick layer of one tier, because that is where you find
-              out what your API contract actually cost the client.
-            </li>
-            <li>
-              <strong>AI features that are mostly plumbing.</strong> Retrieval, chunking, citations, evaluation
-              sets, and a hard boundary between the model and anything that writes to a database. I built
-              a full RAG system end to end before advising anyone on one, because I refuse to advise from
-              blog posts.
-            </li>
-          </ul>
+          <h2>Education</h2>
+          <p>Undergraduate studies at Addis Ababa University.</p>
 
-          <h2>Where I still get my hands dirty on my own time</h2>
+          <h2>Code</h2>
           <p>
-            The side projects are the same instinct as the Flutter-versus-Swift experiment. Fantasy
-            Premier League tooling I use every week, a Jeopardy game for team nights, a URL
-            shortener built twice to see what the second attempt taught me. If a caching strategy
-            survives a Saturday when everyone opens the app at once, it is probably ready for
-            someone&rsquo;s production.
-          </p>
-          <p>
-            They are public for two reasons. Small complete programs teach better than large
-            incomplete ones. And a commit history going back to 2016 is a more honest CV than
-            anything I could write about myself.
+            Around thirty public repositories going back to 2016, at <a
+              href="https://github.com/samu-el"
+              target="_blank"
+              rel="noopener noreferrer">github.com/samu-el</a
+            >. Selected work is on the <a href={href('/work')}>work</a> page.
           </p>
         </div>
       </div>
@@ -178,33 +141,13 @@ const index = await navIndex('/about');
               }
             </ul>
           </div>
-
-          <div class="card rounded-lg p-6">
-            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">
-              Beyond the desk
-            </h2>
-            <ul class="mt-5 space-y-3 text-[0.9375rem] leading-relaxed text-muted">
-              <li>
-                Fantasy Premier League, seriously enough to have <a
-                  href={href('/work/fantasy-pl')}
-                  class="link">built tooling for it</a
-                >.
-              </li>
-              <li>
-                Reading other people&rsquo;s codebases for fun, which is a strange hobby and the
-                most useful one I have.
-              </li>
-              <li>Advent of Code every December, in Python, badly, happily.</li>
-              <li>Arguing that PHP runs more of the world than anyone admits.</li>
-            </ul>
-          </div>
         </div>
       </aside>
     </div>
   </div>
 
   <!-- ── Timeline ─────────────────────────────────────────────────── -->
-  <Section index="05" eyebrow="Timeline" title="Where the time went." id="timeline">
+  <Section index="05" eyebrow="Timeline" title="Timeline." id="timeline">
     <ol class="space-y-px overflow-hidden rounded-lg border border-line bg-line">
       {
         roles.map((role, i) => (
