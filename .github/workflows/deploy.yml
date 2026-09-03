@@ -42,6 +42,10 @@ jobs:
           BASE: ${{ vars.BASE || '/personal-website' }}
 
       - uses: actions/configure-pages@v5
+        with:
+          # Lets the first run turn Pages on itself, instead of failing because
+          # Settings → Pages has never been touched.
+          enablement: true
 
       - uses: actions/upload-pages-artifact@v3
         with:
