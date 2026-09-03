@@ -12,6 +12,8 @@ repo: 'https://github.com/samu-el/RestaurantAppIOS'
 stats:
   - { label: 'Platform', value: 'iOS, native' }
   - { label: 'Purpose', value: 'Calibration' }
+featured: false
+hidden: true
 ---
 
 Written the year after the Flutter app, and for the same reason in reverse: you cannot have a

@@ -9,7 +9,8 @@ status: 'Live'
 stack: ['Python', 'Telegram Bot API', 'HTTP scraping']
 tags: ['Ethiopia', 'Telegram', 'Public interest', 'Open source']
 repo: 'https://github.com/samu-el/check-exam-results-TBot'
-featured: true
+featured: false
+hidden: true
 stats:
   - { label: 'Interface', value: 'Telegram' }
   - { label: 'Input', value: 'Admission number' }

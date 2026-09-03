@@ -12,6 +12,8 @@ repo: 'https://github.com/samu-el/FChat'
 stats:
   - { label: 'Platforms', value: 'iOS + Android' }
   - { label: 'Year', value: '2019' }
+featured: false
+hidden: true
 ---
 
 Flutter in 2019 was still an argument. I built a chat app to settle it for myself, because

@@ -6,9 +6,11 @@ import { href } from '@/lib/paths';
 import { Icon } from 'astro-icon/components';
 
 export const getStaticPaths: GetStaticPaths = async () => {
+  // Hidden projects get no detail page, so nothing links into them and they
+  // stay out of the sitemap.
   const projects = await getCollection(
     'projects',
-    ({ data }) => import.meta.env.DEV || !data.draft,
+    ({ data }) => !data.hidden && (import.meta.env.DEV || !data.draft),
   );
   const sorted = projects.sort((a, b) => b.data.weight - a.data.weight);
 
@@ -212,7 +214,9 @@ const statusTone: Record<string, string> = {
     </div>
 
     <!-- ── Prev / next ────────────────────────────────────────────── -->
-    <nav aria-label="More work" class="border-t border-line">
+    <!-- Only render when there is somewhere to go; a lone project would
+         otherwise leave an empty bordered strip. -->
+    <nav aria-label="More work" class="border-t border-line" hidden={!prev && !next}>
       <div class="wrap grid gap-px py-0 sm:grid-cols-2">
         {
           prev ? (

@@ -10,7 +10,8 @@ stack: ['TypeScript', 'Next.js', 'React', 'PostgreSQL', 'Vercel']
 tags: ['Health', 'Scheduling', 'Product']
 repo: 'https://github.com/samu-el/telemed'
 demo: 'https://telemed-mu.vercel.app'
-featured: true
+featured: false
+hidden: true
 stats:
   - { label: 'Surface', value: 'Web app' }
   - { label: 'Core loop', value: 'Book → consult → record' }

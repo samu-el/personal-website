@@ -40,8 +40,16 @@ mobile menu, the work filter, the scroll reveal, and the RSS/sitemap/OG/JSON-LD 
 ```bash
 npm run build
 npm run preview &
-npm run verify          # BASE_URL=… to point it at a deployed site instead
+npm run verify
 ```
+
+To check a deployed site instead, point it at the origin and base path:
+
+```bash
+BASE_URL=https://samu-el.github.io BASE_PATH=/personal-website npm run verify
+```
+
+Both the route fetches and the browser honour `HTTPS_PROXY` when it is set.
 
 ---
 
@@ -121,7 +129,15 @@ One stylesheet, `src/styles/global.css`, holds all of it:
 ## Deployment
 
 `.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `master`.
-Enable it once under **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+
+**One-time setup, required before the first deploy can succeed:**
+
+> **Settings → Pages → Build and deployment → Source: _GitHub Actions_**
+
+This cannot be automated. Creating a Pages site needs repo-admin credentials, and a workflow's
+`GITHUB_TOKEN` never has them — `configure-pages` fails with
+`Create Pages site failed: Resource not accessible by integration` until the setting is flipped
+by hand. Once it is, re-run the deploy workflow and every later push publishes on its own.
 
 The live URL is `https://samu-el.github.io/personal-website`.
 
