@@ -13,9 +13,8 @@ import { Icon } from 'astro-icon/components';
 const isPublished = (d: { draft?: boolean }) => import.meta.env.DEV || !d.draft;
 
 const projects = (await getCollection('projects', ({ data }) => isPublished(data)))
-  .filter((p) => p.data.featured)
-  .sort((a, b) => b.data.weight - a.data.weight)
-  .slice(0, 4);
+  .filter((p) => p.data.featured && !p.data.hidden)
+  .sort((a, b) => b.data.weight - a.data.weight);
 
 const posts = (await getCollection('posts', ({ data }) => isPublished(data)))
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
@@ -227,16 +226,16 @@ const marquee = [
   <Section
     index="02"
     eyebrow="Selected work"
-    title="Things I have built."
-    lede="Client work, products, and the side projects I use to keep an honest opinion about a stack. Every repository linked here is public — including the ones that did not work."
+    title="What I build when nobody is asking."
+    lede="Most of what I ship now lives under a client’s name. This one is mine end to end — and it is where a pattern gets tried before it touches anyone’s production system."
     id="work"
   >
-    <div class="grid gap-5 lg:grid-cols-2">
-      {projects.map((p, i) => <ProjectCard project={p} index={i} feature={i === 0} />)}
+    <div class="grid gap-5">
+      {projects.map((p) => <ProjectCard project={p} index={0} feature />)}
     </div>
     <div class="mt-10 flex justify-start">
       <a href={href('/work')} class="btn btn-ghost">
-        All work
+        More about it
         <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
       </a>
     </div>

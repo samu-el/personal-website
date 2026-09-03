@@ -13,6 +13,8 @@ demo: 'https://jeopardy-delta-fawn.vercel.app'
 stats:
   - { label: 'Mode', value: 'Multiplayer' }
   - { label: 'Hard part', value: 'Who buzzed first' }
+featured: false
+hidden: true
 ---
 
 Built for team nights, and it turns out a quiz game is a compact tour of every problem

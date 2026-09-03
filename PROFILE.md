@@ -13,16 +13,15 @@ in `src/lib/site.ts` (`role`) and `src/data/experience.ts` (the first entry's `t
 
 ## Verified from public sources
 
-| Fact                                                       | Source                                                                                                  |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Samuel Mussie, at Mereb Technologies since ~2020           | [LinkedIn](https://www.linkedin.com/in/samu-el/), company listings                                      |
-| Based in Addis Ababa, Ethiopia                             | LinkedIn                                                                                                |
-| Attended Addis Ababa University                            | LinkedIn                                                                                                |
-| Mereb serves European/US clients from Addis Ababa          | mereb.tech                                                                                              |
-| Apadua (German procurement intelligence) is a Mereb client | mereb.tech case studies                                                                                 |
-| Email `samuel@mereb.tech`                                  | Public business listings                                                                                |
-| Every project entry, repo link and live demo URL           | [github.com/samu-el](https://github.com/samu-el) — names, descriptions, languages, deploy URLs all real |
-| Eight languages, 30+ repos, first commit 2016              | Your public repository list and account age                                                             |
+| Fact                                              | Source                                                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| Samuel Mussie, at Mereb Technologies since ~2020  | [LinkedIn](https://www.linkedin.com/in/samu-el/), company listings                                      |
+| Based in Addis Ababa, Ethiopia                    | LinkedIn                                                                                                |
+| Attended Addis Ababa University                   | LinkedIn                                                                                                |
+| Mereb serves European/US clients from Addis Ababa | mereb.tech                                                                                              |
+| Email `samuel@mereb.tech`                         | Public business listings                                                                                |
+| Every project entry, repo link and live demo URL  | [github.com/samu-el](https://github.com/samu-el) — names, descriptions, languages, deploy URLs all real |
+| Eight languages, 30+ repos, first commit 2016     | Your public repository list and account age                                                             |
 
 Project pages are built on your actual repositories: `check-exam-results-TBot`, `telemed`,
 `rag-chatboat-backend` + `rag-chatbot-fe`, `short.et-mono`, `fantasy-pl` + `fantasy-pl-mobile`,
@@ -44,11 +43,11 @@ None of these are false as far as I can tell — but they are yours to sign off.
    earlier or want SQL excluded from the count.
 3. **The 2016–2020 independent period.** Framed as contracting, from the "freelancers → company"
    story Mereb tells publicly. If you had named employers in that window, list them instead.
-4. **The Apadua entry** (`src/content/projects/apadua.md`). That Apadua is a client is public.
-   The _stack_ (TypeScript/React/Node/Postgres/AWS) and the engineering description are my
-   inference from the product category and how Mereb describes its work. **Correct or generalise
-   this before a client or a recruiter reads it** — it is the one entry not grounded in a public
-   repository of yours. Check you are comfortable naming the client at all.
+4. **The client-work entry** (`src/content/projects/client-saas-platform.md`). Anonymised at
+   your request: no client name, no country, no outbound link, and marked `hidden: true`, so it
+   neither renders nor appears in the sitemap. The _stack_ and engineering description are my
+   inference from the product category. If you ever unhide it, re-read it first — it is the one
+   entry not grounded in a public repository of yours.
 5. **What you do at Mereb day to day.** The timeline says data modelling, service boundaries,
    front end, deploys, AI work, on-call. Plausible for your role but not publicly documented.
 6. **The stack page.** `src/data/stack.ts` is assembled from the languages in your repos plus

@@ -11,7 +11,7 @@ interface Props {
 }
 
 const { project, feature = false, index } = Astro.props;
-const { title, blurb, period, kind, status, stack, demo, repo } = project.data;
+const { title, blurb, period, kind, status, stack, demo, repo, stats } = project.data;
 
 const statusTone: Record<string, string> = {
   Live: 'text-jade',
@@ -75,6 +75,19 @@ const statusTone: Record<string, string> = {
   >
     {blurb}
   </p>
+
+  {
+    feature && stats.length > 0 && (
+      <dl class="mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line sm:grid-cols-4">
+        {stats.map((s) => (
+          <div class="bg-surface-2 px-4 py-3.5">
+            <dt class="font-mono text-2xs uppercase tracking-[0.12em] text-subtle">{s.label}</dt>
+            <dd class="mt-1 text-[0.9375rem] leading-snug tracking-tight text-fg">{s.value}</dd>
+          </div>
+        ))}
+      </dl>
+    )
+  }
 
   <div class="mt-auto pt-6">
     {

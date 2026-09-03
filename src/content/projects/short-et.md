@@ -13,6 +13,8 @@ demo: 'https://url-shortner-pi-swart.vercel.app'
 stats:
   - { label: 'Versions', value: 'Two' }
   - { label: 'Second pass', value: 'Python mono' }
+featured: false
+hidden: true
 ---
 
 A URL shortener is the "hello world" of systems design, which is exactly why it is worth

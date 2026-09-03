@@ -1,23 +1,21 @@
 ---
 title: 'Procurement Intelligence Platform'
-blurb: 'Long-running engineering work on a German B2B SaaS product — the schema, services and front end behind procurement data that enterprise buyers make decisions from.'
+blurb: 'Long-running engineering work on a European B2B SaaS product — the schema, services and front end behind procurement data that enterprise buyers make decisions from.'
 period: 'Ongoing'
-weight: 80
+weight: 50
 kind: 'Client work'
 role: 'Software engineer — data model, services, front end'
 status: 'Ongoing'
 stack: ['TypeScript', 'React', 'Node.js', 'PostgreSQL', 'AWS']
-tags: ['SaaS', 'B2B', 'Data modelling', 'Europe']
-featured: true
+tags: ['SaaS', 'B2B', 'Data modelling']
+featured: false
+hidden: true
 stats:
   - { label: 'Domain', value: 'Procurement' }
-  - { label: 'Market', value: 'Germany / EU' }
   - { label: 'Shape', value: 'Multi-tenant SaaS' }
 ---
 
-Client work for [Apadua](https://www.apadua.com), a German procurement-intelligence platform.
-Most of what I build now ships under someone else's name, so this entry is about the class of
-engineering rather than a feature list.
+Client work under NDA, so this describes the class of engineering rather than the product.
 
 ## What this kind of product actually demands
 

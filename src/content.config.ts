@@ -21,6 +21,12 @@ const projects = defineCollection({
     demo: z.url().optional(),
     /** Shown on the home page when true. */
     featured: z.boolean().default(false),
+    /**
+     * Kept out of the showcase: no detail page, no card, no sitemap entry.
+     * A hidden project with a `repo` still appears as one line in the
+     * "Also public" list on /work; one without disappears entirely.
+     */
+    hidden: z.boolean().default(false),
     /** Numeric facts rendered as a small stat row on the detail page. */
     stats: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
     draft: z.boolean().default(false),

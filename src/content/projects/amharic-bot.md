@@ -12,6 +12,8 @@ repo: 'https://github.com/samu-el/transate-to-amharic-telegram-bot'
 stats:
   - { label: 'Target', value: 'Amharic (አማርኛ)' }
   - { label: 'Verdict', value: 'Instructive failure' }
+featured: false
+hidden: true
 ---
 
 Built in 2020, and the repository description is deliberately modest — a bot that *tries* to

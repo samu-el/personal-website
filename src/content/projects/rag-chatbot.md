@@ -9,7 +9,8 @@ status: 'Shipped'
 stack: ['Python', 'FastAPI', 'TypeScript', 'React', 'Vector search', 'LLM APIs']
 tags: ['AI', 'RAG', 'Retrieval', 'Evals']
 repo: 'https://github.com/samu-el/rag-chatboat-backend'
-featured: true
+featured: false
+hidden: true
 stats:
   - { label: 'Backend', value: 'Python / FastAPI' }
   - { label: 'Client', value: 'React / TypeScript' }

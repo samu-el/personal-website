@@ -12,6 +12,8 @@ repo: 'https://github.com/samu-el?tab=repositories'
 stats:
   - { label: 'Span', value: '2017 — present' }
   - { label: 'Size', value: 'One file, mostly' }
+featured: false
+hidden: true
 ---
 
 Not everything worth shipping is a product. A running collection of small, sharp tools, each

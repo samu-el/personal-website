@@ -7,14 +7,22 @@ import { href } from '@/lib/paths';
 
 const isPublished = (d: { draft?: boolean }) => import.meta.env.DEV || !d.draft;
 
-const projects = (await getCollection('projects', ({ data }) => isPublished(data))).sort(
+const all = (await getCollection('projects', ({ data }) => isPublished(data))).sort(
   (a, b) => b.data.weight - a.data.weight,
 );
 
-const kinds = [...new Set(projects.map((p) => p.data.kind))].sort();
+/** The showcase. Everything else is deliberately kept out of it. */
+const showcased = all.filter((p) => !p.data.hidden);
+
+/**
+ * Hidden work still worth acknowledging: one line each, linking straight to
+ * the repository. Anything without a public repo stays off the page entirely.
+ */
+const alsoPublic = all.filter((p) => p.data.hidden && p.data.repo);
+
 const title = 'Work';
 const description =
-  'Client work, products and open-source tools by Samuel Mussie — telemedicine and SaaS platforms, RAG systems, mobile apps, and a decade of small sharp utilities.';
+  'fantasy.et — Fantasy Premier League tooling by Samuel Mussie: a Next.js web app and a React Native companion sharing one data layer against a live public API.';
 ---
 
 <Layout {title} {description} path="/work">
@@ -30,126 +38,95 @@ const description =
             data-reveal
             style="--reveal-delay:60ms"
           >
-            Client work, products,<br class="hidden lg:block" />
-            <em class="italic text-accent">and things built to settle an argument.</em>
+            One project I will happily<br class="hidden lg:block" />
+            <em class="italic text-accent">talk about for an hour.</em>
           </h1>
         </div>
         <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
           <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
-            {projects.length} entries. Every repository linked here is public — including the ones that
-            did not work, because those are usually the ones with something to say.
+            Client work ships under someone else&rsquo;s name and stays there. So rather than a grid
+            of thumbnails, here is the one thing that is mine end to end, in the detail it actually
+            deserves.
           </p>
         </div>
-      </div>
-
-      <!-- Filters. Enhance to instant filtering with JS; degrade to anchors without it. -->
-      <div class="mt-12 flex flex-wrap items-center gap-2" data-reveal style="--reveal-delay:180ms">
-        <span class="mr-1 font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Filter</span>
-        <button
-          type="button"
-          class="filter-btn chip is-active"
-          data-filter="all"
-          aria-pressed="true"
-        >
-          All <span class="text-subtle">{projects.length}</span>
-        </button>
-        {
-          kinds.map((k) => (
-            <button type="button" class="filter-btn chip" data-filter={k} aria-pressed="false">
-              {k}
-              <span class="text-subtle">{projects.filter((p) => p.data.kind === k).length}</span>
-            </button>
-          ))
-        }
       </div>
     </div>
   </section>
 
   <div class="wrap py-16 lg:py-20">
-    <div id="project-grid" class="grid gap-5 lg:grid-cols-2">
-      {
-        projects.map((p, i) => (
-          <div data-kind={p.data.kind} class="contents">
-            <ProjectCard project={p} index={i} feature={i === 0} />
-          </div>
-        ))
-      }
+    <div class="grid gap-5">
+      {showcased.map((p) => <ProjectCard project={p} index={0} feature />)}
     </div>
-    <p id="no-results" hidden class="py-16 text-center text-muted">Nothing in that category yet.</p>
+
+    <!-- Everything else: acknowledged, not showcased. -->
+    {
+      alsoPublic.length > 0 && (
+        <section class="mt-20 border-t border-line pt-12 lg:mt-28">
+          <div class="grid gap-8 lg:grid-cols-12 lg:gap-10">
+            <div class="lg:col-span-4">
+              <p class="eyebrow" data-reveal>
+                Also public
+              </p>
+              <p
+                class="mt-4 max-w-sm text-[0.9375rem] leading-relaxed text-muted"
+                data-reveal
+                style="--reveal-delay:60ms"
+              >
+                A decade of smaller things — bots, tools, two mobile apps, a URL shortener built
+                twice. Not written up, but the commit history is there if you want it.
+              </p>
+            </div>
+            <div class="lg:col-span-8">
+              <ul class="border-t border-line">
+                {alsoPublic.map((p, i) => (
+                  <li>
+                    <a
+                      href={p.data.repo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="group flex items-baseline gap-4 border-b border-line py-3.5"
+                      data-reveal
+                      style={`--reveal-delay:${Math.min(i, 8) * 40}ms`}
+                    >
+                      <span class="w-28 shrink-0 whitespace-nowrap font-mono text-2xs tracking-wide text-subtle">
+                        {p.data.period}
+                      </span>
+                      <span class="text-[0.9375rem] tracking-tight text-fg transition-colors group-hover:text-accent">
+                        {p.data.title}
+                      </span>
+                      <span class="ml-auto hidden shrink-0 font-mono text-2xs text-subtle sm:block">
+                        {p.data.stack[0] ?? p.data.kind}
+                      </span>
+                      <Icon
+                        name="lucide:arrow-up-right"
+                        class="size-3.5 shrink-0 self-center text-subtle transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+                        aria-hidden="true"
+                      />
+                    </a>
+                  </li>
+                ))}
+              </ul>
+              <a
+                href="https://github.com/samu-el?tab=repositories"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="btn btn-ghost mt-8"
+              >
+                <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
+                Everything on GitHub
+              </a>
+            </div>
+          </div>
+        </section>
+      )
+    }
 
     <div class="mt-16 border-t border-line pt-10">
       <p class="max-w-2xl text-[0.9375rem] leading-relaxed text-muted">
-        Most of what I build now ships under a client’s name and stays there, so this page leans on
-        the work I can show. If you want to talk about the rest —
-        <a href={href('/contact')} class="link">ask me</a>, and I can walk you through it or put you
-        in touch with someone I have built for.
+        If you want to talk about the client work that is not on this page —{' '}
+        <a href={href('/contact')} class="link">ask me</a>. I can walk you through the architecture
+        without naming anyone, or put you in touch with someone I have built for.
       </p>
-      <a
-        href="https://github.com/samu-el?tab=repositories"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="btn btn-ghost mt-6"
-      >
-        <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
-        Everything on GitHub
-      </a>
     </div>
   </div>
 </Layout>
-
-<style>
-  .filter-btn {
-    cursor: pointer;
-    transition:
-      border-color 0.25s ease,
-      color 0.25s ease,
-      background-color 0.25s ease;
-  }
-  .filter-btn:hover {
-    border-color: var(--color-line-strong);
-    color: var(--color-fg);
-  }
-  .filter-btn.is-active {
-    border-color: var(--color-accent);
-    color: var(--color-accent);
-    background-color: rgb(var(--c-accent) / 0.06);
-  }
-</style>
-
-<script is:inline>
-  (() => {
-    function init() {
-      const buttons = document.querySelectorAll('.filter-btn');
-      const grid = document.getElementById('project-grid');
-      const empty = document.getElementById('no-results');
-      if (!buttons.length || !grid) return;
-
-      // ProjectCard renders inside `display:contents`, so filter the <article>s directly.
-      const cards = Array.from(grid.querySelectorAll('article'));
-      const kindOf = (card) => card.closest('[data-kind]')?.dataset.kind ?? '';
-
-      buttons.forEach((btn) => {
-        if (btn.dataset.bound === '1') return;
-        btn.dataset.bound = '1';
-        btn.addEventListener('click', () => {
-          const filter = btn.dataset.filter;
-          buttons.forEach((b) => {
-            const on = b === btn;
-            b.classList.toggle('is-active', on);
-            b.setAttribute('aria-pressed', String(on));
-          });
-
-          let shown = 0;
-          cards.forEach((card) => {
-            const match = filter === 'all' || kindOf(card) === filter;
-            card.hidden = !match;
-            if (match) shown += 1;
-          });
-          if (empty) empty.hidden = shown > 0;
-        });
-      });
-    }
-    init();
-    document.addEventListener('astro:page-load', init);
-  })();
-</script>

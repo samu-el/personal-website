@@ -49,7 +49,9 @@ const routes = [
   ),
   '/404',
 ];
-if (routes.length < 20) throw new Error(`sitemap yielded only ${routes.length} routes`);
+// Guards against a sitemap that failed to enumerate — deliberately not a
+// page count, so pruning the showcase doesn't break the suite.
+if (routes.length < 5) throw new Error(`sitemap yielded only ${routes.length} routes`);
 console.log(`Checking ${routes.length} routes…`);
 
 const browser = await chromium.launch({
@@ -163,17 +165,41 @@ for (const [w, h, tag] of [
   await ctx.close();
 }
 
-// 4. Work-page filtering.
+// 4. Showcase invariants: exactly the showcased projects have detail pages,
+//    nothing marked hidden is reachable, and client work carries no outbound
+//    link. Slugs are read from the project files so this holds as the
+//    showcase changes.
 {
+  const { readdir, readFile } = await import('node:fs/promises');
+  const dir = new URL('../src/content/projects/', import.meta.url);
+  const files = (await readdir(dir)).filter((f) => /\.mdx?$/.test(f));
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await ctx.newPage();
-  await page.goto(BASE + '/work', { waitUntil: 'load' });
-  const before = await page.locator('#project-grid article:visible').count();
-  await page.click('.filter-btn[data-filter="Tool"]');
-  await page.waitForTimeout(250);
-  const after = await page.locator('#project-grid article:visible').count();
-  if (!(after > 0 && after < before))
-    issues.push(`work filter did not narrow: ${before} -> ${after}`);
+
+  for (const file of files) {
+    const raw = await readFile(new URL(file, dir), 'utf8');
+    const slug = file.replace(/\.mdx?$/, '');
+    const hidden = /^hidden:\s*true\s*$/m.test(raw);
+    const res = await page.request.get(`${BASE}/work/${slug}`);
+    if (hidden && res.status() !== 404) {
+      issues.push(`hidden project /work/${slug} is reachable (HTTP ${res.status()})`);
+    }
+    if (!hidden && res.status() !== 200) {
+      issues.push(`showcased project /work/${slug} -> HTTP ${res.status()}`);
+    }
+    // Client work is anonymised — an outbound repo or demo link would identify it.
+    if (/^kind:\s*'Client work'/m.test(raw) && /^(repo|demo):/m.test(raw)) {
+      issues.push(`${file} is client work but carries an outbound repo/demo link`);
+    }
+  }
+
+  await page.goto(`${BASE}/work`, { waitUntil: 'load' });
+  const counts = await page.evaluate(() => ({
+    cards: document.querySelectorAll('article').length,
+    repoLinks: document.querySelectorAll('a[href*="github.com/samu-el/"]').length,
+  }));
+  if (counts.cards !== 1) issues.push(`/work shows ${counts.cards} project cards, expected 1`);
+  if (counts.repoLinks < 5) issues.push(`/work lists only ${counts.repoLinks} repo links`);
   await ctx.close();
 }
 
