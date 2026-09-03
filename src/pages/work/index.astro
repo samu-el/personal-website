@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
+import { navIndex } from '@/lib/posts';
 import ProjectCard from '@/components/ProjectCard.astro';
 import { Icon } from 'astro-icon/components';
 import { href } from '@/lib/paths';
@@ -14,15 +15,11 @@ const all = (await getCollection('projects', ({ data }) => isPublished(data))).s
 /** The showcase. Everything else is deliberately kept out of it. */
 const showcased = all.filter((p) => !p.data.hidden);
 
-/**
- * Hidden work still worth acknowledging: one line each, linking straight to
- * the repository. Anything without a public repo stays off the page entirely.
- */
-const alsoPublic = all.filter((p) => p.data.hidden && p.data.repo);
-
 const title = 'Work';
 const description =
   'fantasy.et — Fantasy Premier League tooling by Samuel Mussie: a Next.js web app and a React Native companion sharing one data layer against a live public API.';
+
+const index = await navIndex('/work');
 ---
 
 <Layout {title} {description} path="/work">
@@ -30,7 +27,7 @@ const description =
     <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
     </div>
     <div class="wrap relative py-16 lg:py-24">
-      <p class="eyebrow" data-reveal>03 &nbsp;Work</p>
+      <p class="eyebrow" data-reveal>{index} &nbsp;Work</p>
       <div class="mt-7 grid gap-10 lg:grid-cols-12 lg:gap-8">
         <div class="lg:col-span-7">
           <h1
@@ -58,68 +55,36 @@ const description =
       {showcased.map((p) => <ProjectCard project={p} index={0} feature />)}
     </div>
 
-    <!-- Everything else: acknowledged, not showcased. -->
-    {
-      alsoPublic.length > 0 && (
-        <section class="mt-20 border-t border-line pt-12 lg:mt-28">
-          <div class="grid gap-8 lg:grid-cols-12 lg:gap-10">
-            <div class="lg:col-span-4">
-              <p class="eyebrow" data-reveal>
-                Also public
-              </p>
-              <p
-                class="mt-4 max-w-sm text-[0.9375rem] leading-relaxed text-muted"
-                data-reveal
-                style="--reveal-delay:60ms"
-              >
-                A decade of smaller things — bots, tools, two mobile apps, a URL shortener built
-                twice. Not written up, but the commit history is there if you want it.
-              </p>
-            </div>
-            <div class="lg:col-span-8">
-              <ul class="border-t border-line">
-                {alsoPublic.map((p, i) => (
-                  <li>
-                    <a
-                      href={p.data.repo}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="group flex items-baseline gap-4 border-b border-line py-3.5"
-                      data-reveal
-                      style={`--reveal-delay:${Math.min(i, 8) * 40}ms`}
-                    >
-                      <span class="w-28 shrink-0 whitespace-nowrap font-mono text-2xs tracking-wide text-subtle">
-                        {p.data.period}
-                      </span>
-                      <span class="text-[0.9375rem] tracking-tight text-fg transition-colors group-hover:text-accent">
-                        {p.data.title}
-                      </span>
-                      <span class="ml-auto hidden shrink-0 font-mono text-2xs text-subtle sm:block">
-                        {p.data.stack[0] ?? p.data.kind}
-                      </span>
-                      <Icon
-                        name="lucide:arrow-up-right"
-                        class="size-3.5 shrink-0 self-center text-subtle transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
-                        aria-hidden="true"
-                      />
-                    </a>
-                  </li>
-                ))}
-              </ul>
-              <a
-                href="https://github.com/samu-el?tab=repositories"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="btn btn-ghost mt-8"
-              >
-                <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
-                Everything on GitHub
-              </a>
-            </div>
-          </div>
-        </section>
-      )
-    }
+    <!-- Everything else lives on GitHub rather than being re-listed here. -->
+    <section class="mt-20 border-t border-line pt-12 lg:mt-28">
+      <div class="grid gap-8 lg:grid-cols-12 lg:gap-10">
+        <div class="lg:col-span-4">
+          <p class="eyebrow" data-reveal>Everything else</p>
+        </div>
+        <div class="lg:col-span-7">
+          <p
+            class="max-w-xl text-[0.9375rem] leading-relaxed text-muted"
+            data-reveal
+            style="--reveal-delay:60ms"
+          >
+            A decade of smaller things — bots, tools, two mobile apps, a URL shortener built twice.
+            None of it is written up, but the commit history goes back to 2016 and is a more honest
+            record than anything I could write about myself.
+          </p>
+          <a
+            href="https://github.com/samu-el?tab=repositories"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="btn btn-ghost mt-7"
+            data-reveal
+            style="--reveal-delay:120ms"
+          >
+            <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
+            Explore on GitHub
+          </a>
+        </div>
+      </div>
+    </section>
 
     <div class="mt-16 border-t border-line pt-10">
       <p class="max-w-2xl text-[0.9375rem] leading-relaxed text-muted">

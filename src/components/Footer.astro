@@ -1,9 +1,13 @@
 ---
 import { nav, site, socials } from '@/lib/site';
 import { href } from '@/lib/paths';
+import { hasWriting, visibleNav } from '@/lib/posts';
 import { Icon } from 'astro-icon/components';
 
 const year = new Date().getFullYear();
+
+const writing = await hasWriting();
+const items = await visibleNav();
 ---
 
 <footer class="mt-32 border-t border-line bg-sunken">
@@ -32,7 +36,7 @@ const year = new Date().getFullYear();
         <h3 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Pages</h3>
         <ul class="mt-5 space-y-2.5">
           {
-            nav.map((item) => (
+            items.map((item) => (
               <li>
                 <a
                   href={href(item.href)}
@@ -70,15 +74,19 @@ const year = new Date().getFullYear();
       <div class="lg:col-span-2">
         <h3 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">This site</h3>
         <ul class="mt-5 space-y-2.5">
-          <li>
-            <a
-              href={href('/rss.xml')}
-              class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
-            >
-              <Icon name="lucide:rss" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
-              RSS feed
-            </a>
-          </li>
+          {
+            writing && (
+              <li>
+                <a
+                  href={href('/rss.xml')}
+                  class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+                >
+                  <Icon name="lucide:rss" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+                  RSS feed
+                </a>
+              </li>
+            )
+          }
           <li>
             <a
               href="https://github.com/samu-el/personal-website"

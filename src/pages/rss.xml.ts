@@ -1,13 +1,11 @@
 import rss from '@astrojs/rss';
-import { getCollection } from 'astro:content';
 import type { APIRoute } from 'astro';
 import { site } from '@/lib/site';
 import { href } from '@/lib/paths';
+import { publishedPosts } from '@/lib/posts';
 
 export const GET: APIRoute = async (context) => {
-  const posts = (await getCollection('posts', ({ data }) => !data.draft)).sort(
-    (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
-  );
+  const posts = await publishedPosts();
 
   return rss({
     title: `${site.name} — Writing`,

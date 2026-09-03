@@ -165,6 +165,41 @@ for (const [w, h, tag] of [
   await ctx.close();
 }
 
+// 3b. Writing policy: nothing an AI wrote may be published, and the section
+//     only exists when there is something in it.
+const hasPosts = await (async () => {
+  const { readdir, readFile } = await import('node:fs/promises');
+  const dir = new URL('../src/content/posts/', import.meta.url);
+  const files = (await readdir(dir)).filter((f) => /\.mdx?$/.test(f));
+  let publishable = 0;
+  for (const file of files) {
+    const raw = await readFile(new URL(file, dir), 'utf8');
+    const ai = /^aiWritten:\s*true\s*$/m.test(raw);
+    const draft = /^draft:\s*true\s*$/m.test(raw);
+    if (!ai && !draft) publishable += 1;
+  }
+  return publishable > 0;
+})();
+
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/`, { waitUntil: 'load' });
+  const navHasWriting = await page.evaluate(() =>
+    [...document.querySelectorAll('header a')].some((a) => /\/writing\/?$/.test(a.pathname)),
+  );
+  if (navHasWriting !== hasPosts) {
+    issues.push(
+      `nav ${navHasWriting ? 'shows' : 'hides'} Writing but ${hasPosts ? 'posts exist' : 'there are no posts'}`,
+    );
+  }
+
+  const sitemap = await (await page.request.get(`${BASE}/sitemap-0.xml`)).text();
+  const inSitemap = /\/writing\/?<\/loc>/.test(sitemap);
+  if (inSitemap && !hasPosts) issues.push('empty /writing is listed in the sitemap');
+  await ctx.close();
+}
+
 // 4. Showcase invariants: exactly the showcased projects have detail pages,
 //    nothing marked hidden is reachable, and client work carries no outbound
 //    link. Slugs are read from the project files so this holds as the
@@ -194,12 +229,19 @@ for (const [w, h, tag] of [
   }
 
   await page.goto(`${BASE}/work`, { waitUntil: 'load' });
-  const counts = await page.evaluate(() => ({
+  const workPage = await page.evaluate(() => ({
     cards: document.querySelectorAll('article').length,
-    repoLinks: document.querySelectorAll('a[href*="github.com/samu-el/"]').length,
+    // Hidden projects are not re-listed here; the page points at GitHub instead.
+    hiddenListed: document.querySelectorAll('main ul a[href*="github.com/samu-el/"]').length,
+    exploreLink: [...document.querySelectorAll('a')].some((a) =>
+      /github\.com\/samu-el\?tab=repositories/.test(a.href),
+    ),
   }));
-  if (counts.cards !== 1) issues.push(`/work shows ${counts.cards} project cards, expected 1`);
-  if (counts.repoLinks < 5) issues.push(`/work lists only ${counts.repoLinks} repo links`);
+  if (workPage.cards !== 1) issues.push(`/work shows ${workPage.cards} project cards, expected 1`);
+  if (workPage.hiddenListed > 0) {
+    issues.push(`/work re-lists ${workPage.hiddenListed} hidden projects`);
+  }
+  if (!workPage.exploreLink) issues.push('/work has no link out to the GitHub profile');
   await ctx.close();
 }
 
@@ -230,7 +272,9 @@ for (const [w, h, tag] of [
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   for (const [path, must] of [
-    ['/rss.xml', ['<rss', '<language>en-us</language>', '<item>']],
+    // The feed is valid whether or not anything is published; only assert
+    // items when there are posts to be in it.
+    ['/rss.xml', hasPosts ? ['<rss', '<language>en-us</language>', '<item>'] : ['<rss']],
     ['/sitemap-index.xml', ['<sitemapindex']],
     ['/robots.txt', ['Sitemap:', 'User-agent: *']],
   ]) {

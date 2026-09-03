@@ -62,7 +62,7 @@ Everything editable lives in two places: **`src/content/`** for long-form entrie
 src/
 ├── content/
 │   ├── projects/*.md     # one file per project → /work/<slug>
-│   └── posts/*.md        # one file per essay   → /writing/<slug>
+│   └── posts/*.md        # one file per post   → /writing/<slug>
 ├── content.config.ts     # frontmatter schemas (build fails on a bad field)
 ├── data/
 │   ├── experience.ts     # timeline, metrics, principles
@@ -81,6 +81,10 @@ src/
 
 ### Adding a post
 
+There are no posts. The Writing section — its nav link, the home-page section, the RSS feed and
+its sitemap entry — appears automatically the moment a publishable post exists, and disappears
+again when none do. So adding one is the only step.
+
 Create `src/content/posts/my-post.md`:
 
 ```yaml
@@ -96,6 +100,11 @@ Body in Markdown.
 ```
 
 Reading time is computed from the body; set `readingTime` to override it.
+
+**`aiWritten: true` means a post is never rendered in production**, in any environment — the
+same treatment as `draft`, but not overridable by the dev server. This site publishes only
+Samuel's own words, and the flag makes that a property of the build rather than something to
+remember. It is enforced in `src/lib/posts.ts` and covered by the smoke suite.
 
 The smoke suite reads its route list from the built sitemap, so a new page or a renamed post is
 covered automatically.

@@ -1,9 +1,14 @@
 ---
 import { nav, site } from '@/lib/site';
 import { href, isActive } from '@/lib/paths';
+import { hasWriting, visibleNav } from '@/lib/posts';
 import ThemeToggle from './ThemeToggle.astro';
 
 const current = Astro.url.pathname;
+
+// The Writing section only exists when there is something published in it.
+const writing = await hasWriting();
+const items = await visibleNav();
 ---
 
 <a
@@ -40,7 +45,7 @@ const current = Astro.url.pathname;
     <!-- Desktop nav -->
     <nav aria-label="Primary" class="hidden items-center gap-0.5 md:flex">
       {
-        nav.slice(1).map((item) => {
+        items.slice(1).map((item) => {
           const active = isActive(current, href(item.href));
           return (
             <a
@@ -99,7 +104,7 @@ const current = Astro.url.pathname;
   <div id="mobile-menu" hidden class="border-t border-line bg-bg md:hidden">
     <nav aria-label="Mobile" class="wrap flex flex-col py-2">
       {
-        nav.map((item) => {
+        items.map((item) => {
           const active = isActive(current, href(item.href));
           return (
             <a

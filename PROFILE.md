@@ -59,17 +59,21 @@ None of these are false as far as I can tell — but they are yours to sign off.
    request", "I can put you in touch with someone I have built for". Keep only what you'll
    honour. If you are not looking, change the hero eyebrow ("Open to engagements") and the
    footer ("Open to work").
-8. **The five essays** in `src/content/posts/`. Written in your voice, from technical positions
-   your repositories support:
-   - `rag-in-production` — from your RAG backend/frontend repos.
-   - `url-shortener-twice` — from `short.et` and `short.et-mono` existing as two builds.
-   - `flutter-or-native` — from `FChat` (2019, Dart) and `RestaurantAppIOS` (2020, Swift).
-   - `worst-connection-in-the-room` — from `check-exam-results-TBot`.
-   - `amharic-is-not-hard` — from `transate-to-amharic-telegram-bot`.
-     The _reasoning_ in each is mine, not yours. Read them properly, edit freely, or set
-     `draft: true` on any you'd rather not publish. In particular: the shortener essay claims
-     version two used a Postgres sequence rather than random-and-check — verify that matches
-     what you actually built.
+8. **There is no Writing section.** I had written five essays in your voice; you did not want
+   AI-written articles on your site, so they are deleted. The section's plumbing survives — drop
+   a Markdown file into `src/content/posts/` and the nav link, home-page section, RSS feed and
+   sitemap entry all reappear on the next build.
+
+   A post carrying `aiWritten: true` is never rendered in production, in any environment. That
+   is enforced in `src/lib/posts.ts` and covered by the smoke suite, so the policy holds without
+   anyone having to remember it.
+
+9. **The rest of the site copy is still mine, not yours.** The hero, the About narrative, the
+   principles, the stack notes, the contact routes and the fantasy.et write-up were all written
+   by me from public sources. That is a different thing from a bylined article, which is why
+   deleting the essays did not touch them — but if you want the site to be your words
+   throughout, this is the list to rewrite. Everything editable is in `src/content/`,
+   `src/data/` and the page files.
 
 ---
 

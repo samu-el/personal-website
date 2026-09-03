@@ -1,5 +1,6 @@
 ---
 import Layout from '@/layouts/Layout.astro';
+import { navIndex } from '@/lib/posts';
 import { site, socials } from '@/lib/site';
 import { href } from '@/lib/paths';
 import { services } from '@/data/stack';
@@ -39,6 +40,8 @@ const routes = [
     ctaHref: `mailto:${site.email}`,
   },
 ];
+
+const index = await navIndex('/contact');
 ---
 
 <Layout {title} {description} path="/contact" bareFooter>
@@ -46,7 +49,7 @@ const routes = [
     <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
     </div>
     <div class="wrap relative py-16 lg:py-24">
-      <p class="eyebrow" data-reveal>06 &nbsp;Contact</p>
+      <p class="eyebrow" data-reveal>{index} &nbsp;Contact</p>
       <div class="mt-7 grid gap-10 lg:grid-cols-12 lg:gap-8">
         <div class="lg:col-span-7">
           <h1
