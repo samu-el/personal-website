@@ -43,8 +43,11 @@ jobs:
 
       - uses: actions/configure-pages@v5
         with:
-          # Lets the first run turn Pages on itself, instead of failing because
-          # Settings → Pages has never been touched.
+          # Only effective where the caller's credentials can create a Pages
+          # site. The default GITHUB_TOKEN cannot, whatever its permissions —
+          # so Pages must be switched on once by hand:
+          #   Settings → Pages → Build and deployment → Source: GitHub Actions
+          # After that this step just reads the existing config and passes.
           enablement: true
 
       - uses: actions/upload-pages-artifact@v3
