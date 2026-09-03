@@ -6,6 +6,8 @@
 export const site = {
   name: 'Samuel Mussie',
   shortName: 'Samuel',
+  /** Still used by the favicon and app icons (public/favicon.svg,
+   *  scripts/assets/icon.html) — a face is not legible at 16px. */
   initials: 'SM',
   role: 'Software Engineer',
   location: 'Addis Ababa, Ethiopia',

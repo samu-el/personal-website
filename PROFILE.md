@@ -67,8 +67,13 @@ removed so you can write your own. What remains that still needs checking:
   the services pitch, the invented anecdotes, and the case-study reasoning in the fantasy.et
   write-up (which also removes the two technical claims about it I could not verify). What is
   left states facts and stops.
-- **No photograph** — I had no rights-cleared image of you. Drop one in `public/` and add it to
-  the About page and `BaseHead`'s OG tags.
+- **A higher-resolution photograph.** The one you sent is 72×72, which is enough for the 32px
+  header avatar and the 62px mark on the social card — both now use it (`src/assets/avatar.jpg`).
+  It is _not_ enough for an About-page portrait or the app icons, which need 512px. Send a larger
+  file and replace that one asset; the header and card pick it up automatically.
+- **The favicon and app icons are still the "SM" monogram** (`public/favicon.svg`,
+  `scripts/assets/icon.html`). Deliberate: a face is not legible at 16px. With a larger source I
+  can switch the 180/192/512px app icons to the photo and leave the favicon as the monogram.
 - **No phone number, address or rates.**
 - **No testimonials or client names.**
 - **No X/Twitter link** — no account I could confirm was yours. Add it to `src/lib/site.ts`.
