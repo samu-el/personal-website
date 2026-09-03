@@ -19,10 +19,20 @@
  */
 import { chromium } from 'playwright';
 import { mkdir } from 'node:fs/promises';
+import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
 
 const ORIGIN = process.env.BASE_URL ?? 'http://localhost:4321';
 const BASE_PATH = process.env.BASE_PATH ?? '/personal-website';
 const BASE = `${ORIGIN}${BASE_PATH}`;
+
+// Node's global fetch ignores HTTPS_PROXY, so checking a deployed site from
+// behind an egress proxy fails with a 403 from the proxy rather than a real
+// response. Route fetch through it, and hand the same proxy to the browser.
+const PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || '';
+if (PROXY) setGlobalDispatcher(new EnvHttpProxyAgent());
+const proxyOption = PROXY
+  ? { server: PROXY, bypass: (process.env.NO_PROXY || 'localhost,127.0.0.1').split(',').join(',') }
+  : undefined;
 const OUT = process.env.SHOT_DIR ?? '.screenshots';
 await mkdir(OUT, { recursive: true });
 
@@ -45,6 +55,7 @@ console.log(`Checking ${routes.length} routes…`);
 const browser = await chromium.launch({
   // Honour a preinstalled browser when one is provided (CI images, sandboxes).
   executablePath: process.env.CHROMIUM_PATH || undefined,
+  proxy: proxyOption,
 });
 const issues = [];
 

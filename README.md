@@ -40,8 +40,16 @@ mobile menu, the work filter, the scroll reveal, and the RSS/sitemap/OG/JSON-LD 
 ```bash
 npm run build
 npm run preview &
-npm run verify          # BASE_URL=… to point it at a deployed site instead
+npm run verify
 ```
+
+To check a deployed site instead, point it at the origin and base path:
+
+```bash
+BASE_URL=https://samu-el.github.io BASE_PATH=/personal-website npm run verify
+```
+
+Both the route fetches and the browser honour `HTTPS_PROXY` when it is set.
 
 ---
 
