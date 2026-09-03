@@ -9,6 +9,8 @@ export const site = {
   initials: 'SM',
   role: 'Software Engineer',
   location: 'Addis Ababa, Ethiopia',
+  /** For tight spots — the header wordmark, the social card. */
+  locationShort: 'Addis Ababa',
   /** Current employer. Referenced in the timeline only — not part of the pitch. */
   company: 'Mereb Technologies',
   companyUrl: 'https://www.mereb.tech',
@@ -17,7 +19,7 @@ export const site = {
   email: 'samuel@mereb.tech',
   /** Used in <title> suffix and OG site name. */
   title: 'Samuel Mussie — Software Engineer',
-  tagline: 'I ship the boring version of hard problems.',
+  tagline: 'No software engineering problem is too big to solve.',
   description:
     'Samuel Mussie is a software engineer in Addis Ababa. A decade of building web and mobile products end to end — Python and TypeScript services, React and Next.js front ends, Flutter and native mobile, and the retrieval systems behind AI features that hold up in production.',
 } as const;

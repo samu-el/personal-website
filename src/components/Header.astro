@@ -30,8 +30,9 @@ const current = Astro.url.pathname;
       >
       <span class="flex flex-col leading-none">
         <span class="text-[0.9375rem] font-medium tracking-tight">{site.name}</span>
-        <span class="mt-0.5 hidden font-mono text-2xs tracking-wider text-subtle sm:block"
-          >{site.role} · {site.location}</span
+        <span
+          class="mt-0.5 hidden whitespace-nowrap font-mono text-2xs tracking-wider text-subtle lg:block"
+          >{site.role} · {site.locationShort}</span
         >
       </span>
     </a>
@@ -64,7 +65,7 @@ const current = Astro.url.pathname;
       <ThemeToggle />
       <a
         href={href('/contact')}
-        class="btn btn-primary hidden !px-4 !py-2 !text-[0.8125rem] md:inline-flex"
+        class="btn btn-primary hidden whitespace-nowrap !px-4 !py-2 !text-[0.8125rem] lg:inline-flex"
       >
         Get in touch
       </a>
