@@ -1,9 +1,10 @@
 /**
  * Build-time base path helpers.
  *
- * The site can ship either to a GitHub Pages project site (base `/personal-website`)
- * or to a custom domain (base `/`). Every internal link goes through `href()` so
- * switching between the two is a single env var, not a find-and-replace.
+ * The site ships to the custom domain smr.et at the root (base `/`), but can be
+ * built for a GitHub Pages project site (base `/personal-website`) instead.
+ * Every internal link goes through `href()` so switching between the two is a
+ * single env var, not a find-and-replace.
  */
 const BASE = import.meta.env.BASE_URL || '/';
 

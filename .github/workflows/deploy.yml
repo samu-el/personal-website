@@ -36,10 +36,10 @@ jobs:
       - name: Build
         run: npm run build:fast
         env:
-          # Set repository variables SITE / BASE to move to a custom domain
-          # (e.g. SITE=https://samuelmussie.dev and BASE=/).
-          SITE: ${{ vars.SITE || 'https://samu-el.github.io' }}
-          BASE: ${{ vars.BASE || '/personal-website' }}
+          # Defaults target the custom domain smr.et at the root. Repository
+          # variables SITE / BASE override them without touching this file.
+          SITE: ${{ vars.SITE || 'https://smr.et' }}
+          BASE: ${{ vars.BASE || '/' }}
 
       - uses: actions/configure-pages@v5
         with:

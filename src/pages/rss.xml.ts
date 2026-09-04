@@ -11,7 +11,7 @@ export const GET: APIRoute = async (context) => {
     title: `${site.name} — Writing`,
     description:
       'Essays on hiring senior engineers, running distributed teams, and shipping AI features that survive contact with users.',
-    site: context.site ?? 'https://samu-el.github.io',
+    site: context.site ?? 'https://smr.et',
     trailingSlash: false,
     items: posts.map((post) => ({
       title: post.data.title,

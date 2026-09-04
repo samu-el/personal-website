@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { href } from '@/lib/paths';
 
 export const GET: APIRoute = ({ site }) => {
-  const sitemap = new URL(href('/sitemap-index.xml'), site ?? 'https://samu-el.github.io');
+  const sitemap = new URL(href('/sitemap-index.xml'), site ?? 'https://smr.et');
 
   const body = `User-agent: *
 Allow: /
