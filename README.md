@@ -146,9 +146,11 @@ three need to stay in place:
    Cloudflare's SSL/TLS mode must be **Full** (not Flexible, which causes a redirect loop with
    Pages).
 2. **The repository setting** — Settings → Pages → Custom domain is set to `smr.et`.
-3. **`public/CNAME`** — shipped in the build artifact so a deploy cannot clear the setting.
-   It must live in `public/`, not the repository root: this workflow deploys the built `dist/`
-   directory, and only `public/` is copied into it. A root `CNAME` is never seen by Pages.
+3. **Two `CNAME` files, both required.** `CNAME` at the repository root is what GitHub treats
+   as the source of truth for the custom-domain setting — the Pages UI writes it, and **deleting
+   it clears the domain**, which takes the site down. `public/CNAME` is the copy that ends up
+   inside the deployed `dist/`, since Astro copies only `public/`. Keep both; do not "tidy up"
+   either one.
 
 Build defaults live in `astro.config.mjs` (`SITE=https://smr.et`, `BASE=/`) and are mirrored in
 the deploy workflow, so no repository variables are required.
