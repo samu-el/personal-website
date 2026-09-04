@@ -32,7 +32,9 @@ const hasPosts = readdirSync(new URL('./src/content/posts', import.meta.url)).so
 export default defineConfig({
   site: SITE,
   base: BASE,
-  trailingSlash: 'ignore',
+  // GitHub Pages 301s /about to /about/, so emit the slashed form directly:
+  // no redirect hop on navigation, and canonicals that match the sitemap.
+  trailingSlash: 'always',
   output: 'static',
   integrations: [
     mdx(),
