@@ -16,7 +16,7 @@ a page is a theme toggle, a mobile menu, a scroll observer and a clock.
 
 ```bash
 npm install
-npm run dev        # http://localhost:4321/personal-website
+npm run dev        # http://localhost:4321
 ```
 
 | Command              | What it does                                             |
@@ -46,7 +46,7 @@ npm run verify
 To check a deployed site instead, point it at the origin and base path:
 
 ```bash
-BASE_URL=https://samu-el.github.io BASE_PATH=/personal-website npm run verify
+BASE_URL=https://smr.et npm run verify
 ```
 
 Both the route fetches and the browser honour `HTTPS_PROXY` when it is set.
@@ -139,33 +139,29 @@ One stylesheet, `src/styles/global.css`, holds all of it:
 
 `.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `master`.
 
-**One-time setup, required before the first deploy can succeed:**
+The site is served from **https://smr.et**, at the root. Three things make that work, and all
+three need to stay in place:
 
-> **Settings → Pages → Build and deployment → Source: _GitHub Actions_**
+1. **DNS** — `smr.et` and `www.smr.et` resolve to Cloudflare, which proxies to GitHub Pages.
+   Cloudflare's SSL/TLS mode must be **Full** (not Flexible, which causes a redirect loop with
+   Pages).
+2. **The repository setting** — Settings → Pages → Custom domain is set to `smr.et`.
+3. **`public/CNAME`** — shipped in the build artifact so a deploy cannot clear the setting.
 
-This cannot be automated. Creating a Pages site needs repo-admin credentials, and a workflow's
-`GITHUB_TOKEN` never has them — `configure-pages` fails with
-`Create Pages site failed: Resource not accessible by integration` until the setting is flipped
-by hand. Once it is, re-run the deploy workflow and every later push publishes on its own.
+Build defaults live in `astro.config.mjs` (`SITE=https://smr.et`, `BASE=/`) and are mirrored in
+the deploy workflow, so no repository variables are required.
 
-The live URL is `https://samu-el.github.io/personal-website`.
+### Building for a GitHub Pages project site instead
 
-### Moving to a custom domain
+If the domain ever goes away, nothing needs rewriting — every internal link goes through
+`href()` in `src/lib/paths.ts`, which applies the base:
 
-The site URL and base path are environment variables, so this is configuration, not a
-find-and-replace:
+```bash
+SITE=https://samu-el.github.io BASE=/personal-website npm run build
+```
 
-1. Add `public/CNAME` containing the bare domain (e.g. `samuelmussie.dev`).
-2. Set repository variables under **Settings → Secrets and variables → Actions → Variables**:
-   - `SITE` = `https://samuelmussie.dev`
-   - `BASE` = `/`
-3. Point a `CNAME` DNS record at `samu-el.github.io`, then set the domain under
-   **Settings → Pages**.
-
-Every internal link goes through `href()` in `src/lib/paths.ts`, which prefixes the configured
-base — so both deployments work from the same source.
-
----
+Either set those as repository variables (**Settings → Secrets and variables → Actions →
+Variables**) or change the defaults in `astro.config.mjs`. Remove `public/CNAME` too.
 
 ## Licence
 

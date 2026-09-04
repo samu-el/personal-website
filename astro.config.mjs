@@ -7,14 +7,18 @@ import icon from 'astro-icon';
 import tailwindcss from '@tailwindcss/vite';
 
 /**
- * Deployment is configurable so the same source can ship to either
- * a GitHub Pages project site or a custom domain:
+ * The site is served from the custom domain smr.et, at the root.
  *
- *   GitHub Pages (default) -> https://samu-el.github.io/personal-website
- *   Custom domain          -> SITE=https://samuelmussie.dev BASE=/ npm run build
+ * Both values stay overridable so the same source can be built for a
+ * GitHub Pages project site if the domain ever goes away:
+ *
+ *   SITE=https://samu-el.github.io BASE=/personal-website npm run build
+ *
+ * Every internal link goes through href() in src/lib/paths.ts, which applies
+ * the base — so switching is configuration, not a find-and-replace.
  */
-const SITE = process.env.SITE ?? 'https://samu-el.github.io';
-const BASE = process.env.BASE ?? '/personal-website';
+const SITE = process.env.SITE ?? 'https://smr.et';
+const BASE = process.env.BASE ?? '/';
 
 /**
  * The Writing section is gated on there being posts to read. When there are

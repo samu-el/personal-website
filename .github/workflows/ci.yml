@@ -33,5 +33,5 @@ jobs:
       - name: Smoke test the built site
         run: |
           npx astro preview --port 4321 &
-          npx wait-on http://localhost:4321/personal-website/ --timeout 60000
+          npx wait-on http://localhost:4321/ --timeout 60000
           npm run verify

@@ -36,7 +36,7 @@ const { Content, headings } = await render(post);
 const d = post.data;
 const minutes = d.readingTime ?? readingTime(post.body);
 
-const shareUrl = new URL(href(`/writing/${post.id}`), Astro.site ?? 'https://samu-el.github.io');
+const shareUrl = new URL(href(`/writing/${post.id}`), Astro.site ?? 'https://smr.et');
 
 const articleSchema = {
   '@context': 'https://schema.org',

@@ -1,5 +1,7 @@
 # Content provenance & what needs your eyes
 
+The site is live at **https://smr.et**.
+
 Everything on this site was written from **public sources plus reasonable inference**. This file
 records where each claim came from and flags the ones only you can confirm. Read the flagged
 list before you share the URL.

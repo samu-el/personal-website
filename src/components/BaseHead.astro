@@ -32,8 +32,8 @@ const {
 
 const hasFeed = await hasWriting();
 
-const canonical = new URL(href(path), Astro.site ?? 'https://samu-el.github.io');
-const ogImage = new URL(href(image), Astro.site ?? 'https://samu-el.github.io');
+const canonical = new URL(href(path), Astro.site ?? 'https://smr.et');
+const ogImage = new URL(href(image), Astro.site ?? 'https://smr.et');
 const fullTitle = path === '/' ? title : `${title} · ${site.name}`;
 
 /** Person schema so search engines and assistants get the identity right. */
@@ -41,7 +41,7 @@ const personSchema = {
   '@context': 'https://schema.org',
   '@type': 'Person',
   name: site.name,
-  url: new URL(href('/'), Astro.site ?? 'https://samu-el.github.io').toString(),
+  url: new URL(href('/'), Astro.site ?? 'https://smr.et').toString(),
   image: ogImage.toString(),
   email: `mailto:${site.email}`,
   jobTitle: 'Software Engineer',

@@ -22,7 +22,7 @@ import { mkdir } from 'node:fs/promises';
 import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
 
 const ORIGIN = process.env.BASE_URL ?? 'http://localhost:4321';
-const BASE_PATH = process.env.BASE_PATH ?? '/personal-website';
+const BASE_PATH = process.env.BASE_PATH ?? '';
 const BASE = `${ORIGIN}${BASE_PATH}`;
 
 // Node's global fetch ignores HTTPS_PROXY, so checking a deployed site from
@@ -297,8 +297,26 @@ const hasPosts = await (async () => {
   if (!meta.title?.includes('Samuel Mussie')) issues.push('title missing name');
   if (!meta.desc) issues.push('missing meta description');
   if (!meta.og?.endsWith('/og.png')) issues.push(`og:image wrong: ${meta.og}`);
-  if (!meta.canonical?.includes('/personal-website'))
-    issues.push(`canonical wrong: ${meta.canonical}`);
+  // The canonical points at the configured production origin, not wherever
+  // this run happens to be served from, so check its shape rather than its
+  // host: absolute, https, and the path this page actually lives at.
+  try {
+    const c = new URL(meta.canonical);
+    if (c.protocol !== 'https:') issues.push(`canonical is not https: ${meta.canonical}`);
+    const expected = `${BASE_PATH}/`.replace(/\/+/g, '/');
+    if (c.pathname !== expected) {
+      issues.push(`canonical path is ${c.pathname}, expected ${expected}`);
+    }
+  } catch {
+    issues.push(`canonical is not an absolute URL: ${meta.canonical}`);
+  }
+  // og:image must be absolute too, or scrapers cannot fetch it.
+  try {
+    const o = new URL(meta.og);
+    if (o.protocol !== 'https:') issues.push(`og:image is not https: ${meta.og}`);
+  } catch {
+    issues.push(`og:image is not an absolute URL: ${meta.og}`);
+  }
   try {
     const ld = JSON.parse(meta.ld);
     if (ld['@type'] !== 'Person' || ld.name !== 'Samuel Mussie') issues.push('Person schema wrong');
