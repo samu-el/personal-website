@@ -147,6 +147,8 @@ three need to stay in place:
    Pages).
 2. **The repository setting** — Settings → Pages → Custom domain is set to `smr.et`.
 3. **`public/CNAME`** — shipped in the build artifact so a deploy cannot clear the setting.
+   It must live in `public/`, not the repository root: this workflow deploys the built `dist/`
+   directory, and only `public/` is copied into it. A root `CNAME` is never seen by Pages.
 
 Build defaults live in `astro.config.mjs` (`SITE=https://smr.et`, `BASE=/`) and are mirrored in
 the deploy workflow, so no repository variables are required.
