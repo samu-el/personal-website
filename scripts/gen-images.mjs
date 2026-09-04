@@ -9,7 +9,7 @@
  *
  * Set CHROMIUM_PATH when a browser is already installed on the machine.
  */
-import { mkdir, rm } from 'node:fs/promises';
+import { mkdir, readFile, rm } from 'node:fs/promises';
 import { statSync } from 'node:fs';
 import { resolve, dirname } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -25,10 +25,23 @@ await mkdir(publicDir, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 
+/**
+ * The card is a standalone HTML file, so it cannot import from site.ts. Rather
+ * than keep a second copy of the address that silently goes stale, read it out
+ * of site.ts and write it into the page before the screenshot.
+ */
+const siteTs = await readFile(resolve(root, 'src/lib/site.ts'), 'utf8');
+const email = siteTs.match(/email:\s*'([^']+)'/)?.[1];
+if (!email) throw new Error('could not read site.email from src/lib/site.ts');
+
 async function shoot(template, width, height, target) {
   const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   await page.goto(asset(template), { waitUntil: 'load' });
+  await page.evaluate((value) => {
+    const el = document.getElementById('email');
+    if (el) el.textContent = value;
+  }, email);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(150);
   await mkdir(dirname(target), { recursive: true });

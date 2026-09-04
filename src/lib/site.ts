@@ -18,7 +18,7 @@ export const site = {
   companyUrl: 'https://www.mereb.tech',
   locale: 'en',
   timezone: 'Africa/Addis_Ababa',
-  email: 'samuel@mereb.tech',
+  email: 'samuel@smr.et',
   /** Used in <title> suffix and OG site name. */
   title: 'Samuel Mussie — Software Engineer',
   tagline: 'No software engineering problem is too big to solve.',
