@@ -16,9 +16,9 @@ const index = await navIndex('/stack');
   <section class="relative overflow-hidden border-b border-line">
     <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
     </div>
-    <div class="wrap relative py-16 lg:py-24">
+    <div class="wrap relative py-10 lg:py-24">
       <p class="eyebrow" data-reveal>{index} &nbsp;Stack</p>
-      <div class="mt-7 grid gap-10 lg:grid-cols-12 lg:gap-8">
+      <div class="mt-5 grid gap-5 lg:mt-7 lg:grid-cols-12 lg:gap-8">
         <div class="lg:col-span-7">
           <h1
             class="display text-[clamp(2.4rem,6.6vw,4.25rem)]"
@@ -38,8 +38,8 @@ const index = await navIndex('/stack');
     </div>
   </section>
 
-  <div class="wrap py-16 lg:py-20">
-    <div class="space-y-16 lg:space-y-24">
+  <div class="wrap py-10 lg:py-20">
+    <div class="space-y-10 lg:space-y-24">
       {
         stack.map((group) => (
           <section class="grid gap-8 lg:grid-cols-12 lg:gap-10">
@@ -60,10 +60,10 @@ const index = await navIndex('/stack');
             </div>
 
             <div class="lg:col-span-8">
-              <ul class="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
+              <ul class="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-line bg-line">
                 {group.items.map((item, i) => (
                   <li
-                    class="group flex items-start gap-3.5 bg-surface p-5 transition-colors duration-300 hover:bg-surface-2"
+                    class="group flex items-start gap-3 bg-surface p-4 transition-colors duration-300 hover:bg-surface-2 sm:gap-3.5 sm:p-5"
                     data-reveal
                     style={`--reveal-delay:${Math.min(i, 6) * 50}ms`}
                   >
@@ -90,7 +90,7 @@ const index = await navIndex('/stack');
     </div>
 
     <!-- How this site is built -->
-    <section class="mt-20 border-t border-line pt-12 lg:mt-28">
+    <section class="mt-12 border-t border-line pt-10 lg:mt-28 lg:pt-12">
       <div class="grid gap-8 lg:grid-cols-12 lg:gap-10">
         <div class="lg:col-span-4">
           <p class="eyebrow" data-reveal>This site</p>

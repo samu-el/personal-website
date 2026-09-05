@@ -16,7 +16,7 @@ const { index, eyebrow, title, lede, id, divider = true, class: className = '' }
 
 <section id={id} class:list={['scroll-mt-24', className]}>
   {divider && <div class="rule" />}
-  <div class="wrap py-16 lg:py-24">
+  <div class="wrap py-10 lg:py-24">
     {
       (eyebrow || title || lede) && (
         <div class="grid gap-6 lg:grid-cols-12 lg:gap-8">
@@ -51,7 +51,7 @@ const { index, eyebrow, title, lede, id, divider = true, class: className = '' }
         </div>
       )
     }
-    <div class:list={[(eyebrow || title || lede) && 'mt-14 lg:mt-16']}>
+    <div class:list={[(eyebrow || title || lede) && 'mt-8 lg:mt-16']}>
       <slot />
     </div>
   </div>

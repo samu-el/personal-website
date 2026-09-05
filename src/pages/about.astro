@@ -19,9 +19,9 @@ const index = await navIndex('/about');
   <section class="relative overflow-hidden border-b border-line">
     <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
     </div>
-    <div class="wrap relative py-16 lg:py-24">
+    <div class="wrap relative py-10 lg:py-24">
       <p class="eyebrow" data-reveal>{index} &nbsp;About</p>
-      <div class="mt-7 grid gap-10 lg:grid-cols-12 lg:gap-8">
+      <div class="mt-5 grid gap-5 lg:mt-7 lg:grid-cols-12 lg:gap-8">
         <div class="lg:col-span-7">
           <h1
             class="display text-[clamp(2.4rem,6.6vw,4.25rem)]"
@@ -43,8 +43,8 @@ const index = await navIndex('/about');
   </section>
 
   <!-- ── Narrative ────────────────────────────────────────────────── -->
-  <div class="wrap py-16 lg:py-24">
-    <div class="grid gap-12 lg:grid-cols-12 lg:gap-10">
+  <div class="wrap py-10 lg:py-24">
+    <div class="grid gap-10 lg:grid-cols-12 lg:gap-10">
       <div class="lg:col-span-7">
         <div class="prose" data-reveal>
           <p>
@@ -151,7 +151,7 @@ const index = await navIndex('/about');
     <ol class="space-y-px overflow-hidden rounded-lg border border-line bg-line">
       {
         roles.map((role, i) => (
-          <li class="bg-surface p-7 lg:p-9" data-reveal style={`--reveal-delay:${i * 80}ms`}>
+          <li class="bg-surface p-5 sm:p-7 lg:p-9" data-reveal style={`--reveal-delay:${i * 80}ms`}>
             <div class="grid gap-6 lg:grid-cols-12 lg:gap-8">
               <div class="lg:col-span-3">
                 <p class="flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-subtle">

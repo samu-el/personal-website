@@ -1,29 +1,30 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import { nav } from '@/lib/site';
+import { visibleNav } from '@/lib/posts';
 import { href } from '@/lib/paths';
 import { Icon } from 'astro-icon/components';
+
+const items = await visibleNav();
 ---
 
 <Layout title="Not found" description="That page does not exist." path="/404" noindex>
-  <section class="relative flex min-h-[70dvh] items-center overflow-hidden">
+  <section class="relative flex overflow-hidden lg:min-h-[70dvh] lg:items-center">
     <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
     </div>
-    <div class="wrap relative py-20">
+    <div class="wrap relative py-10 lg:py-20">
       <p class="eyebrow">Error 404</p>
       <h1 class="display mt-6 text-[clamp(3.5rem,14vw,9rem)]">
         Not <em class="block italic text-accent">found.</em>
       </h1>
       <p class="mt-6 max-w-lg text-[1.0625rem] leading-relaxed text-muted">
-        Either I moved it, or you typed it from memory. Both are recoverable — here is everything
-        that does exist:
+        That page does not exist. Everything that does:
       </p>
 
       <ul
         class="mt-10 grid max-w-2xl gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2"
       >
         {
-          nav.map((item) => (
+          items.map((item) => (
             <li>
               <a
                 href={href(item.href)}

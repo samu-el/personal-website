@@ -43,7 +43,7 @@ const marquee = [
     </div>
     <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-line" aria-hidden="true"></div>
 
-    <div class="wrap relative pb-16 pt-14 lg:pb-24 lg:pt-24">
+    <div class="wrap relative pb-10 pt-8 lg:pb-24 lg:pt-24">
       <p class="eyebrow" data-reveal>
         <span class="flex items-center gap-2">
           <span class="relative flex size-1.5">
@@ -67,7 +67,7 @@ const marquee = [
         <em class="block italic text-accent">is too big to solve.</em>
       </h1>
 
-      <div class="mt-12 grid gap-12 lg:mt-16 lg:grid-cols-12 lg:gap-10">
+      <div class="mt-8 grid gap-8 lg:mt-16 lg:grid-cols-12 lg:gap-10">
         <div class="lg:col-span-7">
           <div class="max-w-2xl" data-reveal style="--reveal-delay:140ms">
             <p class="text-[1.0625rem] leading-relaxed text-muted lg:text-lg">
@@ -168,7 +168,7 @@ const marquee = [
   </section>
 
   <!-- ── Metrics ──────────────────────────────────────────────────── -->
-  <div class="wrap py-14 lg:py-16">
+  <div class="wrap py-10 lg:py-16">
     <dl class="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
       {
         metrics.map((m, i) => (
@@ -194,7 +194,7 @@ const marquee = [
       {
         services.map((s, i) => (
           <div
-            class="group relative bg-surface p-7 transition-colors duration-300 hover:bg-surface-2 lg:p-8"
+            class="group relative bg-surface p-5 transition-colors duration-300 hover:bg-surface-2 sm:p-7 lg:p-8"
             data-reveal
             style={`--reveal-delay:${i * 70}ms`}
           >
