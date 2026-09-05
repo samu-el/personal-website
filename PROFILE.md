@@ -21,7 +21,7 @@ in `src/lib/site.ts` (`role`) and `src/data/experience.ts` (the first entry's `t
 | Based in Addis Ababa, Ethiopia                    | LinkedIn                                                                                                |
 | Attended Addis Ababa University                   | LinkedIn                                                                                                |
 | Mereb serves European/US clients from Addis Ababa | mereb.tech                                                                                              |
-| Email `samuel@smr.et`                             | Your own domain, via Cloudflare Email Routing                                                           |
+| Email `me@smr.et`                                 | Your own domain, via Cloudflare Email Routing                                                           |
 | Every project entry, repo link and live demo URL  | [github.com/samu-el](https://github.com/samu-el) — names, descriptions, languages, deploy URLs all real |
 | Eight languages, 30+ repos, first commit 2016     | Your public repository list and account age                                                             |
 
