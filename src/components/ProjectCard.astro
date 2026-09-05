@@ -23,7 +23,10 @@ const statusTone: Record<string, string> = {
 ---
 
 <article
-  class:list={['card group flex flex-col rounded-lg', feature ? 'p-7 lg:p-9' : 'p-6 lg:p-7']}
+  class:list={[
+    'card group flex flex-col rounded-lg',
+    feature ? 'p-5 sm:p-7 lg:p-9' : 'p-5 sm:p-6 lg:p-7',
+  ]}
   data-reveal
   style={index !== undefined ? `--reveal-delay:${Math.min(index, 6) * 70}ms` : undefined}
 >
@@ -80,7 +83,10 @@ const statusTone: Record<string, string> = {
     feature && stats.length > 0 && (
       <dl
         class:list={[
-          'mt-8 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line',
+          'mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line',
+          // A lone last cell on a two-column phone grid spans the row rather than
+          // leaving a hole; desktop columns match the count so it never applies.
+          '[&>*:last-child:nth-child(odd)]:col-span-2 sm:[&>*:last-child:nth-child(odd)]:col-span-1',
           stats.length % 3 === 0 ? 'sm:grid-cols-3' : 'sm:grid-cols-4',
         ]}
       >
