@@ -43,12 +43,17 @@ if (!sitemapRes.ok) throw new Error(`sitemap-0.xml -> HTTP ${sitemapRes.status}`
 const sitemap = await sitemapRes.text();
 const routes = [
   ...new Set(
-    [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)]
-      .map((m) => new URL(m[1]).pathname.replace(BASE_PATH, '') || '/')
-      .map((p) => (p.length > 1 ? p.replace(/\/$/, '') : p)),
+    [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(
+      (m) => new URL(m[1]).pathname.replace(BASE_PATH, '') || '/',
+    ),
   ),
-  '/404',
+  // The custom 404 page, fetched as a file so it is 200 on both the preview
+  // server and Pages; an unknown path is checked separately below.
+  '/404.html',
 ];
+// Sitemap URLs carry the site's trailing-slash convention. Hardcoded paths
+// below must match it, or Astro's preview server 404s them (Pages would 301).
+const SLASH = routes.some((r) => r.length > 1 && r.endsWith('/')) ? '/' : '';
 // Guards against a sitemap that failed to enumerate — deliberately not a
 // page count, so pruning the showcase doesn't break the suite.
 if (routes.length < 5) throw new Error(`sitemap yielded only ${routes.length} routes`);
@@ -121,6 +126,14 @@ for (const [w, h, tag] of [
   await ctx.close();
 }
 
+// 1b. An unknown path must be a real 404, not a soft 200.
+{
+  const ctx = await browser.newContext();
+  const r = await ctx.request.get(`${BASE}/this-page-does-not-exist${SLASH}`);
+  if (r.status() !== 404) issues.push(`unknown path returned HTTP ${r.status()}, expected 404`);
+  await ctx.close();
+}
+
 // 2. Theme toggle cycles and persists.
 {
   const ctx = await browser.newContext({
@@ -139,7 +152,7 @@ for (const [w, h, tag] of [
     issues.push(`theme cycle wrong: ${seq.join(',')}`);
 
   // The loop above left the toggle one step past 'system', i.e. on 'light'.
-  await page.goto(BASE + '/about', { waitUntil: 'load' });
+  await page.goto(`${BASE}/about${SLASH}`, { waitUntil: 'load' });
   const persisted = await page.evaluate(() => ({
     theme: document.documentElement.dataset.theme,
     dark: document.documentElement.classList.contains('dark'),
@@ -215,7 +228,7 @@ const hasPosts = await (async () => {
     const raw = await readFile(new URL(file, dir), 'utf8');
     const slug = file.replace(/\.mdx?$/, '');
     const hidden = /^hidden:\s*true\s*$/m.test(raw);
-    const res = await page.request.get(`${BASE}/work/${slug}`);
+    const res = await page.request.get(`${BASE}/work/${slug}${SLASH}`);
     if (hidden && res.status() !== 404) {
       issues.push(`hidden project /work/${slug} is reachable (HTTP ${res.status()})`);
     }
@@ -228,7 +241,7 @@ const hasPosts = await (async () => {
     }
   }
 
-  await page.goto(`${BASE}/work`, { waitUntil: 'load' });
+  await page.goto(`${BASE}/work${SLASH}`, { waitUntil: 'load' });
   const workPage = await page.evaluate(() => ({
     cards: document.querySelectorAll('article').length,
     // Hidden projects are not re-listed here; the page points at GitHub instead.
