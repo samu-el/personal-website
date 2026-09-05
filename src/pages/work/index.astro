@@ -4,7 +4,6 @@ import Layout from '@/layouts/Layout.astro';
 import { navIndex } from '@/lib/posts';
 import ProjectCard from '@/components/ProjectCard.astro';
 import { Icon } from 'astro-icon/components';
-import { href } from '@/lib/paths';
 
 const isPublished = (d: { draft?: boolean }) => import.meta.env.DEV || !d.draft;
 
@@ -35,15 +34,12 @@ const index = await navIndex('/work');
             data-reveal
             style="--reveal-delay:60ms"
           >
-            Selected work,
-            <em class="block italic text-accent">and everything else on GitHub.</em>
+            Selected <em class="italic text-accent">work.</em>
           </h1>
         </div>
         <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
           <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
-            Client work ships under someone else&rsquo;s name and stays there. So rather than a grid
-            of thumbnails, here is the one thing that is mine end to end, in the detail it actually
-            deserves.
+            Feel free to reach out about any of the projects I&rsquo;ve worked on.
           </p>
         </div>
       </div>
@@ -67,9 +63,7 @@ const index = await navIndex('/work');
             data-reveal
             style="--reveal-delay:60ms"
           >
-            A decade of smaller things — bots, tools, two mobile apps, a URL shortener built twice.
-            None of it is written up, but the commit history goes back to 2016 and is a more honest
-            record than anything I could write about myself.
+            More projects — bots, tools, mobile apps and experiments — are on GitHub.
           </p>
           <a
             href="https://github.com/samu-el?tab=repositories"
@@ -85,13 +79,5 @@ const index = await navIndex('/work');
         </div>
       </div>
     </section>
-
-    <div class="mt-16 border-t border-line pt-10">
-      <p class="max-w-2xl text-[0.9375rem] leading-relaxed text-muted">
-        If you want to talk about the client work that is not on this page —{' '}
-        <a href={href('/contact')} class="link">ask me</a>. I can walk you through the architecture
-        without naming anyone, or put you in touch with someone I have built for.
-      </p>
-    </div>
   </div>
 </Layout>
