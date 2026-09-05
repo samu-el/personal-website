@@ -8,7 +8,6 @@ import { Icon } from 'astro-icon/components';
 const title = 'Stack';
 const description =
   'Languages, frameworks and tools used by Samuel Mussie in production: TypeScript, Python, React, Next.js, PostgreSQL, Flutter, AWS.';
-const total = stack.reduce((n, g) => n + g.items.length, 0);
 
 const index = await navIndex('/stack');
 ---
@@ -32,7 +31,7 @@ const index = await navIndex('/stack');
         </div>
         <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
           <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
-            {total} entries across six groups, covering production work in web, mobile and AI.
+            Technologies I&rsquo;ve worked with across my career.
           </p>
         </div>
       </div>

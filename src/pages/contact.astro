@@ -8,7 +8,7 @@ import { Icon } from 'astro-icon/components';
 
 const title = 'Contact';
 const description =
-  'Contact Samuel Mussie — software engineer in Addis Ababa, Ethiopia. Available for contract and full-time work, remote across EU and US hours.';
+  'Contact Samuel Mussie — software engineer in Addis Ababa, Ethiopia. Email or LinkedIn.';
 
 const index = await navIndex('/contact');
 
@@ -22,7 +22,7 @@ const routes = [
   },
   {
     heading: 'Roles',
-    body: 'Open to contract and full-time positions, remote. Formal CV and references on request.',
+    body: 'Open to new roles and collaborations.',
     icon: 'lucide:briefcase',
     cta: 'Email about a role',
     ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Role enquiry')}`,
@@ -73,8 +73,7 @@ const routes = [
         </div>
         <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
           <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:180ms">
-            Email is the fastest route. Open to contract and full-time work, remote across EU and US
-            hours.
+            Email me or reach out on LinkedIn.
           </p>
         </div>
       </div>
@@ -116,7 +115,7 @@ const routes = [
 
     <!-- Practical details -->
     <div class="mt-16 grid gap-10 border-t border-line pt-12 lg:grid-cols-12 lg:gap-8">
-      <div class="lg:col-span-4">
+      <div class="lg:col-span-6">
         <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Where to find me</h2>
         <ul class="mt-5 space-y-3">
           {
@@ -146,36 +145,7 @@ const routes = [
         </ul>
       </div>
 
-      <div class="lg:col-span-4">
-        <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Practicalities</h2>
-        <dl class="mt-5 space-y-4 text-[0.9375rem]">
-          <div>
-            <dt class="text-subtle">Working hours</dt>
-            <dd class="mt-1 text-fg">
-              09:00 – 18:00 EAT (GMT+3). Overlaps European working hours and the first half of the
-              US East Coast day.
-            </dd>
-          </div>
-          <div>
-            <dt class="text-subtle">Availability</dt>
-            <dd class="mt-1 text-fg">Contract and full-time, remote.</dd>
-          </div>
-          <div>
-            <dt class="text-subtle">Code samples</dt>
-            <dd class="mt-1 text-fg">
-              Around thirty public repositories at{' '}
-              <a
-                href="https://github.com/samu-el"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="link">github.com/samu-el</a
-              >. Formal CV on request.
-            </dd>
-          </div>
-        </dl>
-      </div>
-
-      <div class="lg:col-span-4">
+      <div class="lg:col-span-6">
         <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Types of work</h2>
         <ul class="mt-5 space-y-3">
           {

@@ -54,10 +54,10 @@ removed so you can write your own. What remains that still needs checking:
 6. **The client-work entry** (`src/content/projects/client-saas-platform.md`). Anonymised and
    `hidden: true`, so it does not render or appear in the sitemap. The stack is inferred from the
    product category. Re-read it before ever unhiding it.
-7. **Commitments the site makes.** "Available for contract and full-time work, remote across EU
-   and US hours", working hours 09:00–18:00 EAT, "formal CV and references on request". Keep
-   only what is true. If you are not looking, change the hero eyebrow ("Available for work") and
-   the footer.
+7. **Commitments the site makes.** Now just two: "Available to collaborate" (hero panel and
+   footer) and "Open to new roles and collaborations" (contact page). The earlier working hours,
+   contract/full-time wording and "CV and references on request" were removed at your request.
+   If you are not looking, change the hero eyebrow ("Available for work") and the footer.
 8. **The About bio is a placeholder.** Three short factual paragraphs plus Languages, Education
    and Code headings. It is accurate but deliberately flat — no opinions, no anecdotes, no claims
    about how you think. **This is the piece to rewrite in your own voice**, in
