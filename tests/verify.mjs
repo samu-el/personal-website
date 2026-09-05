@@ -18,6 +18,7 @@
  * Set BASE_URL to point at a deployed site instead of the local preview.
  */
 import { chromium } from 'playwright';
+import fs from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
 
@@ -250,7 +251,15 @@ const hasPosts = await (async () => {
       /github\.com\/samu-el\?tab=repositories/.test(a.href),
     ),
   }));
-  if (workPage.cards !== 1) issues.push(`/work shows ${workPage.cards} project cards, expected 1`);
+  // One card per project that is neither hidden nor a draft.
+  const expectedCards = fs
+    .readdirSync(new URL('../src/content/projects/', import.meta.url))
+    .filter((f) => /\.mdx?$/.test(f))
+    .map((f) => fs.readFileSync(new URL(`../src/content/projects/${f}`, import.meta.url), 'utf8'))
+    .filter((src) => !/^(hidden|draft):\s*true\s*$/m.test(src.split('---')[1] ?? '')).length;
+  if (workPage.cards !== expectedCards) {
+    issues.push(`/work shows ${workPage.cards} project cards, expected ${expectedCards}`);
+  }
   if (workPage.hiddenListed > 0) {
     issues.push(`/work re-lists ${workPage.hiddenListed} hidden projects`);
   }
