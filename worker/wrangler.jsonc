@@ -1,0 +1,27 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "smr-now-playing",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-01",
+
+  // Mounted on the site's own domain so the page fetch is same-origin. The
+  // zone already exists in Cloudflare; this route sits in front of the
+  // GitHub Pages origin and never reaches it.
+  "routes": [
+    {
+      "pattern": "smr.et/api/now-playing.json",
+      "zone_name": "smr.et",
+    },
+  ],
+
+  // Secrets are NOT listed here. They are set once with
+  //   wrangler secret put SPOTIFY_CLIENT_ID
+  //   wrangler secret put SPOTIFY_CLIENT_SECRET
+  //   wrangler secret put SPOTIFY_REFRESH_TOKEN
+  // which stores them encrypted at Cloudflare, out of the repository and not
+  // readable back afterwards.
+
+  "observability": {
+    "enabled": true,
+  },
+}

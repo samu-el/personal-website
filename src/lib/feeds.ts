@@ -52,6 +52,8 @@ export type Track = {
   title: string;
   artist: string;
   album: string | null;
+  /** Album art, hotlinked from Spotify's CDN. Null when the payload omits it. */
+  art: string | null;
   url: string;
   playedAt: string;
 };
@@ -59,6 +61,8 @@ export type Track = {
 export type Film = {
   title: string;
   year: string | null;
+  /** Poster, hotlinked from Letterboxd's CDN. Null when the item has no image. */
+  poster: string | null;
   /** Out of 5, in half-steps. Null when the entry carries no rating. */
   rating: number | null;
   rewatch: boolean;
@@ -204,6 +208,7 @@ export function parseLetterboxd(xml: string): Film[] {
       return {
         title: decodeEntities(title),
         year: field(item, 'letterboxd:filmYear'),
+        poster: item.match(/<img\s+src="([^"]+)"/)?.[1] ?? null,
         rating: rating === null ? null : Number(rating),
         rewatch: field(item, 'letterboxd:rewatch') === 'Yes',
         watchedAt,
@@ -325,12 +330,22 @@ export function normalizeSpotify(items: Array<Record<string, unknown>>): Track[]
     const artists = Array.isArray(track.artists)
       ? track.artists.map((a: { name?: string }) => a?.name).filter(Boolean)
       : [];
-    const album = (track.album as { name?: string } | undefined)?.name;
+    const album = track.album as
+      { name?: string; images?: Array<Record<string, unknown>> } | undefined;
+    const images = Array.isArray(album?.images) ? album.images : [];
+    // Spotify returns 640/300/64. The smallest at or above 200px is plenty for
+    // a list thumbnail and a fraction of the bytes of the original.
+    const art =
+      images
+        .filter((i) => typeof i.url === 'string')
+        .sort((a, b) => Number(a.width ?? 0) - Number(b.width ?? 0))
+        .find((i) => Number(i.width ?? 0) >= 200) ?? images[0];
 
     out.push({
       title: String(track.name),
       artist: artists.join(', '),
-      album: album ?? null,
+      album: album?.name ?? null,
+      art: typeof art?.url === 'string' ? art.url : null,
       url:
         (track.external_urls as { spotify?: string } | undefined)?.spotify ??
         'https://open.spotify.com/',

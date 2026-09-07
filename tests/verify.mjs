@@ -428,6 +428,18 @@ const hasPosts = await (async () => {
     issues.push('the Konami code did not toggle the layout grid back off');
   }
 
+  // The now-playing endpoint must always answer, so the browser never logs a
+  // failed request for it. In production a Worker route shadows this file.
+  const np = await page.request.get(`${BASE}/api/now-playing.json`);
+  if (np.status() !== 200) {
+    issues.push(`/api/now-playing.json -> HTTP ${np.status()} (the static fallback is missing)`);
+  } else {
+    const body = await np.json().catch(() => null);
+    if (!body || typeof body.playing !== 'boolean') {
+      issues.push('/api/now-playing.json did not return a boolean "playing"');
+    }
+  }
+
   const humans = await page.request.get(`${BASE}/humans.txt`);
   if (humans.status() !== 200) issues.push(`humans.txt -> HTTP ${humans.status()}`);
   await ctx.close();
