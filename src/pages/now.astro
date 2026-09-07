@@ -115,11 +115,12 @@ function stars(rating: number): string {
               <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
               All repositories
             </a>
-            {github.languages.length > 0 && (
-              <p class="text-[0.9375rem] text-subtle">
-                Languages across all public repositories: {github.languages.join(', ')}.
-              </p>
-            )}
+            <div class="text-[0.9375rem] text-subtle">
+              {github.languages.length > 0 && (
+                <p>Languages across all public repositories: {github.languages.join(', ')}.</p>
+              )}
+              <p class="mt-1">Private repositories are not listed.</p>
+            </div>
           </div>
         </div>
       </section>

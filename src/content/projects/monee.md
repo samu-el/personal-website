@@ -8,6 +8,7 @@ role: 'Sole author'
 status: 'Ongoing'
 stack: ['TypeScript', 'React Native', 'Expo', 'SQLite', 'Drizzle', 'Kotlin', 'Swift']
 tags: ['Finance', 'Mobile', 'Offline']
+repoPrivate: true
 demo: 'https://monee.smr.et'
 featured: true
 stats:

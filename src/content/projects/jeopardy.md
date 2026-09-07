@@ -8,6 +8,7 @@ role: 'Sole author'
 status: 'Live'
 stack: ['TypeScript', 'Next.js', 'React', 'Bun', 'Socket.IO', 'Vercel']
 tags: ['Game', 'Realtime', 'AI']
+repo: 'https://github.com/samu-el/jeopardy'
 demo: 'https://jeopardy.smr.et'
 featured: true
 stats:
@@ -43,3 +44,4 @@ opponents.
 ## Links
 
 - Live: [jeopardy.smr.et](https://jeopardy.smr.et)
+- Source: [github.com/samu-el/jeopardy](https://github.com/samu-el/jeopardy)

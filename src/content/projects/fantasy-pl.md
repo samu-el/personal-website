@@ -8,7 +8,7 @@ role: 'Sole author'
 status: 'Live'
 stack: ['TypeScript', 'Next.js', 'React', 'React Native', 'Public API', 'Vercel']
 tags: ['Football', 'Data', 'Mobile']
-repo: 'https://github.com/samu-el/fantasy-pl'
+repoPrivate: true
 demo: 'https://fantasy-pl-pearl.vercel.app'
 featured: true
 stats:
@@ -34,5 +34,4 @@ companion. Data comes from the game's public API. Deployed on Vercel.
 ## Links
 
 - Live: [fantasy-pl-pearl.vercel.app](https://fantasy-pl-pearl.vercel.app)
-- Source: [github.com/samu-el/fantasy-pl](https://github.com/samu-el/fantasy-pl)
 - Mobile source: [github.com/samu-el/fantasy-pl-mobile](https://github.com/samu-el/fantasy-pl-mobile)

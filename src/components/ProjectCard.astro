@@ -11,7 +11,7 @@ interface Props {
 }
 
 const { project, feature = false, index } = Astro.props;
-const { title, blurb, period, kind, status, stack, demo, repo, stats } = project.data;
+const { title, blurb, period, kind, status, stack, demo, repo, repoPrivate, stats } = project.data;
 
 const statusTone: Record<string, string> = {
   Live: 'text-jade',
@@ -112,7 +112,7 @@ const statusTone: Record<string, string> = {
       )
     }
     {
-      (demo || repo) && (
+      (demo || repo || repoPrivate) && (
         <div class="mt-5 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-5">
           {demo && (
             <a
@@ -135,6 +135,12 @@ const statusTone: Record<string, string> = {
               <Icon name="simple-icons:github" class="size-3" aria-hidden="true" />
               Source
             </a>
+          )}
+          {!repo && repoPrivate && (
+            <span class="inline-flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-subtle">
+              <Icon name="lucide:lock" class="size-3" aria-hidden="true" />
+              Private source
+            </span>
           )}
         </div>
       )
