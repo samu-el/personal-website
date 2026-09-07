@@ -188,6 +188,10 @@ the repository variable `PUBLIC_NOW_PLAYING_URL` to its absolute URL and the
 page will read from there instead. It is a URL rather than a secret, so it is a
 variable, and being `PUBLIC_` it is inlined into the page deliberately.
 
+The Worker has its own tests — `cd worker && npm test` — which pin each
+`?debug=1` reason against stubbed Spotify responses, and assert that the
+normal payload carries no diagnostics.
+
 See `worker/README.md` for deployment. Note that the Worker needs a refresh
 token carrying `user-read-currently-playing`, which
 `scripts/spotify-token.mjs` now requests alongside the history scope.
