@@ -135,6 +135,14 @@ const statusTone: Record<string, string> = {
                   </a>
                 )
               }
+              {
+                !d.repo && d.repoPrivate && (
+                  <span class="inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle">
+                    <Icon name="lucide:lock" class="size-3.5" aria-hidden="true" />
+                    Private source
+                  </span>
+                )
+              }
             </div>
           </div>
 
