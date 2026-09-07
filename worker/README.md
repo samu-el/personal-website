@@ -24,7 +24,62 @@ browser never logs a failed request for an endpoint that does not exist yet.
 missing, or when Spotify is unreachable. The page treats all three the same
 way: it renders nothing.
 
-## Deploying
+## Deploying from the dashboard (no CLI)
+
+`src/index.js` is deliberately plain JavaScript in one file with no imports,
+so it pastes into the dashboard editor verbatim. There is no build step.
+
+**Before you start**, the refresh token must carry the
+**`user-read-currently-playing`** scope. The one minted for the build-time
+"recently played" feed only had `user-read-recently-played`, so mint a new one
+with `node scripts/spotify-token.mjs` from the repository root — it now
+requests both — and keep the client id and secret to hand.
+
+### 1. Create the Worker
+
+1. Cloudflare dashboard → **Workers & Pages** → **Create** → **Start with Hello World!** → **Create Worker**.
+2. Name it `smr-now-playing`. Deploy the placeholder.
+3. **Edit code**, select everything in the editor, and paste the whole of
+   `worker/src/index.js` over it. **Deploy**.
+
+It will answer `{"playing":false}` at this point — the secrets are not set yet,
+which the Worker treats as "nothing playing" rather than an error.
+
+### 2. Add the three secrets
+
+From **Workers & Pages** → **Overview** → select the Worker → **Settings**,
+then under **Variables and Secrets** select **Add**. For each one choose type
+**Secret**, enter the name, paste the value, and **Deploy**:
+
+| Variable name           | Value                                                |
+| ----------------------- | ---------------------------------------------------- |
+| `SPOTIFY_CLIENT_ID`     | from the Spotify app dashboard                       |
+| `SPOTIFY_CLIENT_SECRET` | from the Spotify app dashboard, "View client secret" |
+| `SPOTIFY_REFRESH_TOKEN` | printed by `scripts/spotify-token.mjs`               |
+
+Secrets are hidden after saving, in the dashboard and in Wrangler alike. To
+change one you overwrite it; you cannot read it back.
+
+### 3. Point the domain at it
+
+Still in the Worker's **Settings**, go to **Domains & Routes** → **Add** →
+**Route**:
+
+- **Zone**: `smr.et`
+- **Route**: `smr.et/api/*`
+
+The DNS record for the apex must be **proxied** (orange cloud) or the route is
+never consulted — a grey-cloud record bypasses Workers entirely.
+
+### 4. Check it, with music actually playing
+
+```sh
+curl -si https://smr.et/api/now-playing.json | head -20
+```
+
+Then read the table in the next section to tell which side answered.
+
+## Deploying with Wrangler
 
 The refresh token needs the **`user-read-currently-playing`** scope. The one
 minted for the build-time "recently played" feed only has
