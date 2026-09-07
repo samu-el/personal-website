@@ -47,6 +47,12 @@ jobs:
           # Lifts the build's GitHub API calls off the runner's shared
           # anonymous rate limit. Read-only; the build never writes.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Spotify. Absent until the three repository secrets are set, and the
+          # feed is simply not rendered until then. Never exposed to the
+          # browser: Astro inlines only PUBLIC_* variables into client code.
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
 
       - uses: actions/configure-pages@v5
         with:

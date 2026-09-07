@@ -12,7 +12,7 @@
  */
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizeGitHub, parseLetterboxd } from '../src/lib/feeds.ts';
+import { normalizeGitHub, normalizeSpotify, parseLetterboxd } from '../src/lib/feeds.ts';
 
 const repo = (over = {}) => ({
   name: 'thing',
@@ -130,6 +130,101 @@ test('normalizeGitHub returns an empty list rather than throwing on no repos', (
   const out = normalizeGitHub({ public_repos: 0 }, []);
   assert.deepEqual(out.recent, []);
   assert.deepEqual(out.languages, []);
+});
+
+test('normalizeGitHub drops repositories older than the age cap', () => {
+  const days = (n) => new Date(Date.now() - n * 86_400_000).toISOString();
+  const out = normalizeGitHub({ public_repos: 3 }, [
+    repo({ name: 'current', pushed_at: days(10) }),
+    repo({ name: 'still-recent', pushed_at: days(700) }),
+    repo({ name: 'ancient', pushed_at: days(1800) }),
+  ]);
+  assert.deepEqual(
+    out.recent.map((r) => r.name),
+    ['current', 'still-recent'],
+  );
+});
+
+test('an aged-out repository still counts towards the language summary', () => {
+  // The list is about recent activity; the language line is about all of it.
+  const out = normalizeGitHub({ public_repos: 1 }, [
+    repo({ name: 'ancient', language: 'Swift', pushed_at: new Date(0).toISOString() }),
+  ]);
+  assert.deepEqual(out.recent, []);
+  assert.deepEqual(out.languages, ['Swift']);
+});
+
+// --- Spotify --------------------------------------------------------------
+
+const play = (over = {}) => ({
+  played_at: 'played_at' in over ? over.played_at : '2026-09-07T10:00:00.000Z',
+  track: {
+    id: over.id ?? 't1',
+    name: over.name ?? 'Ye Vinger',
+    artists: 'artists' in over ? over.artists : [{ name: 'Mulatu Astatke' }],
+    album: 'album' in over ? over.album : { name: 'Mulatu of Ethiopia' },
+    external_urls: { spotify: over.url ?? 'https://open.spotify.com/track/t1' },
+  },
+});
+
+test('normalizeSpotify reads title, artist, album and url', () => {
+  const [track] = normalizeSpotify([play()]);
+  assert.equal(track.title, 'Ye Vinger');
+  assert.equal(track.artist, 'Mulatu Astatke');
+  assert.equal(track.album, 'Mulatu of Ethiopia');
+  assert.match(track.url, /open\.spotify\.com/);
+  assert.equal(track.playedAt, '2026-09-07T10:00:00.000Z');
+});
+
+test('normalizeSpotify joins multiple artists', () => {
+  const [track] = normalizeSpotify([
+    play({ artists: [{ name: 'Rophnan' }, { name: 'Aster Aweke' }] }),
+  ]);
+  assert.equal(track.artist, 'Rophnan, Aster Aweke');
+});
+
+test('normalizeSpotify collapses a repeated track to its most recent play', () => {
+  // The history has one row per play, so a repeat listen would fill the list.
+  const tracks = normalizeSpotify([
+    play({ id: 'a', played_at: '2026-09-07T12:00:00.000Z' }),
+    play({ id: 'a', played_at: '2026-09-07T11:00:00.000Z' }),
+    play({ id: 'a', played_at: '2026-09-07T10:00:00.000Z' }),
+    play({ id: 'b', name: 'Tizita', played_at: '2026-09-07T09:00:00.000Z' }),
+  ]);
+  assert.equal(tracks.length, 2);
+  assert.equal(tracks[0].playedAt, '2026-09-07T12:00:00.000Z');
+});
+
+test('normalizeSpotify sorts by play time, newest first, and caps at six', () => {
+  const items = Array.from({ length: 10 }, (_, i) =>
+    play({ id: `t${i}`, played_at: `2026-09-0${(i % 9) + 1}T10:00:00.000Z` }),
+  );
+  const tracks = normalizeSpotify(items);
+  assert.equal(tracks.length, 6);
+  const times = tracks.map((t) => t.playedAt);
+  assert.deepEqual(times, [...times].sort().reverse());
+});
+
+test('normalizeSpotify skips rows with no track or no timestamp', () => {
+  const tracks = normalizeSpotify([
+    { played_at: '2026-09-07T10:00:00.000Z' },
+    { track: { name: 'No timestamp', artists: [] } },
+    play({ id: 'ok', name: 'Kept' }),
+  ]);
+  assert.deepEqual(
+    tracks.map((t) => t.title),
+    ['Kept'],
+  );
+});
+
+test('normalizeSpotify tolerates a missing album and artist list', () => {
+  const [track] = normalizeSpotify([play({ album: undefined, artists: undefined })]);
+  assert.equal(track.album, null);
+  assert.equal(track.artist, '');
+});
+
+test('normalizeSpotify returns an empty list for an empty history', () => {
+  assert.deepEqual(normalizeSpotify([]), []);
 });
 
 // --- Letterboxd -----------------------------------------------------------

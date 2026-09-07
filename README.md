@@ -137,13 +137,20 @@ One stylesheet, `src/styles/global.css`, holds all of it:
 
 ## Live feeds
 
-The **Now** page (`/now`) reads two public sources at build time, in
+The **Now** page (`/now`) reads three sources at build time, in
 `src/lib/feeds.ts`:
 
 | Source           | Endpoint                                    | Auth                                                                              |
 | ---------------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
 | GitHub activity  | `/users/samu-el` and `/users/samu-el/repos` | none required; `GITHUB_TOKEN` is used when set, to avoid the anonymous rate limit |
+| Spotify history  | `/v1/me/player/recently-played`             | client id, client secret and a refresh token, from the environment                |
 | Letterboxd diary | `letterboxd.com/rocin4nte/rss/`             | none                                                                              |
+
+"Recently pushed" drops anything pushed longer ago than `MAX_REPO_AGE_DAYS`
+(two years) and lets the list run short. A fixed-length list backfills from
+further down the history whenever something is excluded, which is how a
+five-year-old repository ends up presented as recent activity. The language
+summary still spans every public repository, aged out or not.
 
 Forks are excluded from "recently pushed" as somebody else's work, with one
 documented exception: this repository itself began in 2019 as a fork of
@@ -164,6 +171,34 @@ freshness.
 
 A `schedule` trigger in `deploy.yml` rebuilds daily at 05:00 UTC (08:00 in
 Addis Ababa) so the feeds stay current between pushes.
+
+### Spotify
+
+Three secrets, none of which may ever reach the browser. They are read through
+`process.env` in `src/lib/feeds.ts` at build time; Astro inlines only
+`PUBLIC_*` variables into client JavaScript, so a value read that way cannot
+end up in the output. With none of them set the section is simply absent, which
+is the expected state of a fresh clone; with some of them set the build warns,
+because that is a misconfiguration rather than a choice.
+
+1. Create an app at developer.spotify.com and add `http://127.0.0.1:8888/callback`
+   to its redirect URIs. It has to be the IP literal — Spotify requires HTTPS
+   except for loopback addresses, and `localhost` is not accepted.
+2. Mint a refresh token once, locally. It prints the token and writes nothing
+   to disk:
+
+   ```
+   SPOTIFY_CLIENT_ID=… SPOTIFY_CLIENT_SECRET=… node scripts/spotify-token.mjs
+   ```
+
+3. Add `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET` and
+   `SPOTIFY_REFRESH_TOKEN` as repository secrets under Settings → Secrets and
+   variables → Actions. The deploy workflow passes them to the build; CI does
+   not, so pull requests build without the feed.
+
+**This app's refresh token expires after 180 days.** When it does the fetch
+starts failing, the section disappears, and step 2 has to be repeated. The site
+keeps building throughout.
 
 The parsers are pure and unit-tested against fixtures — `npm run test:unit`.
 That matters because the GitHub user-level endpoints are unreachable from some
