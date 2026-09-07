@@ -12,6 +12,7 @@ import { href } from '@/lib/paths';
 import { navIndex } from '@/lib/posts';
 import { githubActivity, recentFilms, recentTracks } from '@/lib/feeds';
 import { Icon } from 'astro-icon/components';
+import NowPlaying from '@/components/NowPlaying.astro';
 
 const index = await navIndex('/now');
 const [github, films, tracks] = await Promise.all([
@@ -55,6 +56,8 @@ function stars(rating: number): string {
       <h1 class="display mt-5 text-[clamp(2.4rem,7vw,4.75rem)] lg:mt-7" data-reveal>Lately.</h1>
     </div>
   </section>
+
+  <NowPlaying />
 
   {
     github && github.recent.length > 0 && (
@@ -132,7 +135,10 @@ function stars(rating: number): string {
             <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle" data-reveal>
               Recently played
             </h2>
-            <span class="font-mono text-2xs uppercase tracking-[0.1em] text-subtle">Spotify</span>
+            <span class="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-subtle">
+              <Icon name="simple-icons:spotify" class="size-3.5" aria-hidden="true" />
+              Spotify
+            </span>
           </div>
 
           <ul class="mt-6 divide-y divide-line border-y border-line">
@@ -142,13 +148,32 @@ function stars(rating: number): string {
                   href={track.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="group flex flex-col gap-1.5 py-4 sm:flex-row sm:items-baseline sm:gap-6"
+                  class="group flex items-center gap-4 py-3"
                 >
-                  <span class="min-w-0 flex-1 truncate text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
-                    {track.title}
-                  </span>
-                  <span class="min-w-0 flex-1 truncate text-[0.9375rem] text-muted sm:text-right">
-                    {track.artist}
+                  {track.art ? (
+                    <img
+                      src={track.art}
+                      alt=""
+                      width="80"
+                      height="80"
+                      loading="lazy"
+                      decoding="async"
+                      referrerpolicy="no-referrer"
+                      class="size-10 shrink-0 rounded border border-line object-cover"
+                    />
+                  ) : (
+                    <span
+                      class="size-10 shrink-0 rounded border border-line bg-surface-2"
+                      aria-hidden="true"
+                    />
+                  )}
+                  <span class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-6">
+                    <span class="min-w-0 flex-1 truncate text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
+                      {track.title}
+                    </span>
+                    <span class="min-w-0 flex-1 truncate text-[0.9375rem] text-muted sm:text-right">
+                      {track.artist}
+                    </span>
                   </span>
                   <span class="shrink-0 font-mono text-2xs uppercase tracking-[0.1em] tabular-nums text-subtle">
                     {ago(track.playedAt)}
@@ -175,8 +200,9 @@ function stars(rating: number): string {
               href="https://letterboxd.com/rocin4nte/"
               target="_blank"
               rel="noopener noreferrer"
-              class="font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-accent"
+              class="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-accent"
             >
+              <Icon name="simple-icons:letterboxd" class="size-3.5" aria-hidden="true" />
               Letterboxd ↗
             </a>
           </div>
@@ -188,23 +214,42 @@ function stars(rating: number): string {
                   href={film.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  class="group flex flex-wrap items-baseline gap-x-4 gap-y-1.5 py-4"
+                  class="group flex items-center gap-4 py-3"
                 >
-                  <span class="text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
-                    {film.title}
-                  </span>
-                  {film.year && (
-                    <span class="font-mono text-2xs tracking-wide text-subtle">{film.year}</span>
+                  {film.poster ? (
+                    <img
+                      src={film.poster}
+                      alt=""
+                      width="60"
+                      height="90"
+                      loading="lazy"
+                      decoding="async"
+                      referrerpolicy="no-referrer"
+                      class="h-[3.375rem] w-9 shrink-0 rounded border border-line object-cover"
+                    />
+                  ) : (
+                    <span
+                      class="h-[3.375rem] w-9 shrink-0 rounded border border-line bg-surface-2"
+                      aria-hidden="true"
+                    />
                   )}
-                  {film.rewatch && <span class="chip">Rewatch</span>}
-                  <span class="ml-auto flex items-center gap-4">
-                    {film.rating !== null && (
-                      <span class="text-sm text-accent" aria-label={`${film.rating} out of 5`}>
-                        {stars(film.rating)}
-                      </span>
+                  <span class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-4 gap-y-1.5">
+                    <span class="text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
+                      {film.title}
+                    </span>
+                    {film.year && (
+                      <span class="font-mono text-2xs tracking-wide text-subtle">{film.year}</span>
                     )}
-                    <span class="font-mono text-2xs uppercase tracking-[0.1em] tabular-nums text-subtle">
-                      {ago(film.watchedAt)}
+                    {film.rewatch && <span class="chip">Rewatch</span>}
+                    <span class="ml-auto flex items-center gap-4">
+                      {film.rating !== null && (
+                        <span class="text-sm text-accent" aria-label={`${film.rating} out of 5`}>
+                          {stars(film.rating)}
+                        </span>
+                      )}
+                      <span class="font-mono text-2xs uppercase tracking-[0.1em] tabular-nums text-subtle">
+                        {ago(film.watchedAt)}
+                      </span>
                     </span>
                   </span>
                 </a>

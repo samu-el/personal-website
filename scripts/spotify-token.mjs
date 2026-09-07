@@ -25,9 +25,10 @@ import { randomBytes } from 'node:crypto';
 
 const PORT = 8888;
 const REDIRECT_URI = `http://127.0.0.1:${PORT}/callback`;
-// Enough to read the play history. Add user-read-currently-playing if you
-// later want a live indicator rather than a recent list.
-const SCOPES = 'user-read-recently-played';
+// Both feeds: the build-time "recently played" list needs the history, and
+// the now-playing Worker needs the current track. Minting one token for both
+// means one authorisation and one secret to rotate.
+const SCOPES = 'user-read-recently-played user-read-currently-playing';
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;

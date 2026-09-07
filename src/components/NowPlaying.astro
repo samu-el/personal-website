@@ -1,0 +1,210 @@
+---
+/**
+ * Live "currently listening" card, filled in the browser from
+ * /api/now-playing — a Cloudflare Worker on this same domain, so the fetch is
+ * same-origin and the Spotify credentials stay server-side. See worker/.
+ *
+ * Ships hidden and stays hidden unless the Worker says something is playing,
+ * so the section costs nothing before the Worker is deployed, when Spotify is
+ * idle, or when the request fails.
+ *
+ * public/api/now-playing.json answers { playing: false } so the fetch is a 200
+ * even with no Worker deployed. A caught exception still leaves the browser
+ * logging a failed request to the console, and an endpoint that does not exist
+ * yet is not something a visitor should see an error about. In production the
+ * Worker route shadows that file and the static copy is never reached.
+ */
+import { Icon } from 'astro-icon/components';
+import { href } from '@/lib/paths';
+---
+
+<section id="now-playing" hidden class="scroll-mt-24">
+  <div class="wrap py-10 lg:py-16">
+    <a
+      id="np-link"
+      href="https://open.spotify.com/"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="group relative block overflow-hidden rounded-xl border border-line bg-surface p-5 transition-colors hover:border-line-strong sm:p-7"
+    >
+      <!-- Warmth behind the sleeve, so the card is not a flat rectangle. -->
+      <div
+        class="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100"
+        style="background:radial-gradient(circle,rgb(var(--c-accent)/0.35),transparent 70%)"
+        aria-hidden="true"
+      >
+      </div>
+
+      <div class="relative flex items-center gap-5 sm:gap-7">
+        <div class="min-w-0 flex-1">
+          <p
+            class="flex items-center gap-2.5 font-mono text-2xs uppercase tracking-[0.14em] text-subtle"
+          >
+            <span class="eq" aria-hidden="true">
+              <span></span><span></span><span></span><span></span>
+            </span>
+            Currently listening
+          </p>
+
+          <p
+            id="np-title"
+            class="display mt-4 text-[clamp(1.5rem,3.6vw,2.35rem)] leading-tight text-fg"
+          >
+          </p>
+          <p id="np-artist" class="mt-2 text-[0.9375rem] text-muted sm:text-base"></p>
+
+          <p
+            class="mt-4 flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle"
+          >
+            <Icon name="simple-icons:spotify" class="size-3.5 text-jade" aria-hidden="true" />
+            Spotify
+          </p>
+        </div>
+
+        <!-- Fixed box so the card does not reflow when the art loads. -->
+        <div
+          class="relative aspect-square w-24 shrink-0 overflow-hidden rounded-lg border border-line bg-surface-2 sm:w-32 lg:w-40"
+        >
+          <img
+            id="np-art"
+            alt=""
+            width="320"
+            height="320"
+            loading="lazy"
+            decoding="async"
+            referrerpolicy="no-referrer"
+            class="size-full object-cover opacity-0 transition-opacity duration-500"
+          />
+        </div>
+      </div>
+    </a>
+  </div>
+  <div class="rule"></div>
+</section>
+
+<style>
+  /* Four bars on their own offsets, so it reads as sound rather than a
+     synchronised blink. Sized in em to follow the label. */
+  .eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 0.85em;
+  }
+  .eq > span {
+    width: 2px;
+    height: 100%;
+    background-color: var(--color-jade);
+    transform-origin: bottom;
+    animation: eq 1.1s ease-in-out infinite;
+  }
+  .eq > span:nth-child(1) {
+    animation-delay: -0.9s;
+  }
+  .eq > span:nth-child(2) {
+    animation-delay: -0.45s;
+  }
+  .eq > span:nth-child(3) {
+    animation-delay: -0.7s;
+  }
+  .eq > span:nth-child(4) {
+    animation-delay: -0.2s;
+  }
+  @keyframes eq {
+    0%,
+    100% {
+      transform: scaleY(0.28);
+    }
+    50% {
+      transform: scaleY(1);
+    }
+  }
+
+  /* Reduced motion keeps the meaning without the movement: static bars at
+     different heights still read as a level meter. */
+  @media (prefers-reduced-motion: reduce) {
+    .eq > span {
+      animation: none;
+    }
+    .eq > span:nth-child(1) {
+      height: 45%;
+    }
+    .eq > span:nth-child(2) {
+      height: 100%;
+    }
+    .eq > span:nth-child(3) {
+      height: 65%;
+    }
+    .eq > span:nth-child(4) {
+      height: 85%;
+    }
+  }
+</style>
+
+<script is:inline define:vars={{ endpoint: href('/api/now-playing.json') }}>
+  (() => {
+    // Re-runs on navigation; the poll is registered once per document.
+    if (window.__np) return;
+    window.__np = true;
+
+    const REFRESH_MS = 45000;
+
+    async function poll() {
+      const section = document.getElementById('now-playing');
+      if (!section) return;
+
+      let data = null;
+      try {
+        const res = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+        if (res.ok) data = await res.json();
+      } catch {
+        // Offline, blocked, or DNS still catching up. Leave the card hidden.
+      }
+
+      if (!data || !data.playing || !data.title) {
+        section.hidden = true;
+        return;
+      }
+
+      const title = document.getElementById('np-title');
+      const artist = document.getElementById('np-artist');
+      const art = document.getElementById('np-art');
+      const link = document.getElementById('np-link');
+
+      title.textContent = data.title;
+      artist.textContent = data.artist || '';
+      if (data.url) link.href = data.url;
+
+      if (data.art) {
+        // Only fade the sleeve in once it has actually decoded.
+        if (art.src !== data.art) {
+          art.style.opacity = '0';
+          art.src = data.art;
+          art.alt = data.album ? `${data.album} — album art` : '';
+          art.onload = () => (art.style.opacity = '1');
+        }
+      } else {
+        art.removeAttribute('src');
+        art.style.opacity = '0';
+      }
+
+      section.hidden = false;
+    }
+
+    function start() {
+      poll();
+      window.clearInterval(window.__npTimer);
+      // Only poll while the tab is visible — a background tab has no reason to.
+      window.__npTimer = window.setInterval(() => {
+        if (!document.hidden) poll();
+      }, REFRESH_MS);
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) poll();
+    });
+
+    start();
+    document.addEventListener('astro:page-load', poll);
+  })();
+</script>

@@ -169,6 +169,34 @@ freshness.
 A `schedule` trigger in `deploy.yml` rebuilds daily at 05:00 UTC (08:00 in
 Addis Ababa) so the feeds stay current between pushes.
 
+### Currently listening
+
+The live card on `/now` is filled in the browser from
+`GET /api/now-playing.json`, served by the Cloudflare Worker in `worker/`.
+A static site cannot hold a secret; the Worker can, so the credentials stay
+server-side and the browser only sees a trimmed `{ playing, title, artist,
+art, url }`.
+
+The route sits on this site's own domain, so the fetch is same-origin: no CORS
+preflight, no third-party request. `public/api/now-playing.json` answers
+`{ "playing": false }` as a fallback, which the Worker route shadows in
+production — without it a browser would log a failed request for an endpoint
+that is not deployed yet. The smoke suite asserts that fallback exists.
+
+See `worker/README.md` for deployment. Note that the Worker needs a refresh
+token carrying `user-read-currently-playing`, which
+`scripts/spotify-token.mjs` now requests alongside the history scope.
+
+### Artwork
+
+Album art and film posters are hotlinked from `i.scdn.co` and `a.ltrbxd.com`
+with `referrerpolicy="no-referrer"`, fixed dimensions and `loading="lazy"`.
+They are deliberately _not_ run through Astro's remote image optimisation:
+that downloads at build time and would fail the build if a CDN hiccupped,
+which contradicts the rule that no feed may ever break a deploy. The trade is
+two third-party image hosts at runtime. Moving them behind a Worker proxy
+would make them first-party again if that ever matters.
+
 ### Spotify
 
 Three secrets, none of which may ever reach the browser. They are read through
