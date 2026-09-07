@@ -24,13 +24,20 @@ const ENV = {
 };
 
 /** Replaces global fetch with canned Spotify answers. */
-function stub({ tokenStatus = 200, playStatus = 200, playBody = null, errorBody = null } = {}) {
+function stub({
+  tokenStatus = 200,
+  playStatus = 200,
+  playBody = null,
+  errorBody = null,
+  tokenScope = 'user-read-recently-played user-read-currently-playing',
+} = {}) {
   globalThis.fetch = async (input) => {
     const url = typeof input === 'string' ? input : input.url;
     if (url.includes('accounts.spotify.com')) {
-      return new Response(tokenStatus === 200 ? JSON.stringify({ access_token: 'tok' }) : 'no', {
-        status: tokenStatus,
-      });
+      return new Response(
+        tokenStatus === 200 ? JSON.stringify({ access_token: 'tok', scope: tokenScope }) : 'no',
+        { status: tokenStatus },
+      );
     }
     if (url.includes('api.spotify.com')) {
       if (playStatus >= 400) {
@@ -135,6 +142,21 @@ test('no spotifyMessage is attached when nothing was rejected', async () => {
   const body = await (await get('/?debug=1')).json();
   assert.equal(body.reason, 'spotify_204_nothing_playing');
   assert.equal(body.spotifyMessage, undefined);
+});
+
+test('debug reports the scopes the refresh token actually carries', async () => {
+  // Scopes are bound at authorisation time, so a token granted without
+  // user-read-currently-playing can never acquire it by being refreshed. This
+  // makes that visible without waiting for a 401.
+  stub({ tokenScope: 'user-read-recently-played', playStatus: 401 });
+  const bad = await (await get('/?debug=1')).json();
+  assert.equal(bad.grantedScopes, 'user-read-recently-played');
+  assert.equal(bad.scopeOk, false);
+
+  stub({ playStatus: 204 });
+  const good = await (await get('/?debug=1')).json();
+  assert.match(good.grantedScopes, /user-read-currently-playing/);
+  assert.equal(good.scopeOk, true);
 });
 
 test('the normal payload carries no diagnostics', async () => {

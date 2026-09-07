@@ -147,6 +147,13 @@ curl -s 'https://now-playing.smr.et/?debug=1' | jq
 | `spotify_429`                 | Rate limited                                                                                                                       | wait                                                 |
 | `missing_secrets`             | One or more secrets are not set — the reply names which                                                                            | add them                                             |
 
+Every debug reply also reports `grantedScopes` — the scopes the refresh token
+actually carries, echoed by Spotify — and `scopeOk`, whether
+`user-read-currently-playing` is among them. **Scopes are bound at
+authorisation time**, so a token granted without it can never acquire it by
+being refreshed: the consent screen has to be approved again. `scopeOk: false`
+means re-mint, not retry.
+
 A rejection also carries `spotifyMessage`, Spotify's own words for it. That
 matters most for a 401, which has two very different causes:
 
