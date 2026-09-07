@@ -74,8 +74,11 @@ async function accessToken(env: Env): Promise<string | null> {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    // The zone route is a wildcard over /api/*, so anything else under it
+    // belongs to the static origin. Pass those through rather than swallowing
+    // them, which keeps the Worker transparent for everything it does not own.
     if (!url.pathname.endsWith('/now-playing.json')) {
-      return new Response('Not found', { status: 404 });
+      return fetch(request);
     }
     if (request.method !== 'GET') {
       return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET' } });

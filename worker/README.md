@@ -49,6 +49,42 @@ Then check it:
 curl -s https://smr.et/api/now-playing.json | jq
 ```
 
+## Is the Worker actually answering?
+
+The static fallback and the Worker both return `{ playing: false }` when
+nothing is on, so "it returns false" does not tell you which one replied.
+Three things distinguish them:
+
+```sh
+curl -si https://smr.et/api/now-playing.json | head -20
+```
+
+| Signal                | Worker answered              | Origin answered (route not live) |
+| --------------------- | ---------------------------- | -------------------------------- |
+| Body whitespace       | `{"playing":false}`          | `{ "playing": false }`           |
+| `cache-control`       | `max-age=30, s-maxage=30, …` | `max-age=600`                    |
+| `x-github-request-id` | absent                       | present                          |
+
+If the origin is answering, the route is not intercepting. Check
+**Workers & Pages → smr-now-playing → Settings → Domains & Routes** in the
+dashboard, confirm the zone route is listed, and confirm the DNS record for
+the apex is **proxied** (orange cloud) — a grey-cloud record bypasses Workers
+entirely.
+
+`workers_dev` is on, so the Worker also has its own
+`smr-now-playing.<your-subdomain>.workers.dev` URL. Hitting that tests the
+code and the secrets in isolation from the routing:
+
+```sh
+npx wrangler deployments list          # confirms what is deployed
+curl -s https://smr-now-playing.<subdomain>.workers.dev/api/now-playing.json
+npx wrangler tail                      # stream logs while you curl
+```
+
+If the workers.dev URL works and the smr.et one does not, the problem is the
+route. If neither works while music is playing, it is the secrets or the token
+scope — the Worker needs `user-read-currently-playing`.
+
 ## Notes
 
 - The route is on the site's own domain, so the page fetch is same-origin: no
