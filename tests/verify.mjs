@@ -451,7 +451,10 @@ const hasPosts = await (async () => {
   const ctx = await browser.newContext();
   const page = await ctx.newPage();
   await page.goto(`${BASE}/work${SLASH}`, { waitUntil: 'load' });
-  const cardNames = await page.$$eval('h3[style*="view-transition-name"]', (n) =>
+  // Any heading level: /work has one h1, so its project titles are h2, while
+  // the home page nests them under a section heading and uses h3. The level is
+  // the page's business; carrying the name is what this checks.
+  const cardNames = await page.$$eval(':is(h1, h2, h3, h4)[style*="view-transition-name"]', (n) =>
     n.map((e) => e.style.viewTransitionName),
   );
   if (cardNames.length !== projectTitles.length) {

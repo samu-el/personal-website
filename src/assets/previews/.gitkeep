@@ -1,0 +1,5 @@
+Screenshots of the live projects land here as <project-id>.webp, produced by
+`npm run shots` (or the "Capture project previews" workflow, which runs it on a
+GitHub runner). ProjectShowcase.astro matches them by project id; a project with
+no file here falls back to its title over the site's grid texture, so this
+directory being empty is a valid state and never fails the build.

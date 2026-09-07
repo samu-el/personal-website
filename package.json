@@ -13,6 +13,7 @@
     "check": "astro check",
     "astro": "astro",
     "images": "node scripts/gen-images.mjs",
+    "shots": "node scripts/shots.mjs",
     "verify": "node tests/verify.mjs",
     "test": "npm run check && npm run test:unit && npm run build:fast && node tests/verify.mjs",
     "test:unit": "node --experimental-strip-types --test tests/*.test.mjs"
