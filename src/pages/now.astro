@@ -86,8 +86,8 @@ function stars(rating: number): string {
                       {repo.name}
                     </span>
                     <Icon
-                      name="lucide:arrow-up-right"
-                      class="size-3 shrink-0 text-subtle transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+                      name="lucide:external-link"
+                      class="size-3 shrink-0 text-subtle transition-transform duration-300 group-hover:text-accent"
                       aria-hidden="true"
                     />
                   </span>
@@ -204,7 +204,8 @@ function stars(rating: number): string {
               class="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-accent"
             >
               <Icon name="simple-icons:letterboxd" class="size-3.5" aria-hidden="true" />
-              Letterboxd ↗
+              Letterboxd
+              <Icon name="lucide:external-link" class="size-3" aria-hidden="true" />
             </a>
           </div>
 
