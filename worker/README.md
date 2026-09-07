@@ -21,9 +21,25 @@ browser never logs a failed request for an endpoint that does not exist yet.
 }
 ```
 
-`{ "playing": false }` when nothing is playing, when the credentials are
-missing, or when Spotify is unreachable. The page treats all three the same
-way: it renders nothing.
+`state` says where the title came from, and the page renders each differently:
+
+| `state`   | Source                                       | Card shows                                        |
+| --------- | -------------------------------------------- | ------------------------------------------------- |
+| `playing` | `/me/player/currently-playing`, `is_playing` | "Currently listening", live bar, animated meter   |
+| `paused`  | the same call, `is_playing: false`           | "Paused", bar frozen at position, static meter    |
+| `recent`  | `/me/player/recently-played?limit=1`         | "Last played · 2 hours ago", no bar, static meter |
+
+The history endpoint is only called when the player names no track at all —
+never while something is playing, which would spend a rate-limited call on an
+answer that gets discarded. It is called after a rejection as well as after a
+204, because a token holding only `user-read-recently-played` gets a 401 on
+the player and can still answer this. `?debug=1` reports that call's own
+status as `recentReason`, separately from `reason`, so a fallback that worked
+does not hide a player call that did not.
+
+A bare `{ "playing": false }` — no `state`, no title — means Spotify named
+nothing at all: credentials missing, both calls rejected, or the API
+unreachable. That is the only case where the page renders nothing.
 
 `progressMs` is a reading taken when the Worker ran, not a running clock, and
 the edge serves that same reading for up to `CACHE_SECONDS`. `fetchedAt` is
