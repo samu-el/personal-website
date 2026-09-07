@@ -33,6 +33,8 @@
  * @property {string} [reason] Only set on a ?debug=1 request.
  * @property {object} [secrets] Only set on a ?debug=1 request. Presence, never values.
  * @property {string} [spotifyMessage] Only set on a ?debug=1 request.
+ * @property {string} [grantedScopes] Only set on a ?debug=1 request.
+ * @property {boolean} [scopeOk] Only set on a ?debug=1 request.
  * @property {string} [title]
  * @property {string} [artist]
  * @property {string} [album]
@@ -46,6 +48,14 @@
 const CACHE_SECONDS = 30;
 /** Seconds the edge holds a "nothing playing" answer — cheaper to repeat. */
 const CACHE_SECONDS_IDLE = 60;
+
+/**
+ * The scope the currently-playing endpoint needs. Spotify binds scopes to a
+ * refresh token at authorisation time, so a token granted without this one can
+ * never mint an access token that has it — re-exchanging is futile, the consent
+ * screen has to be approved again.
+ */
+const REQUIRED_SCOPE = 'user-read-currently-playing';
 
 /**
  * @param {Payload} body
@@ -79,7 +89,7 @@ function json(body, maxAge) {
  */
 /**
  * @param {Env} env
- * @returns {Promise<{ token: string | null, status: number }>}
+ * @returns {Promise<{ token: string | null, status: number, scope: string }>}
  */
 async function accessToken(env) {
   const res = await fetch('https://accounts.spotify.com/api/token', {
@@ -94,11 +104,14 @@ async function accessToken(env) {
       refresh_token: env.SPOTIFY_REFRESH_TOKEN,
     }),
   });
-  if (!res.ok) return { token: null, status: res.status };
+  if (!res.ok) return { token: null, status: res.status, scope: '' };
   const body = await res.json();
   return {
     token: body && typeof body.access_token === 'string' ? body.access_token : null,
     status: res.status,
+    // Spotify echoes the scopes the refresh token actually carries, which is
+    // the only way to see a missing one without waiting for a 401.
+    scope: body && typeof body.scope === 'string' ? body.scope : '',
   };
 }
 
@@ -178,9 +191,11 @@ export default {
     /** Spotify's own words for a rejection — the only thing that separates a
      * missing scope from a non-Premium account, since both answer 401. */
     let spotifyMessage = '';
+    let grantedScopes = '';
 
     try {
-      const { token, status: tokenStatus } = await accessToken(env);
+      const { token, status: tokenStatus, scope } = await accessToken(env);
+      grantedScopes = scope;
       if (!token) {
         // 400 here is almost always an expired or revoked refresh token.
         reason = `token_exchange_failed_${tokenStatus}`;
@@ -255,7 +270,14 @@ export default {
 
     if (debug) {
       return json(
-        { ...payload, reason, ...(spotifyMessage ? { spotifyMessage } : {}), secrets },
+        {
+          ...payload,
+          reason,
+          ...(spotifyMessage ? { spotifyMessage } : {}),
+          grantedScopes,
+          scopeOk: grantedScopes.split(' ').includes(REQUIRED_SCOPE),
+          secrets,
+        },
         0,
       );
     }
