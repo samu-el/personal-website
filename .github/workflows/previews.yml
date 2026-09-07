@@ -1,0 +1,73 @@
+name: Capture project previews
+
+# Manual only. Screenshots change whenever the projects change, not whenever
+# this repository does, so tying this to a push would churn binaries for no
+# reason — and a scheduled run would commit a screenshot of whatever a site
+# happened to be doing at 5am, including an error page.
+on:
+  workflow_dispatch:
+    inputs:
+      projects:
+        description: 'Project ids to capture, space separated. Empty captures all.'
+        required: false
+        default: ''
+
+# Pushes the captured images to a dedicated branch. Never to the branch this
+# was dispatched from: generated binaries should arrive by pull request, where
+# they can be looked at, not appear in the deploy branch unreviewed.
+permissions:
+  contents: write
+
+concurrency:
+  group: previews
+  cancel-in-progress: true
+
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      # Only Chromium, and only its own dependencies. The full install pulls
+      # three browsers for a job that uses one.
+      - run: npx playwright install --with-deps chromium
+
+      - name: Capture
+        run: node scripts/shots.mjs ${{ inputs.projects }}
+
+      # Verify the screenshots actually build into the site before proposing
+      # them. An unreadable or absurdly large image should fail here, in a job
+      # nobody is waiting on, rather than in the deploy.
+      - name: Build with the new screenshots
+        run: npm run build:fast
+
+      - name: Push to the previews branch
+        run: |
+          set -euo pipefail
+          if git diff --quiet -- src/assets/previews; then
+            echo "The captured screenshots are identical to the committed ones."
+            exit 0
+          fi
+
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # A single-commit branch, recreated each run: this carries generated
+          # output, so its history is noise and a stale branch would conflict
+          # with the next capture.
+          git checkout -B previews/auto
+          git add src/assets/previews
+          git commit -m 'Capture project previews' \
+                     -m "Produced by scripts/shots.mjs on run ${{ github.run_id }}, from ${{ github.sha }}."
+          git push --force origin previews/auto
+
+          echo "### Screenshots updated" >> "$GITHUB_STEP_SUMMARY"
+          echo "Pushed to \`previews/auto\`. Open a pull request from that branch to ship them." >> "$GITHUB_STEP_SUMMARY"
+          git diff --stat HEAD~1 -- src/assets/previews >> "$GITHUB_STEP_SUMMARY" || true

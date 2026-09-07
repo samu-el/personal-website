@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
 import { navIndex } from '@/lib/posts';
-import ProjectCard from '@/components/ProjectCard.astro';
+import ProjectShowcase from '@/components/ProjectShowcase.astro';
 import { Icon } from 'astro-icon/components';
 
 const isPublished = (d: { draft?: boolean }) => import.meta.env.DEV || !d.draft;
@@ -47,8 +47,10 @@ const index = await navIndex('/work');
   </section>
 
   <div class="wrap py-10 lg:py-20">
-    <div class="grid gap-5">
-      {showcased.map((p) => <ProjectCard project={p} index={0} feature />)}
+    <!-- Rows rather than cards, separated by a rule, so each project gets
+         room for a screenshot instead of competing in a stack. -->
+    <div class="grid gap-14 lg:gap-24">
+      {showcased.map((p, i) => <ProjectShowcase project={p} index={i} />)}
     </div>
 
     <!-- Everything else lives on GitHub rather than being re-listed here. -->
