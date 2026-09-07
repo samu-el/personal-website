@@ -17,15 +17,6 @@ const LETTERBOXD_USER = 'rocin4nte';
 const TIMEOUT_MS = 8000;
 
 /**
- * Forks are excluded as somebody else's work, but a fork that was taken over
- * and rewritten is not. This site's own repository began in 2019 as a fork of
- * github/personal-website and has since been replaced wholesale, so GitHub
- * still reports `fork: true` for the repository pushed to most often here.
- * Name them explicitly rather than guessing from commit counts.
- */
-const OWNED_FORKS = new Set(['personal-website']);
-
-/**
  * Repositories kept out of "recently pushed" regardless of when they were
  * touched. Old coursework and throwaways are still activity by the API's
  * reckoning, but they are not a signal worth showing. Add or remove a name
@@ -156,11 +147,7 @@ export function normalizeGitHub(
 ): GitHubActivity {
   // Archived repositories are not activity, and private ones are not public.
   const own = repos.filter(
-    (r) =>
-      (!r.fork || OWNED_FORKS.has(String(r.name))) &&
-      !r.archived &&
-      !r.private &&
-      !HIDDEN_REPOS.has(String(r.name)),
+    (r) => !r.fork && !r.archived && !r.private && !HIDDEN_REPOS.has(String(r.name)),
   );
 
   const cutoff = Date.now() - MAX_REPO_AGE_DAYS * 86_400_000;
