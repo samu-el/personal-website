@@ -30,6 +30,10 @@ function stub({
   playBody = null,
   errorBody = null,
   tokenScope = 'user-read-recently-played user-read-currently-playing',
+  // The recently-played fallback, reached whenever the player has no track.
+  // Defaults to failing, so a test only sees it when it asks for it.
+  recentStatus = 404,
+  recentBody = null,
 } = {}) {
   globalThis.fetch = async (input) => {
     const url = typeof input === 'string' ? input : input.url;
@@ -38,6 +42,12 @@ function stub({
         tokenStatus === 200 ? JSON.stringify({ access_token: 'tok', scope: tokenScope }) : 'no',
         { status: tokenStatus },
       );
+    }
+    // Checked first: both endpoints live on api.spotify.com.
+    if (url.includes('recently-played')) {
+      return new Response(recentStatus === 200 ? JSON.stringify(recentBody ?? RECENT) : 'no', {
+        status: recentStatus,
+      });
     }
     if (url.includes('api.spotify.com')) {
       if (playStatus >= 400) {
@@ -53,6 +63,21 @@ function stub({
     return new Response('origin', { status: 200 });
   };
 }
+
+const RECENT = {
+  items: [
+    {
+      played_at: '2026-09-07T10:00:00.000Z',
+      track: {
+        name: 'Tezeta',
+        duration_ms: 240000,
+        artists: [{ name: 'Mulatu Astatke' }],
+        album: { name: 'Ethiopiques 4', images: [{ url: 'https://i.scdn.co/t' }] },
+        external_urls: { spotify: 'https://open.spotify.com/t' },
+      },
+    },
+  ],
+};
 
 const get = (path, env = ENV) =>
   worker.fetch(new Request(`https://w.example${path}`, { method: 'GET' }), env);
@@ -125,6 +150,111 @@ test('a playing track is reported in full', async () => {
   assert.equal(body.durationMs, 200000);
 });
 
+test('a playing track is stamped so the page can correct for cache age', async () => {
+  // progressMs is a reading taken when the Worker ran, and the edge may serve
+  // that same reading for up to CACHE_SECONDS afterwards. Without the stamp
+  // the page cannot tell a fresh reading from a stale one, and every visitor
+  // gets a bar sitting up to half a minute behind the music.
+  stub(PLAYING);
+  const before = Date.now();
+  const body = await (await get('/now-playing.json')).json();
+  assert.equal(typeof body.fetchedAt, 'number');
+  assert.ok(body.fetchedAt >= before && body.fetchedAt <= Date.now());
+});
+
+test('a payload that is not advancing carries no stamp to correct against', async () => {
+  // The stamp exists so the page can add cache age to progressMs. Neither a
+  // paused nor a finished track is advancing, so applying it there would walk
+  // the bar forward through music nobody is listening to.
+  stub({ playBody: { is_playing: false, progress_ms: 5000, item: { name: 'x', duration_ms: 9 } } });
+  assert.equal((await (await get('/now-playing.json')).json()).fetchedAt, undefined);
+
+  stub({ playStatus: 204, recentStatus: 200 });
+  assert.equal((await (await get('/now-playing.json')).json()).fetchedAt, undefined);
+});
+
+test('a paused track is reported with its position, not hidden', async () => {
+  stub({
+    playBody: {
+      is_playing: false,
+      progress_ms: 61234,
+      item: {
+        name: 'Yèkèrmo Sèw',
+        duration_ms: 200000,
+        artists: [{ name: 'Mulatu Astatke' }],
+        album: { name: 'Mulatu of Ethiopia', images: [{ url: 'https://i.scdn.co/x' }] },
+      },
+    },
+  });
+  const body = await (await get('/now-playing.json')).json();
+  assert.equal(body.state, 'paused');
+  assert.equal(body.playing, false);
+  assert.equal(body.title, 'Yèkèrmo Sèw');
+  // The position is what makes paused worth showing over the history endpoint.
+  assert.equal(body.progressMs, 61234);
+  assert.equal(body.durationMs, 200000);
+});
+
+test('an empty player falls back to the last track played', async () => {
+  stub({ playStatus: 204, recentStatus: 200 });
+  const body = await (await get('/now-playing.json')).json();
+  assert.equal(body.state, 'recent');
+  assert.equal(body.playing, false);
+  assert.equal(body.title, 'Tezeta');
+  assert.equal(body.artist, 'Mulatu Astatke');
+  assert.equal(body.art, 'https://i.scdn.co/t');
+  assert.equal(body.url, 'https://open.spotify.com/t');
+  assert.equal(body.playedAt, '2026-09-07T10:00:00.000Z');
+  // A finished track has no position, so the page must not draw a bar for it.
+  assert.equal(body.progressMs, undefined);
+});
+
+test('a token holding only the history scope still fills the card', async () => {
+  // This is the shape of the bug that cost two rounds of guessing: scopes are
+  // bound at authorisation time, so such a token answers 401 on the player
+  // forever. It can still answer this, which beats a blank card.
+  stub({ tokenScope: 'user-read-recently-played', playStatus: 401, recentStatus: 200 });
+  const body = await (await get('/now-playing.json')).json();
+  assert.equal(body.state, 'recent');
+  assert.equal(body.title, 'Tezeta');
+
+  const dbg = await (await get('/?debug=1')).json();
+  // The underlying problem stays visible rather than being papered over.
+  assert.equal(dbg.reason, 'spotify_401');
+  assert.equal(dbg.scopeOk, false);
+  assert.equal(dbg.recentReason, 'recent_200');
+});
+
+test('the fallback reports its own failure separately', async () => {
+  stub({ playStatus: 204, recentStatus: 403 });
+  const body = await (await get('/?debug=1')).json();
+  assert.equal(body.reason, 'spotify_204_nothing_playing');
+  assert.equal(body.recentReason, 'recent_403');
+  assert.equal(body.playing, false);
+});
+
+test('the fallback is not consulted while something is playing', async () => {
+  // An extra Spotify call per request against a rate limit, for an answer
+  // that would be discarded.
+  stub(PLAYING);
+  const asked = [];
+  const inner = globalThis.fetch;
+  globalThis.fetch = (input, init) => {
+    asked.push(typeof input === 'string' ? input : input.url);
+    return inner(input, init);
+  };
+  await get('/now-playing.json');
+  assert.equal(asked.filter((u) => u.includes('recently-played')).length, 0);
+});
+
+test('an empty history is not mistaken for a track', async () => {
+  stub({ playStatus: 204, recentStatus: 200, recentBody: { items: [] } });
+  const body = await (await get('/?debug=1')).json();
+  assert.equal(body.recentReason, 'recent_empty');
+  assert.equal(body.playing, false);
+  assert.equal(body.title, undefined);
+});
+
 test("debug relays Spotify's own message on a rejection", async () => {
   // 401 alone cannot distinguish a missing scope from a non-Premium account;
   // Spotify says which in the body.
@@ -161,7 +291,7 @@ test('debug reports the scopes the refresh token actually carries', async () => 
 
 test('the normal payload carries no diagnostics', async () => {
   // reason and secrets are debug-only; the public endpoint stays minimal.
-  stub({ playStatus: 403 });
+  stub({ playStatus: 403, recentStatus: 403 });
   const body = await (await get('/now-playing.json')).json();
   assert.deepEqual(Object.keys(body), ['playing']);
 });

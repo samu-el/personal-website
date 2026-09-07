@@ -30,11 +30,17 @@
 /**
  * @typedef {object} Payload
  * @property {boolean} playing
+ * @property {'playing' | 'paused' | 'recent'} [state] Which of the three a
+ *   title came from. `playing` and `paused` are the live player; `recent` is
+ *   the last thing that finished. Absent when there is no title at all.
+ * @property {string} [playedAt] ISO timestamp, `recent` only.
  * @property {string} [reason] Only set on a ?debug=1 request.
  * @property {object} [secrets] Only set on a ?debug=1 request. Presence, never values.
  * @property {string} [spotifyMessage] Only set on a ?debug=1 request.
  * @property {string} [grantedScopes] Only set on a ?debug=1 request.
  * @property {boolean} [scopeOk] Only set on a ?debug=1 request.
+ * @property {string} [recentReason] Only set on a ?debug=1 request, and only
+ *   when the recently-played fallback was reached.
  * @property {string} [title]
  * @property {string} [artist]
  * @property {string} [album]
@@ -42,6 +48,7 @@
  * @property {string} [url]
  * @property {number} [progressMs]
  * @property {number} [durationMs]
+ * @property {number} [fetchedAt] Epoch ms at which progressMs was read.
  */
 
 /** Seconds the edge holds a response while playing. Short enough to feel live. */
@@ -56,6 +63,46 @@ const CACHE_SECONDS_IDLE = 60;
  * screen has to be approved again.
  */
 const REQUIRED_SCOPE = 'user-read-currently-playing';
+
+/**
+ * The last thing that finished, for when the player is empty. Needs
+ * user-read-recently-played, which is a different grant from the one above —
+ * a token may hold either, both, or neither.
+ */
+const RECENT_ENDPOINT = 'https://api.spotify.com/v1/me/player/recently-played?limit=1';
+
+/**
+ * Reads the fields the page needs out of a track or a podcast episode. The
+ * two shapes differ enough to be annoying: an episode has no `artists` and no
+ * `album`, carrying its show in `show` and its art at the top level.
+ *
+ * Returns `playing: false`; every caller sets the real state.
+ *
+ * @param {any} item
+ * @returns {Payload}
+ */
+function readTrack(item) {
+  const art =
+    (item.album && item.album.images && item.album.images[0]?.url) ?? // track
+    (item.images && item.images[0]?.url) ?? // podcast episode
+    undefined;
+  const artist = Array.isArray(item.artists)
+    ? item.artists
+        .map((/** @type {{ name?: string }} */ a) => a && a.name)
+        .filter(Boolean)
+        .join(', ')
+    : ((item.show && item.show.name) ?? '');
+
+  return {
+    playing: false,
+    title: String(item.name),
+    artist,
+    album: (item.album && item.album.name) ?? (item.show && item.show.name) ?? undefined,
+    art,
+    url: (item.external_urls && item.external_urls.spotify) ?? undefined,
+    durationMs: typeof item.duration_ms === 'number' ? item.duration_ms : undefined,
+  };
+}
 
 /**
  * @param {Payload} body
@@ -192,6 +239,8 @@ export default {
      * missing scope from a non-Premium account, since both answer 401. */
     let spotifyMessage = '';
     let grantedScopes = '';
+    /** Set only if the recently-played fallback was reached. */
+    let recentReason = '';
 
     try {
       const { token, status: tokenStatus, scope } = await accessToken(env);
@@ -234,32 +283,63 @@ export default {
         if (res.status === 200) {
           const body = await res.json();
           const item = body && body.item;
-          if (body && body.is_playing && item && item.name) {
-            const art =
-              (item.album && item.album.images && item.album.images[0]?.url) ?? // track
-              (item.images && item.images[0]?.url) ?? // podcast episode
-              undefined;
-            const artist = Array.isArray(item.artists)
-              ? item.artists
-                  .map((/** @type {{ name?: string }} */ a) => a && a.name)
-                  .filter(Boolean)
-                  .join(', ')
-              : ((item.show && item.show.name) ?? '');
-
+          if (item && item.name) {
+            // Paused still counts as something to show: the player reports
+            // the track and where it stopped, which beats anything the
+            // history endpoint could tell us about it.
+            const live = Boolean(body.is_playing);
             payload = {
-              playing: true,
-              title: String(item.name),
-              artist,
-              album: (item.album && item.album.name) ?? (item.show && item.show.name) ?? undefined,
-              art,
-              url: (item.external_urls && item.external_urls.spotify) ?? undefined,
+              ...readTrack(item),
+              playing: live,
+              state: live ? 'playing' : 'paused',
               progressMs: typeof body.progress_ms === 'number' ? body.progress_ms : undefined,
-              durationMs: typeof item.duration_ms === 'number' ? item.duration_ms : undefined,
+              // progressMs is a reading, not a running clock, and this response
+              // is cached at the edge for CACHE_SECONDS — so by the time a
+              // browser sees it the track has moved on by up to that much.
+              // Stamping the reading lets the page add the elapsed time back
+              // instead of starting the bar half a minute behind. The stamp
+              // travels inside the cached body, so it ages with it.
+              //
+              // Only when playing. A paused track's progress is not advancing,
+              // so correcting for cache age there would walk the bar forward
+              // through a track nobody is listening to.
+              ...(live ? { fetchedAt: Date.now() } : {}),
             };
-            maxAge = CACHE_SECONDS;
-            reason = 'ok';
+            maxAge = live ? CACHE_SECONDS : CACHE_SECONDS_IDLE;
+            reason = live ? 'ok' : 'paused';
           } else {
-            reason = item ? 'paused' : 'no_item';
+            reason = 'no_item';
+          }
+        }
+
+        // Nothing on the player at all — closed the app, or never opened it
+        // today. Fall back to the last thing that finished, so the card has
+        // something true to say instead of disappearing.
+        //
+        // Reached after a rejection too, not just a 204: a token holding only
+        // user-read-recently-played gets a 401 or 403 above and can still
+        // answer this, which is a strictly better failure than a blank card.
+        if (!payload.title) {
+          const rec = await fetch(RECENT_ENDPOINT, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          recentReason = `recent_${rec.status}`;
+          if (rec.status === 200) {
+            const recBody = await rec.json();
+            const first = recBody && Array.isArray(recBody.items) ? recBody.items[0] : undefined;
+            const played = first && first.track;
+            if (played && played.name) {
+              payload = {
+                ...readTrack(played),
+                state: 'recent',
+                // No progress: this track finished, and where it finished is
+                // not something the page should draw a bar for.
+                playedAt: typeof first.played_at === 'string' ? first.played_at : undefined,
+              };
+              maxAge = CACHE_SECONDS_IDLE;
+            } else {
+              recentReason = 'recent_empty';
+            }
           }
         }
       }
@@ -274,6 +354,7 @@ export default {
           ...payload,
           reason,
           ...(spotifyMessage ? { spotifyMessage } : {}),
+          ...(recentReason ? { recentReason } : {}),
           grantedScopes,
           scopeOk: grantedScopes.split(' ').includes(REQUIRED_SCOPE),
           secrets,

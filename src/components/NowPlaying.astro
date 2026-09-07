@@ -4,9 +4,11 @@
  * /api/now-playing — a Cloudflare Worker on this same domain, so the fetch is
  * same-origin and the Spotify credentials stay server-side. See worker/.
  *
- * Ships hidden and stays hidden unless the Worker says something is playing,
- * so the section costs nothing before the Worker is deployed, when Spotify is
- * idle, or when the request fails.
+ * Shows one of three things, whichever the Worker could establish: the track
+ * playing now, with a live progress bar; a paused track, frozen where it
+ * stopped; or the last one that finished, with how long ago. Only a Worker
+ * that cannot name any track at all leaves the card hidden — before it is
+ * deployed, or when Spotify is unreachable.
  *
  * public/api/now-playing.json answers { playing: false } so the fetch is a 200
  * even with no Worker deployed. A caught exception still leaves the browser
@@ -54,10 +56,10 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
           <p
             class="flex items-center gap-2.5 whitespace-nowrap font-mono text-2xs uppercase tracking-[0.1em] text-subtle sm:tracking-[0.14em]"
           >
-            <span class="eq" aria-hidden="true">
+            <span id="np-eq" class="eq" aria-hidden="true">
               <span></span><span></span><span></span><span></span>
             </span>
-            Currently listening
+            <span id="np-state">Currently listening</span>
           </p>
 
           <p
@@ -66,6 +68,29 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
           >
           </p>
           <p id="np-artist" class="mt-2 text-[0.9375rem] text-muted sm:text-base"></p>
+
+          <!-- Stays hidden unless the track reports a duration. Podcast
+               episodes and local files do not always, and a bar with no end
+               is worse than no bar. -->
+          <div id="np-progress" class="mt-5 max-w-md" hidden>
+            <div class="h-[3px] overflow-hidden rounded-full bg-line" aria-hidden="true">
+              <!-- Width is set from JS every second; the matching linear
+                   transition turns those steps into continuous movement. -->
+              <div
+                id="np-bar"
+                class="h-full rounded-full bg-jade transition-[width] duration-1000 ease-linear motion-reduce:transition-none"
+                style="width:0%"
+              >
+              </div>
+            </div>
+            <!-- The times, not the bar, carry this to a screen reader: the bar
+                 is decoration, and a progressbar role rewritten every second
+                 is chatter. -->
+            <p class="mt-2 flex justify-between font-mono text-2xs tabular-nums text-subtle">
+              <span id="np-elapsed">0:00</span>
+              <span id="np-duration">0:00</span>
+            </p>
+          </div>
 
           <p
             class="mt-4 flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle"
@@ -120,19 +145,26 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
        its cycle and some renderers drop it entirely, which reads as a gap. */
     will-change: transform;
   }
+  /* --h is the height each bar freezes at. Declared alongside its timing so
+     the two ways of stopping the meter — paused, and a visitor who asked for
+     less motion — share one set of numbers instead of drifting apart. */
   .eq > span:nth-child(1) {
+    --h: 45%;
     animation-duration: 1.05s;
     animation-delay: -0.9s;
   }
   .eq > span:nth-child(2) {
+    --h: 100%;
     animation-duration: 0.8s;
     animation-delay: -0.45s;
   }
   .eq > span:nth-child(3) {
+    --h: 65%;
     animation-duration: 1.3s;
     animation-delay: -0.7s;
   }
   .eq > span:nth-child(4) {
+    --h: 85%;
     animation-duration: 0.95s;
     animation-delay: -0.2s;
   }
@@ -146,23 +178,17 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     }
   }
 
-  /* Reduced motion keeps the meaning without the movement: static bars at
-     different heights still read as a level meter. */
+  /* Stopped: nothing is playing, or the visitor asked for less motion. Static
+     bars at four different heights still read as a level meter — a stopped
+     one. A meter dancing above the word "Paused" would just be a lie. */
+  .eq.is-still > span {
+    animation: none;
+    height: var(--h);
+  }
   @media (prefers-reduced-motion: reduce) {
     .eq > span {
       animation: none;
-    }
-    .eq > span:nth-child(1) {
-      height: 45%;
-    }
-    .eq > span:nth-child(2) {
-      height: 100%;
-    }
-    .eq > span:nth-child(3) {
-      height: 65%;
-    }
-    .eq > span:nth-child(4) {
-      height: 85%;
+      height: var(--h);
     }
   }
 </style>
@@ -174,6 +200,67 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     window.__np = true;
 
     const REFRESH_MS = 45000;
+    /* Ceiling on the staleness correction below. The edge holds a response for
+       30s and may serve it for another 60 while revalidating, so 90s is the
+       real worst case; 120 leaves room without letting a wrong clock run away
+       with the bar. */
+    const MAX_AGE_MS = 120000;
+
+    /* Where the bar is, and when that was true. Progress is derived from these
+       rather than stored, so a missed tick self-corrects on the next one. */
+    let base = 0;
+    let baseAt = 0;
+    let total = 0;
+    let ticker = 0;
+    let lastTitle = '';
+
+    /** 3:07, or 1:02:44 for a long podcast episode. */
+    function clock(ms) {
+      const t = Math.max(0, Math.round(ms / 1000));
+      const pad = (n) => String(n).padStart(2, '0');
+      const h = Math.floor(t / 3600);
+      const m = Math.floor((t % 3600) / 60);
+      return h > 0 ? `${h}:${pad(m)}:${pad(t % 60)}` : `${m}:${pad(t % 60)}`;
+    }
+
+    /** "12 min ago". Coarse, so a cached answer cannot look precise. */
+    function since(iso) {
+      const ms = Date.now() - new Date(iso).getTime();
+      if (!Number.isFinite(ms) || ms < 0) return '';
+      const min = Math.floor(ms / 60000);
+      if (min < 1) return 'just now';
+      if (min < 60) return `${min} min ago`;
+      const hours = Math.floor(min / 60);
+      if (hours < 24) return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+      const days = Math.floor(hours / 24);
+      return days === 1 ? 'yesterday' : `${days} days ago`;
+    }
+
+    function renderProgress() {
+      const bar = document.getElementById('np-bar');
+      const elapsed = document.getElementById('np-elapsed');
+      if (!total || !bar || !elapsed) return;
+
+      const ms = Math.min(base + (Date.now() - baseAt), total);
+      bar.style.width = `${((ms / total) * 100).toFixed(2)}%`;
+      elapsed.textContent = clock(ms);
+
+      // Ran off the end. The track is over and the next poll knows what
+      // replaced it; carrying on would only be wrong faster.
+      if (ms >= total) stopTicker();
+    }
+
+    function startTicker() {
+      window.clearInterval(ticker);
+      ticker = window.setInterval(() => {
+        if (!document.hidden) renderProgress();
+      }, 1000);
+    }
+
+    function stopTicker() {
+      window.clearInterval(ticker);
+      ticker = 0;
+    }
 
     async function poll() {
       const section = document.getElementById('now-playing');
@@ -196,10 +283,21 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
         // Offline, blocked, or DNS still catching up. Leave the card hidden.
       }
 
-      if (!data || !data.playing || !data.title) {
+      // A title is the only requirement. Paused counts, and so does the last
+      // thing that finished — the card is about what he is listening to, not
+      // about whether a play button happens to be down right now.
+      if (!data || !data.title) {
         section.hidden = true;
+        total = 0;
+        stopTicker();
         return;
       }
+
+      /* An older deployed Worker sends no state, so infer it. Without this the
+         card would read "Paused" over a playing track for as long as the two
+         are out of step. */
+      const state = data.state || (data.playing ? 'playing' : 'paused');
+      const live = state === 'playing';
 
       const title = document.getElementById('np-title');
       const artist = document.getElementById('np-artist');
@@ -209,6 +307,24 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       title.textContent = data.title;
       artist.textContent = data.artist || '';
       if (data.url) link.href = data.url;
+
+      const eq = document.getElementById('np-eq');
+      if (eq) eq.classList.toggle('is-still', !live);
+
+      const stateEl = document.getElementById('np-state');
+      if (stateEl) {
+        // "Last played" says when, because a track that finished four hours
+        // ago and one that finished a minute ago are different facts.
+        const when = state === 'recent' && data.playedAt ? since(data.playedAt) : '';
+        stateEl.textContent =
+          state === 'playing'
+            ? 'Currently listening'
+            : state === 'paused'
+              ? 'Paused'
+              : when
+                ? `Last played · ${when}`
+                : 'Last played';
+      }
 
       if (data.art) {
         // Only fade the sleeve in once it has actually decoded.
@@ -222,6 +338,58 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
         art.removeAttribute('src');
         art.style.opacity = '0';
       }
+
+      /* The bar advances locally between polls. Left to the poll alone it
+         would sit still for 45 seconds at a time — a quarter of a short
+         track — and then jump. */
+      const bar = document.getElementById('np-bar');
+      const progress = document.getElementById('np-progress');
+      const duration = Number(data.durationMs);
+      const at = Number(data.progressMs);
+
+      // A finished track has no position, so there is no bar to draw for it.
+      // A paused one does, and showing it frozen is the point.
+      if (
+        bar &&
+        progress &&
+        state !== 'recent' &&
+        Number.isFinite(duration) &&
+        duration > 0 &&
+        Number.isFinite(at)
+      ) {
+        /* Add back however long the reading sat in the edge cache, so the bar
+           starts where the track actually is. Clamped because this subtracts
+           the edge's clock from the visitor's: a badly set clock would
+           otherwise peg the bar to one end. Losing the correction only costs
+           the few seconds it was worth. */
+        const stamp = Number(data.fetchedAt);
+        const age =
+          live && Number.isFinite(stamp)
+            ? Math.min(Math.max(Date.now() - stamp, 0), MAX_AGE_MS)
+            : 0;
+
+        // A new track must not glide backwards out of the old one's position.
+        if (data.title !== lastTitle) {
+          bar.style.transition = 'none';
+          requestAnimationFrame(() => (bar.style.transition = ''));
+        }
+
+        base = Math.min(at + age, duration);
+        baseAt = Date.now();
+        total = duration;
+        document.getElementById('np-duration').textContent = clock(duration);
+        progress.hidden = false;
+        renderProgress();
+        // A paused bar is rendered once and then left alone. Ticking it would
+        // advance a track that is not moving.
+        if (live) startTicker();
+        else stopTicker();
+      } else if (progress) {
+        total = 0;
+        progress.hidden = true;
+        stopTicker();
+      }
+      lastTitle = data.title;
 
       section.hidden = false;
     }
