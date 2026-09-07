@@ -92,7 +92,6 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
           ⌘K
         </kbd>
       </button>
-      <ThemeToggle />
       {
         now && (
           <a
@@ -100,7 +99,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
             aria-current={nowActive ? 'page' : undefined}
             title="What I have pushed and watched lately"
             class:list={[
-              'hidden h-9 items-center gap-2 rounded-full border pl-2.5 pr-3 font-mono text-2xs uppercase tracking-[0.1em] transition-colors md:inline-flex',
+              'inline-flex h-9 items-center gap-2 rounded-full border pl-2.5 pr-3 font-mono text-2xs uppercase tracking-[0.1em] transition-colors',
               nowActive
                 ? 'border-jade/60 text-fg'
                 : 'border-line text-subtle hover:border-line-strong hover:text-fg',
@@ -114,6 +113,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
           </a>
         )
       }
+      <ThemeToggle />
       <a
         href={href('/contact')}
         class="btn btn-primary hidden whitespace-nowrap !px-4 !py-2 !text-[0.8125rem] lg:inline-flex"
