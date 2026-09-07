@@ -14,50 +14,66 @@
  * Responses are cached at the edge for a short window. That keeps Spotify's
  * rate limit comfortable however much traffic arrives, and means the answer
  * is "roughly now" rather than a live feed of your listening to every visitor.
+ *
+ * Deliberately plain JavaScript in one file with no imports, so the same
+ * source works with `wrangler deploy` and can be pasted verbatim into the
+ * dashboard editor. Types come from JSDoc, and `tsc` still checks them.
  */
 
-export interface Env {
-  SPOTIFY_CLIENT_ID: string;
-  SPOTIFY_CLIENT_SECRET: string;
-  SPOTIFY_REFRESH_TOKEN: string;
-}
+/**
+ * @typedef {object} Env
+ * @property {string} SPOTIFY_CLIENT_ID
+ * @property {string} SPOTIFY_CLIENT_SECRET
+ * @property {string} SPOTIFY_REFRESH_TOKEN
+ */
 
-/** Seconds the edge holds a response. Short enough to feel live. */
+/**
+ * @typedef {object} Payload
+ * @property {boolean} playing
+ * @property {string} [title]
+ * @property {string} [artist]
+ * @property {string} [album]
+ * @property {string} [art]
+ * @property {string} [url]
+ * @property {number} [progressMs]
+ * @property {number} [durationMs]
+ */
+
+/** Seconds the edge holds a response while playing. Short enough to feel live. */
 const CACHE_SECONDS = 30;
 /** Seconds the edge holds a "nothing playing" answer — cheaper to repeat. */
 const CACHE_SECONDS_IDLE = 60;
 
-type Payload = {
-  playing: boolean;
-  title?: string;
-  artist?: string;
-  album?: string;
-  art?: string;
-  url?: string;
-  /** Milliseconds into the track, for a progress bar. Absent for podcasts. */
-  progressMs?: number;
-  durationMs?: number;
-};
-
-function json(body: Payload, maxAge: number): Response {
+/**
+ * @param {Payload} body
+ * @param {number} maxAge
+ * @returns {Response}
+ */
+function json(body, maxAge) {
   return new Response(JSON.stringify(body), {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      // s-maxage drives the edge cache; max-age keeps the browser quiet between
-      // renders. stale-while-revalidate hides the refresh latency.
+      // s-maxage drives the edge cache; max-age keeps the browser quiet
+      // between renders. stale-while-revalidate hides the refresh latency.
+      // A response carrying max-age=30 is how you know this Worker answered
+      // and not the static fallback at the origin, which sends max-age=600.
       'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge}, stale-while-revalidate=${maxAge * 2}`,
-      // The page is same-origin, so this is belt and braces for anyone
-      // fetching it directly.
       'Access-Control-Allow-Origin': '*',
       'X-Content-Type-Options': 'nosniff',
     },
   });
 }
 
-async function accessToken(env: Env): Promise<string | null> {
+/**
+ * Trades the long-lived refresh token for an access token good for an hour.
+ * @param {Env} env
+ * @returns {Promise<string | null>}
+ */
+async function accessToken(env) {
   const res = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
+      // Client credentials go in the Basic header, never the body.
       Authorization: `Basic ${btoa(`${env.SPOTIFY_CLIENT_ID}:${env.SPOTIFY_CLIENT_SECRET}`)}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
@@ -67,13 +83,19 @@ async function accessToken(env: Env): Promise<string | null> {
     }),
   });
   if (!res.ok) return null;
-  const body = (await res.json()) as { access_token?: string };
-  return typeof body.access_token === 'string' ? body.access_token : null;
+  const body = await res.json();
+  return body && typeof body.access_token === 'string' ? body.access_token : null;
 }
 
 export default {
-  async fetch(request: Request, env: Env): Promise<Response> {
+  /**
+   * @param {Request} request
+   * @param {Env} env
+   * @returns {Promise<Response>}
+   */
+  async fetch(request, env) {
     const url = new URL(request.url);
+
     // The zone route is a wildcard over /api/*, so anything else under it
     // belongs to the static origin. Pass those through rather than swallowing
     // them, which keeps the Worker transparent for everything it does not own.
@@ -97,7 +119,8 @@ export default {
     const hit = await cache.match(cacheKey);
     if (hit) return hit;
 
-    let payload: Payload = { playing: false };
+    /** @type {Payload} */
+    let payload = { playing: false };
     let maxAge = CACHE_SECONDS_IDLE;
 
     try {
@@ -112,27 +135,27 @@ export default {
 
         // 204 is Spotify's "nothing is playing" — a success, not a failure.
         if (res.status === 200) {
-          const body = (await res.json()) as Record<string, any>;
-          const item = body?.item;
-          if (body?.is_playing && item?.name) {
+          const body = await res.json();
+          const item = body && body.item;
+          if (body && body.is_playing && item && item.name) {
             const art =
-              item.album?.images?.[0]?.url ?? // track
-              item.images?.[0]?.url ?? // podcast episode
+              (item.album && item.album.images && item.album.images[0]?.url) ?? // track
+              (item.images && item.images[0]?.url) ?? // podcast episode
               undefined;
             const artist = Array.isArray(item.artists)
               ? item.artists
-                  .map((a: { name?: string }) => a?.name)
+                  .map((/** @type {{ name?: string }} */ a) => a && a.name)
                   .filter(Boolean)
                   .join(', ')
-              : (item.show?.name ?? '');
+              : ((item.show && item.show.name) ?? '');
 
             payload = {
               playing: true,
               title: String(item.name),
               artist,
-              album: item.album?.name ?? item.show?.name ?? undefined,
+              album: (item.album && item.album.name) ?? (item.show && item.show.name) ?? undefined,
               art,
-              url: item.external_urls?.spotify ?? undefined,
+              url: (item.external_urls && item.external_urls.spotify) ?? undefined,
               progressMs: typeof body.progress_ms === 'number' ? body.progress_ms : undefined,
               durationMs: typeof item.duration_ms === 'number' ? item.duration_ms : undefined,
             };
@@ -146,8 +169,7 @@ export default {
     }
 
     const response = json(payload, maxAge);
-    // Cache without blocking the response.
     await cache.put(cacheKey, response.clone());
     return response;
   },
-} satisfies ExportedHandler<Env>;
+};
