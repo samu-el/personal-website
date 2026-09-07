@@ -12,6 +12,10 @@ const current = Astro.url.pathname;
 // The Writing section only exists when there is something published in it.
 const writing = await hasWriting();
 const items = await visibleNav();
+
+// Rendered separately, beside the call to action.
+const now = items.find((item) => item.href === '/now');
+const nowActive = now ? isActive(current, href(now.href)) : false;
 ---
 
 <a
@@ -52,24 +56,27 @@ const items = await visibleNav();
     <!-- Desktop nav -->
     <nav aria-label="Primary" class="hidden items-center gap-0.5 md:flex">
       {
-        items.slice(1).map((item) => {
-          const active = isActive(current, href(item.href));
-          return (
-            <a
-              href={href(item.href)}
-              aria-current={active ? 'page' : undefined}
-              class:list={[
-                'nav-link relative rounded-full px-3.5 py-2 text-sm transition-colors duration-200',
-                active ? 'text-fg' : 'text-muted hover:text-fg',
-              ]}
-            >
-              {item.label}
-              {active && (
-                <span class="absolute inset-x-3.5 -bottom-px h-px bg-accent" aria-hidden="true" />
-              )}
-            </a>
-          );
-        })
+        items
+          .slice(1)
+          .filter((item) => item.href !== '/now')
+          .map((item) => {
+            const active = isActive(current, href(item.href));
+            return (
+              <a
+                href={href(item.href)}
+                aria-current={active ? 'page' : undefined}
+                class:list={[
+                  'nav-link relative rounded-full px-3.5 py-2 text-sm transition-colors duration-200',
+                  active ? 'text-fg' : 'text-muted hover:text-fg',
+                ]}
+              >
+                {item.label}
+                {active && (
+                  <span class="absolute inset-x-3.5 -bottom-px h-px bg-accent" aria-hidden="true" />
+                )}
+              </a>
+            );
+          })
       }
     </nav>
 
@@ -86,6 +93,27 @@ const items = await visibleNav();
         </kbd>
       </button>
       <ThemeToggle />
+      {
+        now && (
+          <a
+            href={href(now.href)}
+            aria-current={nowActive ? 'page' : undefined}
+            title="What I have pushed and watched lately"
+            class:list={[
+              'hidden h-9 items-center gap-2 rounded-full border pl-2.5 pr-3 font-mono text-2xs uppercase tracking-[0.1em] transition-colors md:inline-flex',
+              nowActive
+                ? 'border-jade/60 text-fg'
+                : 'border-line text-subtle hover:border-line-strong hover:text-fg',
+            ]}
+          >
+            <span class="relative flex size-1.5" aria-hidden="true">
+              <span class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-70" />
+              <span class="relative inline-flex size-1.5 rounded-full bg-jade" />
+            </span>
+            {now.label}
+          </a>
+        )
+      }
       <a
         href={href('/contact')}
         class="btn btn-primary hidden whitespace-nowrap !px-4 !py-2 !text-[0.8125rem] lg:inline-flex"

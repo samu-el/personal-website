@@ -150,6 +150,10 @@ documented exception: this repository itself began in 2019 as a fork of
 `github/personal-website` and GitHub still reports `fork: true` for it, so it
 is named in `OWNED_FORKS`. Add a name there if another fork gets taken over.
 
+Old coursework and throwaways are kept out of the list by name in
+`HIDDEN_REPOS` — the API counts them as activity, but they are not a signal
+worth showing. Edit that set to change what appears.
+
 Both are allowed to fail. On a network error, a rate limit or an unexpected
 payload the fetch returns `null`, the section that would have used it is not
 rendered, and the build still succeeds — the home page's repository count
