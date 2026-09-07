@@ -45,26 +45,6 @@ test('normalizeGitHub drops forks, archived and private repositories', () => {
   );
 });
 
-test('normalizeGitHub keeps a fork that was taken over and rewritten', () => {
-  // personal-website is still flagged a fork of the 2019 template it started
-  // from, and is the repository pushed to most often.
-  const out = normalizeGitHub({ public_repos: 2 }, [
-    repo({ name: 'personal-website', fork: true }),
-    repo({ name: 'some-drive-by-fork', fork: true }),
-  ]);
-  assert.deepEqual(
-    out.recent.map((r) => r.name),
-    ['personal-website'],
-  );
-});
-
-test('normalizeGitHub still drops an owned fork once archived', () => {
-  const out = normalizeGitHub({ public_repos: 1 }, [
-    repo({ name: 'personal-website', fork: true, archived: true }),
-  ]);
-  assert.deepEqual(out.recent, []);
-});
-
 test('normalizeGitHub drops repositories on the exclude list', () => {
   const out = normalizeGitHub({ public_repos: 3 }, [
     repo({ name: 'CRM' }),

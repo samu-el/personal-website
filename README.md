@@ -152,10 +152,7 @@ further down the history whenever something is excluded, which is how a
 five-year-old repository ends up presented as recent activity. The language
 summary still spans every public repository, aged out or not.
 
-Forks are excluded from "recently pushed" as somebody else's work, with one
-documented exception: this repository itself began in 2019 as a fork of
-`github/personal-website` and GitHub still reports `fork: true` for it, so it
-is named in `OWNED_FORKS`. Add a name there if another fork gets taken over.
+Forks are excluded from "recently pushed" as somebody else's work.
 
 Old coursework and throwaways are kept out of the list by name in
 `HIDDEN_REPOS` — the API counts them as activity, but they are not a signal
