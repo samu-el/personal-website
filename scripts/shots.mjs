@@ -15,6 +15,7 @@
  * screenshot in place rather than replacing it with a blank page.
  */
 import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { chromium } from 'playwright';
@@ -22,11 +23,20 @@ import { chromium } from 'playwright';
 const CONTENT = 'src/content/projects';
 const OUT = 'src/assets/previews';
 
-/** Wide enough to look like a desktop, 16:10 to match the frame's aspect. */
-const VIEWPORT = { width: 1440, height: 900 };
+/**
+ * Per device, matching the frame the showcase draws around the result.
+ *
+ * `phone` exists because not every project is a website. Monee's own
+ * app.config.ts calls its web build "a phone-shaped preview, not a responsive
+ * target", and a 1440-wide capture of it is a narrow column of app in a field
+ * of empty background.
+ */
+const DEVICES = {
+  desktop: { viewport: { width: 1440, height: 900 }, outWidth: 1600 },
+  phone: { viewport: { width: 440, height: 936 }, outWidth: 880 },
+};
 /** Retina capture, downscaled on save: text stays crisp, the file stays small. */
 const SCALE = 2;
-const OUT_WIDTH = 1600;
 
 /**
  * How long to let a site settle after load. These are client-rendered apps;
@@ -54,7 +64,9 @@ async function projects() {
     // Hidden projects have no card to put a screenshot on, and a project
     // without a demo URL has nothing to photograph.
     if (!demo || field(source, 'hidden') === 'true') continue;
-    out.push({ id: file.replace(/\.md$/, ''), demo, title: field(source, 'title') });
+    const device = field(source, 'device') ?? 'desktop';
+    if (!DEVICES[device]) throw new Error(`${file}: unknown device "${device}"`);
+    out.push({ id: file.replace(/\.md$/, ''), demo, device, title: field(source, 'title') });
   }
   return out;
 }
@@ -75,25 +87,50 @@ const browser = await chromium.launch({
   // Honour a preinstalled browser when one is provided, as tests/verify.mjs does.
   executablePath: process.env.CHROMIUM_PATH || undefined,
 });
-const context = await browser.newContext({
-  viewport: VIEWPORT,
-  deviceScaleFactor: SCALE,
-  // Screenshots are for a light-background page; ask for the light theme so a
-  // site that honours the preference does not come back inverted.
-  colorScheme: 'light',
-  reducedMotion: 'reduce',
-});
+
+/** Contexts are per device and made on demand, then reused. */
+const contexts = new Map();
+async function contextFor(device) {
+  const existing = contexts.get(device);
+  if (existing) return existing;
+  const context = await browser.newContext({
+    viewport: DEVICES[device].viewport,
+    deviceScaleFactor: SCALE,
+    // Screenshots are for a light-background page; ask for the light theme so
+    // a site that honours the preference does not come back inverted. A site
+    // that is dark by design stays dark, which is its own look.
+    colorScheme: 'light',
+    reducedMotion: 'reduce',
+    isMobile: device === 'phone',
+    hasTouch: device === 'phone',
+  });
+  contexts.set(device, context);
+  return context;
+}
+
+/**
+ * A project may ship scripts/seeds/<id>.mjs to put the app in a state worth
+ * photographing — an empty first-run screen is a true picture of nothing.
+ * `prepare(page)` runs before navigation; `path` overrides where to land.
+ */
+async function seedFor(id) {
+  const file = new URL(`./seeds/${id}.mjs`, import.meta.url);
+  if (!existsSync(file)) return undefined;
+  return import(file.href);
+}
 
 let failed = 0;
 
 for (const project of wanted) {
+  const context = await contextFor(project.device);
   const page = await context.newPage();
   const target = path.join(OUT, `${project.id}.webp`);
   try {
-    const response = await page.goto(project.demo, {
-      waitUntil: 'networkidle',
-      timeout: 45000,
-    });
+    const seed = await seedFor(project.id);
+    if (seed?.prepare) await seed.prepare(page);
+
+    const url = new URL(seed?.path ?? '/', project.demo).toString();
+    const response = await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
     const status = response?.status() ?? 0;
     if (status >= 400) throw new Error(`HTTP ${status}`);
 
@@ -101,13 +138,14 @@ for (const project of wanted) {
     const shot = await page.screenshot({ type: 'png' });
 
     const out = await sharp(shot)
-      .resize({ width: OUT_WIDTH, withoutEnlargement: true })
+      .resize({ width: DEVICES[project.device].outWidth, withoutEnlargement: true })
       .webp({ quality: 82 })
       .toBuffer();
     await writeFile(target, out);
 
     const kb = (out.length / 1024).toFixed(0);
-    console.log(`ok    ${project.id.padEnd(22)} ${project.demo}  ->  ${target} (${kb} kB)`);
+    const how = `${project.device}${seed ? ', seeded' : ''}`;
+    console.log(`ok    ${project.id.padEnd(22)} ${url}  ->  ${target} (${kb} kB, ${how})`);
   } catch (error) {
     failed += 1;
     console.error(

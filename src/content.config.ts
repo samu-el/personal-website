@@ -26,6 +26,11 @@ const projects = defineCollection({
        */
       repoPrivate: z.boolean().default(false),
       demo: z.url().optional(),
+      /**
+       * What the demo is, so the preview is framed as the right thing. A
+       * mobile app's web build in a 16:10 desktop frame is mostly background.
+       */
+      device: z.enum(['desktop', 'phone']).default('desktop'),
       /** Shown on the home page when true. */
       featured: z.boolean().default(false),
       /**

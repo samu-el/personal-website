@@ -10,6 +10,9 @@ stack: ['TypeScript', 'React Native', 'Expo', 'SQLite', 'Drizzle', 'Kotlin', 'Sw
 tags: ['Finance', 'Mobile', 'Offline']
 repoPrivate: true
 demo: 'https://monee.smr.et'
+# Its own app.config.ts calls the web build "a phone-shaped preview, not a
+# responsive target", so a desktop capture is mostly empty background.
+device: 'phone'
 featured: true
 stats:
   - { label: 'Platforms', value: 'iOS + Android' }
