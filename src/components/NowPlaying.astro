@@ -199,11 +199,11 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     if (window.__np) return;
     window.__np = true;
 
-    /* Poll interval while the tab is visible. The edge caches for a few
-       seconds, so polling faster than this mostly re-reads the same answer;
-       polling slower is what made the card feel dead. Between the two, a
-       state change shows up in about ten seconds without a refresh. */
-    const REFRESH_MS = 15000;
+    /* Poll interval while the tab is visible. Sets the floor on how long a
+       play or pause takes to show up on a page nobody is touching: this plus
+       the edge TTL, so about fifteen seconds worst case. Polling much faster
+       than the 5s TTL would mostly re-read the same cached answer. */
+    const REFRESH_MS = 10000;
     /* Ceiling on the staleness correction below. The edge now holds a response
        for only a few seconds, so in practice the correction is tiny — this is
        a bound on how far a badly set clock can shove the bar, not a tuning

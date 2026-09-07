@@ -73,7 +73,10 @@ const marquee = [
         data-reveal
         style="--reveal-delay:60ms"
       >
-        No software engineering problem
+        <span class="text-accent">No</span> software engineering problem{' '}
+        <!-- The em is display:block, so this space is invisible — but without
+             it Astro trims the whitespace against the element and the heading
+             copies, and reads aloud, as "problemis too big to solve". -->
         <em class="block italic text-accent">is too big to solve.</em>
       </h1>
 
