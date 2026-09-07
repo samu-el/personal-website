@@ -183,6 +183,11 @@ preflight, no third-party request. `public/api/now-playing.json` answers
 production — without it a browser would log a failed request for an endpoint
 that is not deployed yet. The smoke suite asserts that fallback exists.
 
+If the Worker is on its own hostname rather than a `smr.et/api/*` route, set
+the repository variable `PUBLIC_NOW_PLAYING_URL` to its absolute URL and the
+page will read from there instead. It is a URL rather than a secret, so it is a
+variable, and being `PUBLIC_` it is inlined into the page deliberately.
+
 See `worker/README.md` for deployment. Note that the Worker needs a refresh
 token carrying `user-read-currently-playing`, which
 `scripts/spotify-token.mjs` now requests alongside the history scope.

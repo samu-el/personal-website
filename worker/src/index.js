@@ -96,14 +96,25 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    // The zone route is a wildcard over /api/*, so anything else under it
-    // belongs to the static origin. Pass those through rather than swallowing
-    // them, which keeps the Worker transparent for everything it does not own.
-    if (!url.pathname.endsWith('/now-playing.json')) {
+    // The endpoint answers on its own root as well as the .json path. Behind
+    // the smr.et/api/* route only the latter is ever reached, but on a
+    // workers.dev URL or a dedicated subdomain the root is the obvious thing
+    // to open — and passing that through to a non-existent origin just yields
+    // Cloudflare's "there is nothing here yet" page, which looks broken.
+    const isEndpoint = url.pathname === '/' || url.pathname.endsWith('/now-playing.json');
+
+    // Anything else can only be reached via the zone route, where it belongs
+    // to the static origin. Pass those through so the Worker stays transparent
+    // for everything it does not own.
+    if (!isEndpoint) {
       return fetch(request);
     }
-    if (request.method !== 'GET') {
-      return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET' } });
+    // HEAD is a safe method and costs nothing to support.
+    if (request.method !== 'GET' && request.method !== 'HEAD') {
+      return new Response('Method not allowed', {
+        status: 405,
+        headers: { Allow: 'GET, HEAD' },
+      });
     }
 
     // Missing secrets should read as "nothing playing", not as an error the

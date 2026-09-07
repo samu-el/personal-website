@@ -60,22 +60,44 @@ then under **Variables and Secrets** select **Add**. For each one choose type
 Secrets are hidden after saving, in the dashboard and in Wrangler alike. To
 change one you overwrite it; you cannot read it back.
 
-### 3. Point the domain at it
+### 3. Point a hostname at it
 
-Still in the Worker's **Settings**, go to **Domains & Routes** → **Add** →
-**Route**:
+There are two arrangements. **The route is better** — same origin as the site,
+so no second DNS lookup, no second TLS handshake, no CORS, and nothing extra
+for a blocker to catch. Pick one:
+
+**Option A — a route on the apex (recommended, no site change).** In the
+Worker's **Settings** → **Domains & Routes** → **Add** → **Route**:
 
 - **Zone**: `smr.et`
 - **Route**: `smr.et/api/*`
 
 The DNS record for the apex must be **proxied** (orange cloud) or the route is
-never consulted — a grey-cloud record bypasses Workers entirely.
+never consulted. Nothing else to do — the page already fetches
+`/api/now-playing.json`.
+
+**Option B — its own subdomain.** Add a **Custom Domain** such as
+`now-playing.smr.et` instead. This works, but the page then has to fetch it
+cross-origin, so set a repository **variable** (not a secret — it is a URL):
+
+- **Settings → Secrets and variables → Actions → Variables → New variable**
+- `PUBLIC_NOW_PLAYING_URL` = `https://now-playing.smr.et/now-playing.json`
+
+The next site build picks it up. Without that variable the page keeps asking
+the apex, which answers with the static `{ playing: false }` fallback, and the
+card never appears no matter how healthy the Worker is.
 
 ### 4. Check it, with music actually playing
 
 ```sh
+# Option A
 curl -si https://smr.et/api/now-playing.json | head -20
+# Option B, or the workers.dev URL — the root works too
+curl -s https://now-playing.smr.et/
 ```
+
+Opening the Worker's bare hostname in a browser works as well; it answers on
+its root as well as on `/now-playing.json`.
 
 Then read the table in the next section to tell which side answered.
 

@@ -16,6 +16,20 @@
  */
 import { Icon } from 'astro-icon/components';
 import { href } from '@/lib/paths';
+
+/**
+ * Where to read the payload from. Defaults to a same-origin path, which is the
+ * better arrangement: the Worker sits on a smr.et/api/* route in front of the
+ * static origin, so there is no extra DNS lookup, no TLS handshake to a second
+ * host, and no CORS preflight to fail.
+ *
+ * Set PUBLIC_NOW_PLAYING_URL to an absolute URL if the Worker is instead on its
+ * own hostname (a Cloudflare custom domain such as now-playing.smr.et). That
+ * works too — the Worker sends Access-Control-Allow-Origin — it is just one
+ * more hop and one more thing a blocker can catch. Being a PUBLIC_ variable it
+ * is inlined into the page, which is correct: it is a URL, not a secret.
+ */
+const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playing.json');
 ---
 
 <section id="now-playing" hidden class="scroll-mt-24">
@@ -141,7 +155,7 @@ import { href } from '@/lib/paths';
   }
 </style>
 
-<script is:inline define:vars={{ endpoint: href('/api/now-playing.json') }}>
+<script is:inline define:vars={{ endpoint }}>
   (() => {
     // Re-runs on navigation; the poll is registered once per document.
     if (window.__np) return;

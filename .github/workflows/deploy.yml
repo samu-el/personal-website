@@ -53,6 +53,10 @@ jobs:
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
           SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+          # Only needed when the now-playing Worker is on its own hostname
+          # rather than a smr.et/api/* route. A URL, not a secret, so it lives
+          # in repository variables.
+          PUBLIC_NOW_PLAYING_URL: ${{ vars.PUBLIC_NOW_PLAYING_URL }}
 
       - uses: actions/configure-pages@v5
         with:
