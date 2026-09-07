@@ -51,19 +51,23 @@ jobs:
       - name: Push to the previews branch
         run: |
           set -euo pipefail
-          if git diff --quiet -- src/assets/previews; then
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+
+          # Stage first, then compare against the index. `git diff` alone
+          # ignores untracked files, so the very first capture — every file
+          # brand new — looked like no change at all and skipped the push.
+          git add src/assets/previews
+          if git diff --cached --quiet -- src/assets/previews; then
             echo "The captured screenshots are identical to the committed ones."
             exit 0
           fi
 
-          git config user.name  'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-
           # A single-commit branch, recreated each run: this carries generated
           # output, so its history is noise and a stale branch would conflict
-          # with the next capture.
+          # with the next capture. Staged changes survive the checkout, since
+          # the new branch starts at the commit they were staged against.
           git checkout -B previews/auto
-          git add src/assets/previews
           git commit -m 'Capture project previews' \
                      -m "Produced by scripts/shots.mjs on run ${{ github.run_id }}, from ${{ github.sha }}."
           git push --force origin previews/auto
