@@ -249,7 +249,8 @@ three need to stay in place:
 1. **DNS** — `smr.et` and `www.smr.et` resolve to Cloudflare, which proxies to GitHub Pages.
    Cloudflare's SSL/TLS mode must be **Full** (not Flexible, which causes a redirect loop with
    Pages).
-2. **The repository setting** — Settings → Pages → Custom domain is set to `smr.et`.
+2. **The repository settings** — Settings → Pages → Custom domain is set to `smr.et`, and
+   **Source must be "GitHub Actions"**, not "Deploy from a branch". See below.
 3. **Two `CNAME` files, both required.** `CNAME` at the repository root is what GitHub treats
    as the source of truth for the custom-domain setting — the Pages UI writes it, and **deleting
    it clears the domain**, which takes the site down. `public/CNAME` is the copy that ends up
@@ -258,6 +259,29 @@ three need to stay in place:
 
 Build defaults live in `astro.config.mjs` (`SITE=https://smr.et`, `BASE=/`) and are mirrored in
 the deploy workflow, so no repository variables are required.
+
+### Source must be "GitHub Actions"
+
+If Settings → Pages → Source is left on **Deploy from a branch**, GitHub also runs its own
+legacy `pages-build-deployment` pipeline on every push. That pipeline runs Jekyll over the
+repository root, and Jekyll reads the `---` at the top of every `.astro` file as YAML front
+matter, so it fails:
+
+```
+Invalid YAML front matter in /github/workspace/src/pages/writing/index.astro
+```
+
+The site itself is fine — `actions/deploy-pages` publishes it regardless — so the only visible
+symptom is a failed check and an email on every push. Switching Source to **GitHub Actions**
+stops that pipeline existing.
+
+**Do not "fix" it by adding a `_config.yml` that excludes everything.** That makes the Jekyll
+build _succeed_, and while the source is a branch a successful Jekyll build publishes its
+output — an empty `_site` — which would overwrite the real site. The failure is the only thing
+currently preventing that.
+
+`.nojekyll` does not help either: `actions/jekyll-build-pages` has no handling for it and runs
+`github-pages build` unconditionally.
 
 ### Building for a GitHub Pages project site instead
 
