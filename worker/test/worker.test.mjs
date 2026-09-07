@@ -125,6 +125,24 @@ test('a playing track is reported in full', async () => {
   assert.equal(body.durationMs, 200000);
 });
 
+test('a playing track is stamped so the page can correct for cache age', async () => {
+  // progressMs is a reading taken when the Worker ran, and the edge may serve
+  // that same reading for up to CACHE_SECONDS afterwards. Without the stamp
+  // the page cannot tell a fresh reading from a stale one, and every visitor
+  // gets a bar sitting up to half a minute behind the music.
+  stub(PLAYING);
+  const before = Date.now();
+  const body = await (await get('/now-playing.json')).json();
+  assert.equal(typeof body.fetchedAt, 'number');
+  assert.ok(body.fetchedAt >= before && body.fetchedAt <= Date.now());
+});
+
+test('an idle payload carries no stamp to correct against', async () => {
+  stub({ playStatus: 204 });
+  const body = await (await get('/now-playing.json')).json();
+  assert.equal(body.fetchedAt, undefined);
+});
+
 test("debug relays Spotify's own message on a rejection", async () => {
   // 401 alone cannot distinguish a missing scope from a non-Premium account;
   // Spotify says which in the body.

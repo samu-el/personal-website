@@ -42,6 +42,7 @@
  * @property {string} [url]
  * @property {number} [progressMs]
  * @property {number} [durationMs]
+ * @property {number} [fetchedAt] Epoch ms at which progressMs was read.
  */
 
 /** Seconds the edge holds a response while playing. Short enough to feel live. */
@@ -255,6 +256,13 @@ export default {
               url: (item.external_urls && item.external_urls.spotify) ?? undefined,
               progressMs: typeof body.progress_ms === 'number' ? body.progress_ms : undefined,
               durationMs: typeof item.duration_ms === 'number' ? item.duration_ms : undefined,
+              // progressMs is a reading, not a running clock, and this response
+              // is cached at the edge for CACHE_SECONDS — so by the time a
+              // browser sees it the track has moved on by up to that much.
+              // Stamping the reading lets the page add the elapsed time back
+              // instead of starting the bar half a minute behind. The stamp
+              // travels inside the cached body, so it ages with it.
+              fetchedAt: Date.now(),
             };
             maxAge = CACHE_SECONDS;
             reason = 'ok';

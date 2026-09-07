@@ -16,13 +16,22 @@ browser never logs a failed request for an endpoint that does not exist yet.
   "art": "https://i.scdn.co/…",
   "url": "https://open.spotify.com/…",
   "progressMs": 61234,
-  "durationMs": 214000
+  "durationMs": 214000,
+  "fetchedAt": 1757271600000
 }
 ```
 
 `{ "playing": false }` when nothing is playing, when the credentials are
 missing, or when Spotify is unreachable. The page treats all three the same
 way: it renders nothing.
+
+`progressMs` is a reading taken when the Worker ran, not a running clock, and
+the edge serves that same reading for up to `CACHE_SECONDS`. `fetchedAt` is
+the epoch-millisecond stamp of the reading, travelling inside the cached body
+so it ages with it — the page adds the elapsed time back and advances the
+progress bar locally, instead of starting it up to half a minute behind and
+jumping on each poll. The correction is clamped, since it compares the
+visitor's clock against the edge's.
 
 ## Deploying from the dashboard (no CLI)
 
