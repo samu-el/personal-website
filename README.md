@@ -145,6 +145,11 @@ The **Now** page (`/now`) reads two public sources at build time, in
 | GitHub activity  | `/users/samu-el` and `/users/samu-el/repos` | none required; `GITHUB_TOKEN` is used when set, to avoid the anonymous rate limit |
 | Letterboxd diary | `letterboxd.com/rocin4nte/rss/`             | none                                                                              |
 
+Forks are excluded from "recently pushed" as somebody else's work, with one
+documented exception: this repository itself began in 2019 as a fork of
+`github/personal-website` and GitHub still reports `fork: true` for it, so it
+is named in `OWNED_FORKS`. Add a name there if another fork gets taken over.
+
 Both are allowed to fail. On a network error, a rate limit or an unexpected
 payload the fetch returns `null`, the section that would have used it is not
 rendered, and the build still succeeds — the home page's repository count
