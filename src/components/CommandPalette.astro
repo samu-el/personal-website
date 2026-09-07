@@ -1,0 +1,471 @@
+---
+/**
+ * Keyboard-first navigation. ⌘K / Ctrl+K anywhere, or `/` when nothing else
+ * has focus.
+ *
+ * Built on a native <dialog>, so focus trapping, background inertness and
+ * Escape-to-close come from the platform rather than from hand-rolled JS.
+ * The whole index is baked in at build time — there is no runtime search
+ * request and nothing to keep in sync by hand.
+ */
+import { getCollection } from 'astro:content';
+import { site, socials } from '@/lib/site';
+import { href } from '@/lib/paths';
+import { visibleNav } from '@/lib/posts';
+import { Icon } from 'astro-icon/components';
+
+const items = await visibleNav();
+const projects = (
+  await getCollection(
+    'projects',
+    ({ data }) => !data.hidden && (import.meta.env.DEV || !data.draft),
+  )
+).sort((a, b) => b.data.weight - a.data.weight);
+
+type Entry = {
+  label: string;
+  section: string;
+  href?: string;
+  action?: string;
+  hint?: string;
+  external?: boolean;
+  /** Extra words that should match this entry without being displayed. */
+  keywords?: string;
+};
+
+const entries: Entry[] = [
+  ...items.map((item) => ({
+    label: item.label,
+    section: 'Pages',
+    href: href(item.href),
+    hint: item.index,
+  })),
+  ...projects.map((p) => ({
+    label: p.data.title,
+    section: 'Work',
+    href: href(`/work/${p.id}`),
+    hint: p.data.kind,
+    keywords: [p.data.blurb, ...p.data.stack, ...p.data.tags].join(' '),
+  })),
+  ...socials.map((s) => ({
+    label: s.label,
+    section: 'Elsewhere',
+    href: s.href,
+    hint: s.handle,
+    external: s.href.startsWith('http'),
+  })),
+  {
+    label: 'Copy email address',
+    section: 'Actions',
+    action: 'copy-email',
+    hint: site.email,
+    keywords: 'clipboard contact mail',
+  },
+  {
+    label: 'Change colour theme',
+    section: 'Actions',
+    action: 'theme',
+    hint: 'T',
+    keywords: 'dark light system appearance',
+  },
+  {
+    label: 'View source',
+    section: 'Actions',
+    href: 'https://github.com/samu-el/personal-website',
+    hint: 'GitHub',
+    external: true,
+    keywords: 'repository code astro',
+  },
+];
+
+/** Single-key jumps, resolved through href() so a based build still works. */
+const goto: Record<string, string> = {
+  h: href('/'),
+  a: href('/about'),
+  w: href('/work'),
+  s: href('/stack'),
+  c: href('/contact'),
+};
+---
+
+<dialog
+  id="cmdk"
+  aria-label="Command palette"
+  class="cmdk m-0 w-full max-w-[34rem] rounded-xl border border-line-strong bg-surface p-0 text-fg shadow-[0_24px_70px_-20px_rgb(var(--c-shadow)/0.45)]"
+>
+  <div class="flex items-center gap-3 border-b border-line px-4">
+    <Icon name="lucide:search" class="size-4 shrink-0 text-subtle" aria-hidden="true" />
+    <input
+      id="cmdk-input"
+      type="text"
+      role="combobox"
+      autocomplete="off"
+      autocorrect="off"
+      spellcheck="false"
+      aria-expanded="true"
+      aria-controls="cmdk-list"
+      aria-autocomplete="list"
+      placeholder="Jump to a page, project or action…"
+      class="h-14 w-full flex-1 bg-transparent text-[0.9375rem] text-fg outline-none placeholder:text-subtle"
+    />
+    <kbd
+      class="hidden shrink-0 rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-2xs text-subtle sm:block"
+      >ESC</kbd
+    >
+  </div>
+
+  <ul
+    id="cmdk-list"
+    role="listbox"
+    aria-label="Results"
+    class="max-h-[min(24rem,60dvh)] overflow-y-auto p-2"
+  >
+  </ul>
+
+  <p id="cmdk-empty" hidden class="px-4 py-8 text-center text-sm text-subtle" aria-live="polite">
+    Nothing matches that.
+  </p>
+
+  <div
+    class="flex items-center gap-4 border-t border-line px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.1em] text-subtle"
+  >
+    <span class="flex items-center gap-1.5"><kbd class="cmdk-key">↑↓</kbd> Move</span>
+    <span class="flex items-center gap-1.5"><kbd class="cmdk-key">↵</kbd> Open</span>
+    <span class="ml-auto hidden items-center gap-1.5 sm:flex">
+      <kbd class="cmdk-key">G</kbd> then a page
+    </span>
+  </div>
+</dialog>
+
+<template id="cmdk-row">
+  <li role="option" aria-selected="false" class="cmdk-row">
+    <a class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm">
+      <span class="cmdk-label flex-1 truncate"></span>
+      <span class="cmdk-hint shrink-0 font-mono text-2xs uppercase tracking-[0.1em] text-subtle"
+      ></span>
+    </a>
+  </li>
+</template>
+
+<style>
+  /* Centred, with room to breathe on a phone. */
+  .cmdk {
+    position: fixed;
+    inset-block-start: 12vh;
+    inset-inline: 1rem;
+    margin-inline: auto;
+    max-height: none;
+  }
+  .cmdk::backdrop {
+    background-color: rgb(0 0 0 / 0.45);
+    backdrop-filter: blur(3px);
+  }
+  .cmdk[open] {
+    animation: cmdk-in 0.22s var(--ease-out-quint) both;
+  }
+  .cmdk[open]::backdrop {
+    animation: cmdk-fade 0.22s ease both;
+  }
+  @keyframes cmdk-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.985);
+    }
+  }
+  @keyframes cmdk-fade {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Injected by the script, so this rule cannot be scoped: Astro only
+     stamps its scope attribute onto markup present at build time. */
+  :global(.cmdk-group) {
+    padding: 0.75rem 0.75rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--color-subtle);
+  }
+
+  .cmdk-row > a {
+    cursor: pointer;
+  }
+  .cmdk-row[aria-selected='true'] > a {
+    background-color: var(--color-surface-2);
+    color: var(--color-accent);
+  }
+  .cmdk-row[aria-selected='true'] .cmdk-hint {
+    color: var(--color-accent);
+  }
+
+  .cmdk-key {
+    border: 1px solid var(--color-line);
+    border-radius: 3px;
+    background-color: var(--color-surface-2);
+    padding: 0.05rem 0.3rem;
+    font-family: var(--font-mono);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cmdk[open],
+    .cmdk[open]::backdrop {
+      animation: none;
+    }
+  }
+</style>
+
+<script is:inline define:vars={{ entries, goto, email: site.email }}>
+  (() => {
+    /**
+     * Subsequence match: every character of the query must appear in order.
+     * Contiguous runs and matches on the visible label score higher, so
+     * typing "mon" puts Monee above anything that merely mentions money.
+     */
+    function score(entry, q) {
+      if (!q) return 1;
+      const label = entry.label.toLowerCase();
+      const haystack = `${label} ${entry.section} ${entry.hint ?? ''} ${entry.keywords ?? ''}`
+        .toLowerCase()
+        .trim();
+      if (label.startsWith(q)) return 1000;
+      if (label.includes(q)) return 700;
+
+      let i = 0;
+      let points = 0;
+      let streak = 0;
+      for (const ch of haystack) {
+        if (ch === q[i]) {
+          i += 1;
+          streak += 1;
+          points += streak;
+          if (i === q.length) break;
+        } else {
+          streak = 0;
+        }
+      }
+      return i === q.length ? points : 0;
+    }
+
+    function init() {
+      const dialog = document.getElementById('cmdk');
+      const input = document.getElementById('cmdk-input');
+      const list = document.getElementById('cmdk-list');
+      const empty = document.getElementById('cmdk-empty');
+      const tpl = document.getElementById('cmdk-row');
+      const openBtn = document.getElementById('cmdk-open');
+      if (!dialog || !input || !list || !tpl || typeof dialog.showModal !== 'function') return;
+
+      let rows = [];
+      let cursor = 0;
+
+      const select = (next) => {
+        if (!rows.length) return;
+        cursor = (next + rows.length) % rows.length;
+        rows.forEach((row, i) => row.el.setAttribute('aria-selected', String(i === cursor)));
+        const el = rows[cursor].el;
+        el.scrollIntoView({ block: 'nearest' });
+        if (el.id) input.setAttribute('aria-activedescendant', el.id);
+      };
+
+      function render() {
+        const q = input.value.trim().toLowerCase();
+        const matches = entries
+          .map((entry) => ({ entry, s: score(entry, q) }))
+          .filter((m) => m.s > 0);
+        // With nothing typed the list keeps its authored order, so the section
+        // headings below stay contiguous. Ranking only applies to a search.
+        if (q) matches.sort((a, b) => b.s - a.s || a.entry.label.localeCompare(b.entry.label));
+
+        list.replaceChildren();
+        rows = [];
+
+        let section = null;
+        matches.forEach(({ entry }, i) => {
+          // Group headings only make sense while the list is still ordered
+          // by section, which is to say when nothing has been typed.
+          if (!q && entry.section !== section) {
+            section = entry.section;
+            const head = document.createElement('li');
+            head.className = 'cmdk-group';
+            head.setAttribute('role', 'presentation');
+            head.textContent = section;
+            list.append(head);
+          }
+
+          const node = tpl.content.firstElementChild.cloneNode(true);
+          node.id = `cmdk-row-${i}`;
+          const link = node.querySelector('a');
+          node.querySelector('.cmdk-label').textContent = entry.label;
+          node.querySelector('.cmdk-hint').textContent = entry.hint ?? '';
+
+          if (entry.href) {
+            link.href = entry.href;
+            if (entry.external) {
+              link.target = '_blank';
+              link.rel = 'noopener noreferrer';
+            }
+          } else {
+            link.setAttribute('role', 'button');
+            link.tabIndex = -1;
+          }
+
+          link.addEventListener('click', (e) => {
+            if (entry.action) {
+              e.preventDefault();
+              run(entry.action);
+            } else {
+              close();
+            }
+          });
+          node.addEventListener('mousemove', () => select(rows.findIndex((r) => r.el === node)));
+
+          list.append(node);
+          rows.push({ el: node, entry, link });
+        });
+
+        if (empty) empty.hidden = rows.length > 0;
+        cursor = 0;
+        select(0);
+      }
+
+      function run(action) {
+        if (action === 'theme') {
+          document.getElementById('theme-toggle')?.click();
+          return;
+        }
+        if (action === 'copy-email') {
+          const done = (ok) => {
+            const label = rows[cursor]?.el.querySelector('.cmdk-hint');
+            if (label) label.textContent = ok ? 'Copied' : email;
+            window.setTimeout(close, 550);
+          };
+          if (navigator.clipboard?.writeText) {
+            navigator.clipboard.writeText(email).then(
+              () => done(true),
+              () => done(false),
+            );
+          } else {
+            done(false);
+          }
+        }
+      }
+
+      let lastFocus = null;
+
+      function open() {
+        if (dialog.open) return;
+        lastFocus = document.activeElement;
+        input.value = '';
+        render();
+        dialog.showModal();
+        // Locking the body keeps the page behind from scrolling on iOS.
+        document.documentElement.style.overflow = 'hidden';
+        input.focus();
+      }
+
+      function close() {
+        if (!dialog.open) return;
+        dialog.close();
+      }
+
+      dialog.addEventListener('close', () => {
+        document.documentElement.style.overflow = '';
+        if (lastFocus instanceof HTMLElement) lastFocus.focus();
+      });
+
+      // Clicking the backdrop lands on the dialog itself, never on its content.
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) close();
+      });
+
+      input.addEventListener('input', render);
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          select(cursor + 1);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          select(cursor - 1);
+        } else if (e.key === 'Home') {
+          e.preventDefault();
+          select(0);
+        } else if (e.key === 'End') {
+          e.preventDefault();
+          select(rows.length - 1);
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          rows[cursor]?.link.click();
+        }
+      });
+
+      openBtn?.addEventListener('click', open);
+
+      // Expose the opener so the global key handler stays a single listener.
+      window.__cmdk = { open, close, isOpen: () => dialog.open, goto };
+    }
+
+    /**
+     * Global keys live on `window` and are registered once per document, so a
+     * re-run of this script — or a client-side navigation — cannot stack them.
+     */
+    function bindGlobalKeys() {
+      if (window.__cmdkKeys) return;
+      window.__cmdkKeys = true;
+
+      let chord = 0;
+
+      const typing = (el) =>
+        el instanceof HTMLElement &&
+        (el.tagName === 'INPUT' ||
+          el.tagName === 'TEXTAREA' ||
+          el.tagName === 'SELECT' ||
+          el.isContentEditable);
+
+      document.addEventListener('keydown', (e) => {
+        const cmdk = window.__cmdk;
+        if (!cmdk) return;
+
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault();
+          cmdk.isOpen() ? cmdk.close() : cmdk.open();
+          return;
+        }
+
+        if (cmdk.isOpen() || e.metaKey || e.ctrlKey || e.altKey || typing(e.target)) return;
+
+        const key = e.key.toLowerCase();
+
+        // `g` arms a jump for the next keypress; anything else disarms it.
+        if (chord && Date.now() - chord < 1200) {
+          chord = 0;
+          const path = cmdk.goto[key];
+          if (path) {
+            e.preventDefault();
+            window.location.href = path;
+            return;
+          }
+        }
+
+        if (key === 'g') {
+          chord = Date.now();
+          return;
+        }
+        chord = 0;
+
+        if (key === '/') {
+          e.preventDefault();
+          cmdk.open();
+        } else if (key === 't') {
+          document.getElementById('theme-toggle')?.click();
+        }
+      });
+    }
+
+    init();
+    bindGlobalKeys();
+    document.addEventListener('astro:page-load', init);
+  })();
+</script>

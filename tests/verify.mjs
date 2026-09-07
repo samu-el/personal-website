@@ -60,6 +60,16 @@ const SLASH = routes.some((r) => r.length > 1 && r.endsWith('/')) ? '/' : '';
 if (routes.length < 5) throw new Error(`sitemap yielded only ${routes.length} routes`);
 console.log(`Checking ${routes.length} routes…`);
 
+// Titles of the projects that should be showcased, read from the content
+// directory so adding one cannot leave these checks behind.
+const projectTitles = fs
+  .readdirSync(new URL('../src/content/projects/', import.meta.url))
+  .filter((f) => /\.mdx?$/.test(f))
+  .map((f) => fs.readFileSync(new URL(`../src/content/projects/${f}`, import.meta.url), 'utf8'))
+  .filter((src) => !/^(hidden|draft):\s*true\s*$/m.test(src.split('---')[1] ?? ''))
+  .map((src) => (src.match(/^title:\s*'(.+)'\s*$/m) ?? [])[1])
+  .filter(Boolean);
+
 const browser = await chromium.launch({
   // Honour a preinstalled browser when one is provided (CI images, sandboxes).
   executablePath: process.env.CHROMIUM_PATH || undefined,
@@ -347,6 +357,104 @@ const hasPosts = await (async () => {
   }
   const ogRes = await page.request.get(`${BASE}/og.png`);
   if (ogRes.status() !== 200) issues.push(`og.png -> HTTP ${ogRes.status()}`);
+  await ctx.close();
+}
+
+// 7. Keyboard layer: the command palette and the shortcuts around it.
+{
+  const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+  const page = await ctx.newPage();
+  await page.goto(BASE + '/', { waitUntil: 'load' });
+
+  await page.keyboard.press('Control+k');
+  await page.waitForTimeout(300);
+  if (!(await page.isVisible('#cmdk'))) issues.push('command palette did not open on Ctrl+K');
+  if (!(await page.evaluate(() => document.activeElement?.id === 'cmdk-input'))) {
+    issues.push('command palette did not focus its input');
+  }
+
+  // Unfiltered, the list is grouped and each heading appears once.
+  const groups = await page.$$eval('.cmdk-group', (n) => n.map((e) => e.textContent));
+  if (new Set(groups).size !== groups.length) {
+    issues.push(`command palette repeats section headings: ${groups.join(', ')}`);
+  }
+  const rowCount = await page.$$eval('.cmdk-row', (n) => n.length);
+  if (rowCount < 8) issues.push(`command palette listed only ${rowCount} entries`);
+
+  // Every project must be reachable from it.
+  const labels = await page.$$eval('.cmdk-label', (n) => n.map((e) => e.textContent));
+  for (const title of projectTitles) {
+    if (!labels.includes(title)) issues.push(`command palette is missing project "${title}"`);
+  }
+
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(250);
+  if (await page.isVisible('#cmdk')) issues.push('command palette did not close on Escape');
+
+  // Typing must never be swallowed by the single-key shortcuts.
+  await page.keyboard.press('/');
+  await page.waitForTimeout(250);
+  if (!(await page.isVisible('#cmdk'))) issues.push('command palette did not open on /');
+  const themeBefore = await page.evaluate(() => document.documentElement.dataset.theme);
+  await page.type('#cmdk-input', 'theme');
+  await page.waitForTimeout(200);
+  if ((await page.evaluate(() => document.documentElement.dataset.theme)) !== themeBefore) {
+    issues.push('a single-key shortcut fired while typing in the palette');
+  }
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(250);
+
+  // The Konami code reveals the layout grid, and a broken sequence does not.
+  const konami = [
+    'ArrowUp',
+    'ArrowUp',
+    'ArrowDown',
+    'ArrowDown',
+    'ArrowLeft',
+    'ArrowRight',
+    'ArrowLeft',
+    'ArrowRight',
+    'b',
+    'a',
+  ];
+  for (const k of konami) await page.keyboard.press(k);
+  await page.waitForTimeout(200);
+  if (!(await page.evaluate(() => document.documentElement.hasAttribute('data-debug')))) {
+    issues.push('the Konami code did not toggle the layout grid');
+  }
+  for (const k of konami) await page.keyboard.press(k);
+  await page.waitForTimeout(200);
+  if (await page.evaluate(() => document.documentElement.hasAttribute('data-debug'))) {
+    issues.push('the Konami code did not toggle the layout grid back off');
+  }
+
+  const humans = await page.request.get(`${BASE}/humans.txt`);
+  if (humans.status() !== 200) issues.push(`humans.txt -> HTTP ${humans.status()}`);
+  await ctx.close();
+}
+
+// 8. Project headings share a view-transition name with their detail page, so
+//    the browser morphs one into the other instead of cross-fading.
+{
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await page.goto(`${BASE}/work${SLASH}`, { waitUntil: 'load' });
+  const cardNames = await page.$$eval('h3[style*="view-transition-name"]', (n) =>
+    n.map((e) => e.style.viewTransitionName),
+  );
+  if (cardNames.length !== projectTitles.length) {
+    issues.push(
+      `${cardNames.length} of ${projectTitles.length} work cards carry a transition name`,
+    );
+  }
+  for (const name of cardNames) {
+    const slug = name.replace(/^project-/, '');
+    await page.goto(`${BASE}/work/${slug}${SLASH}`, { waitUntil: 'load' });
+    const h1 = await page.$eval('h1', (e) => e.style.viewTransitionName).catch(() => '');
+    if (h1 !== name) {
+      issues.push(`/work/${slug} heading transition name is "${h1}", expected "${name}"`);
+    }
+  }
   await ctx.close();
 }
 

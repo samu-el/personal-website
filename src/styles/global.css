@@ -539,3 +539,94 @@
     navigation: none;
   }
 }
+
+/* ------------------------------------------------------------------
+   View transitions
+   Native cross-document transitions are declared above. Elements that
+   carry a matching `view-transition-name` in both documents morph
+   between them — the project heading grows from card to detail page.
+   Named groups keep the browser's default morph; only the page-level
+   cross-fade is tuned, so there is nothing per-project to maintain.
+   ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-leave 0.24s var(--ease-out-quint) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-enter 0.34s var(--ease-out-quint) both;
+  }
+
+  @keyframes vt-leave {
+    to {
+      opacity: 0;
+      transform: translate3d(0, -6px, 0);
+    }
+  }
+  @keyframes vt-enter {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 10px, 0);
+    }
+  }
+}
+
+/* The chrome is identical on every page, so naming it holds it still
+   while the content underneath cross-fades. */
+#site-header {
+  view-transition-name: site-header;
+}
+#site-footer {
+  view-transition-name: site-footer;
+}
+
+/* ------------------------------------------------------------------
+   Micro-interactions
+   ------------------------------------------------------------------ */
+@layer components {
+  /* Cards settle upward rather than only gaining a shadow. */
+  .card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Arrows lead the eye out of the button they sit in. */
+  .btn [data-icon],
+  .btn svg {
+    transition: transform 0.3s var(--ease-out-quint);
+  }
+  .btn:hover [data-icon],
+  .btn:hover svg {
+    transform: translateX(2px);
+  }
+
+  /* Primary nav: the active page keeps its hairline, and hovering an
+     inactive one draws the same line in from the centre. */
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0.875rem;
+    bottom: -1px;
+    height: 1px;
+    background-color: var(--color-accent);
+    transform: scaleX(0);
+    transition: transform 0.35s var(--ease-out-quint);
+  }
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Layout debug overlay — toggled by the Konami code. Outlines every
+   box so the underlying grid is visible. Costs nothing until used.
+   ------------------------------------------------------------------ */
+@layer utilities {
+  html[data-debug] * {
+    outline: 1px solid rgb(var(--c-accent) / 0.35);
+    outline-offset: -1px;
+  }
+  html[data-debug] .wrap {
+    background-image: linear-gradient(to right, rgb(var(--c-accent) / 0.07) 1px, transparent 1px);
+    background-size: 8.333% 100%;
+  }
+}

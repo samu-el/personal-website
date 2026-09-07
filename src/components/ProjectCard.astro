@@ -59,6 +59,7 @@ const statusTone: Record<string, string> = {
       'mt-5 font-medium tracking-tight',
       feature ? 'text-[clamp(1.5rem,3vw,2rem)]' : 'text-xl',
     ]}
+    style={`view-transition-name:project-${project.id}`}
   >
     <a href={href(`/work/${project.id}`)} class="group/link">
       <span class="link">{title}</span>

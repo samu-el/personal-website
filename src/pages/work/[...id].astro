@@ -100,7 +100,7 @@ const statusTone: Record<string, string> = {
             <h1
               class="display mt-6 text-[clamp(2.4rem,6.6vw,4.25rem)]"
               data-reveal
-              style="--reveal-delay:60ms"
+              style={`--reveal-delay:60ms;view-transition-name:project-${project.id}`}
             >
               {d.title}
             </h1>

@@ -2,6 +2,8 @@
 import BaseHead from '@/components/BaseHead.astro';
 import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
+import CommandPalette from '@/components/CommandPalette.astro';
+import EasterEggs from '@/components/EasterEggs.astro';
 
 interface Props {
   title: string;
@@ -48,6 +50,8 @@ const { bareFooter = false, ...head } = Astro.props;
       <slot />
     </main>
     {!bareFooter && <Footer />}
+    <CommandPalette />
+    <EasterEggs />
 
     <script is:inline>
       // Progressive scroll reveal. Content is visible by default; the script
