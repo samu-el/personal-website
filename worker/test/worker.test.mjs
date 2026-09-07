@@ -300,9 +300,14 @@ test('a debug response is never cached, a normal one is', async () => {
   stub({ playStatus: 204 });
   assert.equal((await get('/?debug=1')).headers.get('cache-control'), 'no-store');
   const normal = (await get('/now-playing.json')).headers.get('cache-control');
-  assert.match(normal, /max-age=60/);
+  assert.match(normal, /max-age=10/);
   stub(PLAYING);
-  assert.match((await get('/now-playing.json')).headers.get('cache-control'), /max-age=30/);
+  const playing = (await get('/now-playing.json')).headers.get('cache-control');
+  assert.match(playing, /max-age=5/);
+  // No stale-while-revalidate: it would let the edge serve a known-stale
+  // answer past the TTL, which is the staleness the short TTL exists to
+  // remove. This is the regression that made the card look frozen.
+  assert.doesNotMatch(playing, /stale-while-revalidate/);
 });
 
 test('the endpoint answers on the root as well as the json path', async () => {

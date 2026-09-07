@@ -51,10 +51,28 @@
  * @property {number} [fetchedAt] Epoch ms at which progressMs was read.
  */
 
-/** Seconds the edge holds a response while playing. Short enough to feel live. */
-const CACHE_SECONDS = 30;
-/** Seconds the edge holds a "nothing playing" answer — cheaper to repeat. */
-const CACHE_SECONDS_IDLE = 60;
+/**
+ * Seconds the edge holds a response while playing.
+ *
+ * This is the whole reason the endpoint can feel stale, so it is deliberately
+ * short. At 30s a visitor refreshing the page got the byte-identical cached
+ * payload for half a minute and reasonably concluded the thing was broken;
+ * measured, `Age` climbed to 28 before a miss. Five seconds is under the time
+ * it takes to notice.
+ *
+ * The cache exists to shield Spotify's rate limit, not to save latency, and it
+ * still does: a miss costs two Spotify calls (token exchange, then the player),
+ * so the ceiling is 24 calls a minute however much traffic arrives. Spotify
+ * counts in a rolling 30-second window, where that is 12 — a small fraction of
+ * the allowance, and flat regardless of how many people are watching.
+ */
+const CACHE_SECONDS = 5;
+/**
+ * Seconds the edge holds a paused or last-played answer. Slightly longer, since
+ * a stopped player is not about to change on its own — but not the old 60s,
+ * which is how long "Last played" could outlive you pressing play.
+ */
+const CACHE_SECONDS_IDLE = 10;
 
 /**
  * The scope the currently-playing endpoint needs. Spotify binds scopes to a
@@ -115,13 +133,19 @@ function json(body, maxAge) {
       'Content-Type': 'application/json; charset=utf-8',
       ...(maxAge === 0 ? { 'Cache-Control': 'no-store' } : {}),
       // s-maxage drives the edge cache; max-age keeps the browser quiet
-      // between renders. stale-while-revalidate hides the refresh latency.
-      // A response carrying max-age=30 is how you know this Worker answered
-      // and not the static fallback at the origin, which sends max-age=600.
+      // between renders. A response carrying a max-age this short is also how
+      // you know this Worker answered and not the static fallback at the
+      // origin, which sends max-age=600.
+      //
+      // No stale-while-revalidate. It hides refresh latency by serving a known
+      // stale answer, which is the one thing this endpoint must not do — it
+      // would stack another window on top of the TTL and put back the
+      // staleness the short TTL exists to remove. One Spotify round trip on a
+      // miss is the better trade.
       ...(maxAge === 0
         ? {}
         : {
-            'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge}, stale-while-revalidate=${maxAge * 2}`,
+            'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge}`,
           }),
       'Access-Control-Allow-Origin': '*',
       'X-Content-Type-Options': 'nosniff',
