@@ -33,6 +33,14 @@ const OWNED_FORKS = new Set(['personal-website']);
  */
 const HIDDEN_REPOS = new Set(['CRM', 'Expense-Tracking', 'Simple-Blog']);
 
+/**
+ * A fixed-length list backfills from further down the history every time
+ * something is excluded, which is how a five-year-old repository ends up
+ * presented as recent activity. Cap the age instead and let the section run
+ * short: four current repositories say more than six reaching back years.
+ */
+const MAX_REPO_AGE_DAYS = 730;
+
 export type Repo = {
   name: string;
   url: string;
@@ -47,6 +55,14 @@ export type GitHubActivity = {
   /** Distinct primary languages across public, non-fork repositories. */
   languages: string[];
   recent: Repo[];
+};
+
+export type Track = {
+  title: string;
+  artist: string;
+  album: string | null;
+  url: string;
+  playedAt: string;
 };
 
 export type Film = {
@@ -79,6 +95,7 @@ async function get(url: string, headers: Record<string, string> = {}): Promise<R
 
 let githubOnce: Promise<GitHubActivity | null> | undefined;
 let filmsOnce: Promise<Film[] | null> | undefined;
+let tracksOnce: Promise<Track[] | null> | undefined;
 
 /** Memoised per build, so two pages reading the same feed cost one request. */
 export function githubActivity(): Promise<GitHubActivity | null> {
@@ -89,6 +106,11 @@ export function githubActivity(): Promise<GitHubActivity | null> {
 export function recentFilms(): Promise<Film[] | null> {
   filmsOnce ??= fetchFilms();
   return filmsOnce;
+}
+
+export function recentTracks(): Promise<Track[] | null> {
+  tracksOnce ??= fetchTracks();
+  return tracksOnce;
 }
 
 async function fetchGitHub(): Promise<GitHubActivity | null> {
@@ -141,11 +163,14 @@ export function normalizeGitHub(
       !HIDDEN_REPOS.has(String(r.name)),
   );
 
+  const cutoff = Date.now() - MAX_REPO_AGE_DAYS * 86_400_000;
+
   return {
     publicRepos: user.public_repos,
     languages: [...new Set(own.map((r) => r.language).filter((l): l is string => !!l))].sort(),
     recent: own
       .filter((r) => typeof r.pushed_at === 'string')
+      .filter((r) => new Date(String(r.pushed_at)).getTime() >= cutoff)
       .sort((a, b) => String(b.pushed_at).localeCompare(String(a.pushed_at)))
       .slice(0, 6)
       .map((r) => ({
@@ -210,4 +235,122 @@ function decodeEntities(s: string): string {
     .replace(/&quot;/g, '"')
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, '&');
+}
+
+/**
+ * Spotify needs three values, all of them secrets, none of which may ever
+ * reach the browser: the client id and secret from the app dashboard, and a
+ * refresh token minted once by `scripts/spotify-token.mjs`. They are read from
+ * the environment at build time only — Astro inlines nothing into client
+ * JavaScript except `PUBLIC_*` variables, so a value read here through
+ * `process.env` cannot leak into the output.
+ *
+ * With none of them set the feed is simply absent, which is the expected state
+ * of a fresh clone. With some of them set it warns, because that is a
+ * misconfiguration rather than a choice.
+ *
+ * Note that this app's refresh token expires after 180 days. When it does, the
+ * fetch starts failing, the section disappears, and the token has to be minted
+ * again — the site keeps building either way.
+ */
+async function fetchTracks(): Promise<Track[] | null> {
+  const id = process.env.SPOTIFY_CLIENT_ID;
+  const secret = process.env.SPOTIFY_CLIENT_SECRET;
+  const refresh = process.env.SPOTIFY_REFRESH_TOKEN;
+
+  const present = [id, secret, refresh].filter(Boolean).length;
+  if (present === 0) return null;
+  if (present < 3) {
+    console.warn('[feeds] Spotify partially configured — need client id, secret and refresh token');
+    return null;
+  }
+
+  // The refresh token is long-lived; the access token it mints lasts an hour,
+  // which is far longer than a build.
+  let accessToken: string;
+  try {
+    const res = await fetch('https://accounts.spotify.com/api/token', {
+      method: 'POST',
+      headers: {
+        // Client credentials go in the Basic header, never the body.
+        Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refresh! }),
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+    if (!res.ok) {
+      // 400 here almost always means the refresh token has expired or been revoked.
+      console.warn(`[feeds] Spotify token exchange → HTTP ${res.status}`);
+      return null;
+    }
+    const json = await res.json();
+    if (typeof json?.access_token !== 'string') {
+      console.warn('[feeds] Spotify token response had no access_token');
+      return null;
+    }
+    accessToken = json.access_token;
+  } catch (error) {
+    console.warn(
+      `[feeds] Spotify token exchange → ${error instanceof Error ? error.message : error}`,
+    );
+    return null;
+  }
+
+  const res = await get('https://api.spotify.com/v1/me/player/recently-played?limit=12', {
+    Authorization: `Bearer ${accessToken}`,
+  });
+  if (!res) return null;
+
+  try {
+    const json = await res.json();
+    if (!Array.isArray(json?.items)) {
+      console.warn('[feeds] unexpected Spotify payload');
+      return null;
+    }
+    return normalizeSpotify(json.items);
+  } catch (error) {
+    console.warn(`[feeds] Spotify payload unreadable: ${error}`);
+    return null;
+  }
+}
+
+/**
+ * Split out from the fetch so it can be tested without credentials.
+ *
+ * The history returns one entry per play, so the same track appears repeatedly
+ * on a repeat listen. Collapse by track, keeping the most recent play of each,
+ * or the list becomes one song six times over.
+ */
+export function normalizeSpotify(items: Array<Record<string, unknown>>): Track[] {
+  const seen = new Set<string>();
+  const out: Track[] = [];
+
+  for (const item of items) {
+    const track = item?.track as Record<string, unknown> | undefined;
+    const playedAt = item?.played_at;
+    if (!track?.name || typeof playedAt !== 'string') continue;
+
+    const id = String(track.id ?? track.name);
+    if (seen.has(id)) continue;
+    seen.add(id);
+
+    const artists = Array.isArray(track.artists)
+      ? track.artists.map((a: { name?: string }) => a?.name).filter(Boolean)
+      : [];
+    const album = (track.album as { name?: string } | undefined)?.name;
+
+    out.push({
+      title: String(track.name),
+      artist: artists.join(', '),
+      album: album ?? null,
+      url:
+        (track.external_urls as { spotify?: string } | undefined)?.spotify ??
+        'https://open.spotify.com/',
+      playedAt,
+    });
+    if (out.length === 6) break;
+  }
+
+  return out.sort((a, b) => b.playedAt.localeCompare(a.playedAt));
 }

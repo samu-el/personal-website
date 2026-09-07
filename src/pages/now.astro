@@ -10,11 +10,15 @@ import Layout from '@/layouts/Layout.astro';
 import { site } from '@/lib/site';
 import { href } from '@/lib/paths';
 import { navIndex } from '@/lib/posts';
-import { githubActivity, recentFilms } from '@/lib/feeds';
+import { githubActivity, recentFilms, recentTracks } from '@/lib/feeds';
 import { Icon } from 'astro-icon/components';
 
 const index = await navIndex('/now');
-const [github, films] = await Promise.all([githubActivity(), recentFilms()]);
+const [github, films, tracks] = await Promise.all([
+  githubActivity(),
+  recentFilms(),
+  recentTracks(),
+]);
 
 /** "3 days ago" — coarse on purpose, so a stale build cannot look precise. */
 function ago(iso: string): string {
@@ -110,10 +114,49 @@ function stars(rating: number): string {
             </a>
             {github.languages.length > 0 && (
               <p class="text-[0.9375rem] text-subtle">
-                Primary languages across them: {github.languages.join(', ')}.
+                Languages across all public repositories: {github.languages.join(', ')}.
               </p>
             )}
           </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    tracks && tracks.length > 0 && (
+      <section class="scroll-mt-24">
+        <div class="rule" />
+        <div class="wrap py-10 lg:py-20">
+          <div class="flex flex-wrap items-baseline justify-between gap-4">
+            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle" data-reveal>
+              Recently played
+            </h2>
+            <span class="font-mono text-2xs uppercase tracking-[0.1em] text-subtle">Spotify</span>
+          </div>
+
+          <ul class="mt-6 divide-y divide-line border-y border-line">
+            {tracks.map((track, i) => (
+              <li data-reveal style={`--reveal-delay:${Math.min(i, 6) * 60}ms`}>
+                <a
+                  href={track.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group flex flex-col gap-1.5 py-4 sm:flex-row sm:items-baseline sm:gap-6"
+                >
+                  <span class="min-w-0 flex-1 truncate text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
+                    {track.title}
+                  </span>
+                  <span class="min-w-0 flex-1 truncate text-[0.9375rem] text-muted sm:text-right">
+                    {track.artist}
+                  </span>
+                  <span class="shrink-0 font-mono text-2xs uppercase tracking-[0.1em] tabular-nums text-subtle">
+                    {ago(track.playedAt)}
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
     )
@@ -174,7 +217,7 @@ function stars(rating: number): string {
   }
 
   {
-    !github && !films && (
+    !github && !films && !tracks && (
       <section class="scroll-mt-24">
         <div class="wrap py-10 lg:py-20">
           <p class="text-[1.0625rem] text-muted">Neither feed could be reached at build time.</p>
