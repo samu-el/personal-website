@@ -65,6 +65,27 @@ test('normalizeGitHub still drops an owned fork once archived', () => {
   assert.deepEqual(out.recent, []);
 });
 
+test('normalizeGitHub drops repositories on the exclude list', () => {
+  const out = normalizeGitHub({ public_repos: 3 }, [
+    repo({ name: 'CRM' }),
+    repo({ name: 'Expense-Tracking' }),
+    repo({ name: 'Simple-Blog' }),
+    repo({ name: 'telemed' }),
+  ]);
+  assert.deepEqual(
+    out.recent.map((r) => r.name),
+    ['telemed'],
+  );
+});
+
+test('an excluded repository does not contribute a language either', () => {
+  const out = normalizeGitHub({ public_repos: 2 }, [
+    repo({ name: 'CRM', language: 'CSS' }),
+    repo({ name: 'telemed', language: 'TypeScript' }),
+  ]);
+  assert.deepEqual(out.languages, ['TypeScript']);
+});
+
 test('normalizeGitHub sorts by push date, newest first, and caps at six', () => {
   const repos = Array.from({ length: 9 }, (_, i) =>
     repo({ name: `r${i}`, pushed_at: `2026-0${(i % 9) + 1}-01T00:00:00Z` }),

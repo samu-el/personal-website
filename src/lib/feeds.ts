@@ -25,6 +25,14 @@ const TIMEOUT_MS = 8000;
  */
 const OWNED_FORKS = new Set(['personal-website']);
 
+/**
+ * Repositories kept out of "recently pushed" regardless of when they were
+ * touched. Old coursework and throwaways are still activity by the API's
+ * reckoning, but they are not a signal worth showing. Add or remove a name
+ * here; nothing else needs to change.
+ */
+const HIDDEN_REPOS = new Set(['CRM', 'Expense-Tracking', 'Simple-Blog']);
+
 export type Repo = {
   name: string;
   url: string;
@@ -126,7 +134,11 @@ export function normalizeGitHub(
 ): GitHubActivity {
   // Archived repositories are not activity, and private ones are not public.
   const own = repos.filter(
-    (r) => (!r.fork || OWNED_FORKS.has(String(r.name))) && !r.archived && !r.private,
+    (r) =>
+      (!r.fork || OWNED_FORKS.has(String(r.name))) &&
+      !r.archived &&
+      !r.private &&
+      !HIDDEN_REPOS.has(String(r.name)),
   );
 
   return {
