@@ -52,7 +52,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       <div class="relative flex items-center gap-5 sm:gap-7">
         <div class="min-w-0 flex-1">
           <p
-            class="flex items-center gap-2.5 font-mono text-2xs uppercase tracking-[0.14em] text-subtle"
+            class="flex items-center gap-2.5 whitespace-nowrap font-mono text-2xs uppercase tracking-[0.1em] text-subtle sm:tracking-[0.14em]"
           >
             <span class="eq" aria-hidden="true">
               <span></span><span></span><span></span><span></span>
@@ -97,37 +97,49 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
 </section>
 
 <style>
-  /* Four bars on their own offsets, so it reads as sound rather than a
-     synchronised blink. Sized in em to follow the label. */
+  /* Four bars, each on its own duration as well as its own offset, so it
+     reads as a level meter rather than four things blinking in step.
+
+     Sized in rem rather than em on purpose: the label around it is 11px, and
+     at 0.85em the bars came out 9px tall and 2px wide, animating over about
+     six pixels. Technically moving, practically invisible. */
   .eq {
     display: inline-flex;
     align-items: flex-end;
-    gap: 2px;
-    height: 0.85em;
+    gap: 2.5px;
+    height: 0.9rem;
   }
   .eq > span {
-    width: 2px;
+    width: 2.5px;
     height: 100%;
+    border-radius: 1px;
     background-color: var(--color-jade);
     transform-origin: bottom;
     animation: eq 1.1s ease-in-out infinite;
+    /* Without this the bar is scaled to a sub-pixel height at the bottom of
+       its cycle and some renderers drop it entirely, which reads as a gap. */
+    will-change: transform;
   }
   .eq > span:nth-child(1) {
+    animation-duration: 1.05s;
     animation-delay: -0.9s;
   }
   .eq > span:nth-child(2) {
+    animation-duration: 0.8s;
     animation-delay: -0.45s;
   }
   .eq > span:nth-child(3) {
+    animation-duration: 1.3s;
     animation-delay: -0.7s;
   }
   .eq > span:nth-child(4) {
+    animation-duration: 0.95s;
     animation-delay: -0.2s;
   }
   @keyframes eq {
     0%,
     100% {
-      transform: scaleY(0.28);
+      transform: scaleY(0.2);
     }
     50% {
       transform: scaleY(1);
