@@ -33,5 +33,5 @@ companion. Data comes from the game's public API. Deployed on Vercel.
 
 ## Links
 
-- Live: [fantasy-pl-pearl.vercel.app](https://fantasy-pl-pearl.vercel.app)
+- Live: [fantasy.et](https://fantasy.et)
 - Mobile source: [github.com/samu-el/fantasy-pl-mobile](https://github.com/samu-el/fantasy-pl-mobile)

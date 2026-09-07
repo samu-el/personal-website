@@ -94,16 +94,24 @@ const detail = href(`/work/${project.id}`);
       </div>
 
       <div class="mt-5 flex items-center gap-3.5">
-        <!-- Logo tile, or the initial in the display face when there is none. -->
+        <!--
+          The project's own mark where one exists, otherwise its initial set in
+          the site's display face. The initial is styled to read as chosen
+          typography rather than a picture that failed to load: accent ink on a
+          tinted tile, optically centred.
+        -->
         <span
-          class="grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border border-line bg-surface-2"
+          class:list={[
+            'grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border',
+            logo ? 'border-line bg-surface-2' : 'border-accent/25 bg-accent/[0.07]',
+          ]}
           aria-hidden="true"
         >
           {
             logo ? (
               <Image src={logo} alt="" width={88} height={88} class="size-full object-contain" />
             ) : (
-              <span class="display text-lg leading-none text-subtle">{monogram}</span>
+              <span class="display text-xl leading-none text-accent">{monogram}</span>
             )
           }
         </span>
@@ -115,8 +123,8 @@ const detail = href(`/work/${project.id}`);
           <a href={detail} class="group/link">
             <span class="link">{title}</span>
             <Icon
-              name="lucide:arrow-up-right"
-              class="ml-0.5 inline-block size-[0.7em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:-translate-y-1 group-hover/link:translate-x-0.5 group-hover/link:text-accent"
+              name="lucide:arrow-right"
+              class="ml-0.5 inline-block size-[0.7em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:text-accent"
               aria-hidden="true"
             />
           </a>
