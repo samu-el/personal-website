@@ -4,6 +4,7 @@ import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
 import { href } from '@/lib/paths';
 import { Icon } from 'astro-icon/components';
+import PreviewFrame from '@/components/PreviewFrame.astro';
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // Hidden projects get no detail page, so nothing links into them and they
@@ -211,6 +212,16 @@ const statusTone: Record<string, string> = {
         </div>
       </div>
     </header>
+
+    <!-- ── Preview ────────────────────────────────────────────────── -->
+    <!-- Between the facts and the write-up: by here the reader knows what the
+         thing is and has not yet been asked to read about it. Links to the
+         live site rather than back to this page. -->
+    <div class="wrap pt-10 lg:pt-16">
+      <div data-reveal>
+        <PreviewFrame {project} eager />
+      </div>
+    </div>
 
     <!-- ── Body ───────────────────────────────────────────────────── -->
     <div class="wrap py-10 lg:py-20">

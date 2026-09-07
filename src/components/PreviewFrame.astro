@@ -1,0 +1,198 @@
+---
+/**
+ * A framed screenshot of a project actually running. Used by the /work rows
+ * and again at the top of each project's detail page, so the two agree.
+ *
+ * Assets are matched by project id rather than named in frontmatter. Dropping
+ * src/assets/previews/jeopardy.webp in is all it takes, a missing file degrades
+ * to the fallback below instead of failing the build, and nothing in the
+ * content files has to be kept in sync with the filesystem. Screenshots come
+ * from scripts/shots.mjs, which needs network access to the live sites.
+ *
+ * The frame follows the project's `device`. A phone gets a bezel rather than
+ * browser chrome, because a mobile app's web build in a 16:10 desktop window
+ * is a narrow column of app in a field of empty background — and saying
+ * "website" about something that is not one is worse than plain.
+ */
+import type { CollectionEntry } from 'astro:content';
+import type { ImageMetadata } from 'astro';
+import { Image } from 'astro:assets';
+import { Icon } from 'astro-icon/components';
+import { href } from '@/lib/paths';
+
+interface Props {
+  project: CollectionEntry<'projects'>;
+  /** The first frame on a page should not be lazy. */
+  eager?: boolean;
+  class?: string;
+}
+
+const previews = import.meta.glob<{ default: ImageMetadata }>(
+  '/src/assets/previews/*.{png,jpg,jpeg,webp,avif}',
+  { eager: true },
+);
+
+/**
+ * Matches `<id>.<ext>` at the end of a glob key, ignoring the extension.
+ *
+ * Written without a regex on purpose. The obvious version — a character class
+ * containing a slash, then a template literal starting with one — parses as
+ * valid TypeScript but breaks prettier-plugin-astro's tokenizer, which then
+ * runs past the closing fence and reports dozens of phantom errors across the
+ * template. Either construct alone is fine; together they are not.
+ */
+function pick(map: Record<string, { default: ImageMetadata }>, id: string) {
+  const suffix = '/' + id;
+  const hit = Object.entries(map).find(([path]) => {
+    const dot = path.lastIndexOf('.');
+    return (dot === -1 ? path : path.slice(0, dot)).endsWith(suffix);
+  });
+  return hit?.[1].default;
+}
+
+const { project, eager = false, class: className } = Astro.props;
+const { title, demo, device } = project.data;
+
+const preview = pick(previews, project.id);
+const phone = device === 'phone';
+
+/** Hostname only. A full URL is noise at this type size. */
+const host = demo ? new URL(demo).host : null;
+/**
+ * Only a link when there is somewhere else to go. Falling back to the detail
+ * page would make this frame link to the page it is already on, and a
+ * screenshot that navigates nowhere is better than one that pretends to.
+ */
+const Tag = demo ? 'a' : 'div';
+const linkAttrs = demo
+  ? {
+      href: demo,
+      target: '_blank',
+      rel: 'noopener noreferrer',
+      'aria-label': `${title} — open ${host} in a new tab`,
+    }
+  : {};
+
+/** Matches the phone viewport scripts/shots.mjs captures at. */
+const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
+---
+
+<div class:list={['group/frame relative', phone && 'mx-auto w-full max-w-[19rem]', className]}>
+  <!--
+    Warmth behind the frame, positioned from the cursor. Same radial idiom as
+    the now-playing card, so the two read as one system.
+  -->
+  <div
+    class="pointer-events-none absolute -inset-6 opacity-0 blur-3xl transition-opacity duration-700 group-hover/frame:opacity-100 group-hover/row:opacity-100"
+    style="background:radial-gradient(45% 45% at var(--mx,50%) var(--my,40%),rgb(var(--c-accent)/0.3),transparent 70%)"
+    aria-hidden="true"
+    data-frame
+  >
+  </div>
+
+  <Tag
+    {...linkAttrs}
+    class:list={[
+      'card relative block overflow-hidden group-hover/frame:-translate-y-1 group-hover/row:-translate-y-1',
+      // A phone is held, not docked: rounder, and the bezel is the padding.
+      phone ? 'rounded-[1.75rem] bg-surface-2 p-2.5' : 'rounded-xl',
+    ]}
+  >
+    {
+      phone ? (
+        /* Speaker slit rather than a fake notch: it reads as a handset at a
+           glance without pretending to be a specific one. */
+        <span class="mx-auto mb-2 block h-1 w-12 rounded-full bg-line-strong" aria-hidden="true" />
+      ) : (
+        /* Browser chrome, and the hostname in it is the real one. The frame
+           says "this is a running site" without the screenshot having to
+           carry that on its own. */
+        <div class="flex items-center gap-2.5 border-b border-line bg-surface-2 px-3.5 py-2.5 sm:px-4">
+          <span class="flex shrink-0 gap-1.5" aria-hidden="true">
+            <span class="size-2 rounded-full bg-line-strong" />
+            <span class="size-2 rounded-full bg-line-strong" />
+            <span class="size-2 rounded-full bg-line-strong" />
+          </span>
+          <span class="min-w-0 flex-1 truncate font-mono text-2xs tracking-wide text-subtle transition-colors group-hover/frame:text-muted group-hover/row:text-muted">
+            {host ?? project.id}
+          </span>
+          {demo && (
+            <Icon
+              name="lucide:arrow-up-right"
+              class="size-3 shrink-0 text-subtle transition-all duration-300 group-hover/frame:-translate-y-0.5 group-hover/frame:translate-x-0.5 group-hover/frame:text-accent group-hover/row:-translate-y-0.5 group-hover/row:translate-x-0.5 group-hover/row:text-accent"
+              aria-hidden="true"
+            />
+          )}
+        </div>
+      )
+    }
+
+    <!-- Fixed ratio so nothing reflows as the image decodes. -->
+    <div
+      class:list={[
+        'relative overflow-hidden bg-surface-2',
+        aspect,
+        phone && 'rounded-[1.25rem] border border-line',
+      ]}
+    >
+      {
+        preview ? (
+          <Image
+            src={preview}
+            alt={`${title}, running`}
+            widths={phone ? [320, 480, 880] : [640, 960, 1280, 1600]}
+            sizes={phone ? '19rem' : '(min-width: 1024px) 58vw, 100vw'}
+            loading={eager ? 'eager' : 'lazy'}
+            decoding="async"
+            class="size-full object-cover object-top transition-transform duration-[900ms] ease-out-quint group-hover/frame:scale-[1.035] group-hover/row:scale-[1.035]"
+          />
+        ) : (
+          /* No screenshot committed yet. The site's own grid texture and the
+             title, rather than a fake window or a stock image — nothing here
+             pretends to be a picture of the product. */
+          <div class="absolute inset-0 grid place-items-center">
+            <div class="absolute inset-0 grid-lines opacity-60" aria-hidden="true" />
+            <p class="display relative px-6 text-center text-[clamp(1.5rem,4vw,2.5rem)] text-subtle">
+              {title}
+            </p>
+          </div>
+        )
+      }
+    </div>
+  </Tag>
+
+  {
+    /* A phone frame has no address bar, so the host goes underneath — still
+       stated, just not pretending to be chrome. */
+    phone && host && (
+      <p class="mt-3 text-center font-mono text-2xs tracking-wide text-subtle">{host}</p>
+    )
+  }
+</div>
+
+<script>
+  /* Points the glow at the cursor. Purely additive: the gradient already has a
+     sensible default position, so with no JS, no pointer, or reduced motion
+     the frame still lights up on hover — just centred.
+
+     Astro hoists and dedupes a processed script, so this runs once per page
+     however many frames render. */
+  (() => {
+    const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+    function track(event: PointerEvent) {
+      if (!fine.matches || calm.matches) return;
+      const frame = (event.target as Element)?.closest?.('.group\\/frame') as HTMLElement | null;
+      const glow = frame?.querySelector('[data-frame]') as HTMLElement | null;
+      if (!frame || !glow) return;
+      const box = frame.getBoundingClientRect();
+      glow.style.setProperty('--mx', `${((event.clientX - box.left) / box.width) * 100}%`);
+      glow.style.setProperty('--my', `${((event.clientY - box.top) / box.height) * 100}%`);
+    }
+
+    // One delegated listener rather than two per frame, and passive so it
+    // never blocks a scroll on a trackpad.
+    document.addEventListener('pointermove', track, { passive: true });
+  })();
+</script>

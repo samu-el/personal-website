@@ -9,7 +9,7 @@ status: 'Live'
 stack: ['TypeScript', 'Next.js', 'React', 'React Native', 'Public API', 'Vercel']
 tags: ['Football', 'Data', 'Mobile']
 repoPrivate: true
-demo: 'https://fantasy-pl-pearl.vercel.app'
+demo: 'https://fantasy.et'
 featured: true
 stats:
   - { label: 'Clients', value: 'Web + mobile' }
