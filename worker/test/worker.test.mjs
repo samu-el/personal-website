@@ -24,7 +24,7 @@ const ENV = {
 };
 
 /** Replaces global fetch with canned Spotify answers. */
-function stub({ tokenStatus = 200, playStatus = 200, playBody = null } = {}) {
+function stub({ tokenStatus = 200, playStatus = 200, playBody = null, errorBody = null } = {}) {
   globalThis.fetch = async (input) => {
     const url = typeof input === 'string' ? input : input.url;
     if (url.includes('accounts.spotify.com')) {
@@ -33,6 +33,11 @@ function stub({ tokenStatus = 200, playStatus = 200, playBody = null } = {}) {
       });
     }
     if (url.includes('api.spotify.com')) {
+      if (playStatus >= 400) {
+        return new Response(errorBody ?? JSON.stringify({ error: { status: playStatus } }), {
+          status: playStatus,
+        });
+      }
       return new Response(playStatus === 204 ? null : JSON.stringify(playBody ?? {}), {
         status: playStatus,
       });
@@ -111,6 +116,25 @@ test('a playing track is reported in full', async () => {
   assert.equal(body.art, 'https://i.scdn.co/x');
   assert.equal(body.progressMs, 1000);
   assert.equal(body.durationMs, 200000);
+});
+
+test("debug relays Spotify's own message on a rejection", async () => {
+  // 401 alone cannot distinguish a missing scope from a non-Premium account;
+  // Spotify says which in the body.
+  stub({
+    playStatus: 401,
+    errorBody: JSON.stringify({ error: { status: 401, message: 'Permissions missing' } }),
+  });
+  const body = await (await get('/?debug=1')).json();
+  assert.equal(body.reason, 'spotify_401');
+  assert.match(body.spotifyMessage, /Permissions missing/);
+});
+
+test('no spotifyMessage is attached when nothing was rejected', async () => {
+  stub({ playStatus: 204 });
+  const body = await (await get('/?debug=1')).json();
+  assert.equal(body.reason, 'spotify_204_nothing_playing');
+  assert.equal(body.spotifyMessage, undefined);
 });
 
 test('the normal payload carries no diagnostics', async () => {
