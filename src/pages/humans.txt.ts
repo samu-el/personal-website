@@ -22,8 +22,6 @@ export const GET: APIRoute = () => {
   Hosting:    GitHub Pages, behind Cloudflare
   Fonts:      Instrument Serif, Geist, Geist Mono — all self-hosted
   Analytics:  None. No cookies either.
-  Source:     https://github.com/samu-el/personal-website
-
 
 /* THANKS */
 
