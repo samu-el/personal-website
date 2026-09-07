@@ -169,7 +169,16 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
 
       let data = null;
       try {
-        const res = await fetch(endpoint, { headers: { Accept: 'application/json' } });
+        // cache: 'no-store' bypasses the browser's HTTP cache. Necessary
+        // because Cloudflare's zone-level Browser Cache TTL rewrites the
+        // Worker's max-age=30 to its own default — 4 hours on this zone — so
+        // without this every poll would re-read a stale copy and the card
+        // would pin one track for the afternoon. The edge cache still
+        // shields Spotify: s-maxage survives the rewrite.
+        const res = await fetch(endpoint, {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+        });
         if (res.ok) data = await res.json();
       } catch {
         // Offline, blocked, or DNS still catching up. Leave the card hidden.
