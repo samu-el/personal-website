@@ -126,6 +126,31 @@ Then check it:
 curl -s https://smr.et/api/now-playing.json | jq
 ```
 
+## Why is it saying `playing: false`?
+
+Add `?debug=1`. "Nothing is playing", "the refresh token has expired" and "the
+token lacks the right scope" all produce an identical `{ playing: false }`
+otherwise, which is not something you can debug from outside.
+
+```sh
+curl -s 'https://now-playing.smr.et/?debug=1' | jq
+```
+
+| `reason`                      | What it means                                            | Fix                                                  |
+| ----------------------------- | -------------------------------------------------------- | ---------------------------------------------------- |
+| `ok`                          | Playing, and reported                                    | nothing                                              |
+| `spotify_204_nothing_playing` | Genuinely nothing on. **Token and scope are both good.** | play something                                       |
+| `paused`                      | A track is loaded but paused                             | press play                                           |
+| `spotify_403`                 | The token lacks `user-read-currently-playing`            | re-mint the token, overwrite `SPOTIFY_REFRESH_TOKEN` |
+| `spotify_401`                 | The access token was rejected                            | re-mint the token                                    |
+| `token_exchange_failed_400`   | The refresh token is expired or revoked                  | re-mint the token                                    |
+| `spotify_429`                 | Rate limited                                             | wait                                                 |
+| `missing_secrets`             | One or more secrets are not set — the reply names which  | add them                                             |
+
+Debug replies are `no-store`, so they are always a live read rather than a
+minute-old cached answer. They report HTTP statuses and whether each secret is
+set, never a value, so there is nothing there worth hiding behind auth.
+
 ## Is the Worker actually answering?
 
 The static fallback and the Worker both return `{ playing: false }` when

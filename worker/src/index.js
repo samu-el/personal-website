@@ -30,6 +30,8 @@
 /**
  * @typedef {object} Payload
  * @property {boolean} playing
+ * @property {string} [reason] Only set on a ?debug=1 request.
+ * @property {object} [secrets] Only set on a ?debug=1 request. Presence, never values.
  * @property {string} [title]
  * @property {string} [artist]
  * @property {string} [album]
@@ -53,11 +55,16 @@ function json(body, maxAge) {
   return new Response(JSON.stringify(body), {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
+      ...(maxAge === 0 ? { 'Cache-Control': 'no-store' } : {}),
       // s-maxage drives the edge cache; max-age keeps the browser quiet
       // between renders. stale-while-revalidate hides the refresh latency.
       // A response carrying max-age=30 is how you know this Worker answered
       // and not the static fallback at the origin, which sends max-age=600.
-      'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge}, stale-while-revalidate=${maxAge * 2}`,
+      ...(maxAge === 0
+        ? {}
+        : {
+            'Cache-Control': `public, max-age=${maxAge}, s-maxage=${maxAge}, stale-while-revalidate=${maxAge * 2}`,
+          }),
       'Access-Control-Allow-Origin': '*',
       'X-Content-Type-Options': 'nosniff',
     },
@@ -68,6 +75,10 @@ function json(body, maxAge) {
  * Trades the long-lived refresh token for an access token good for an hour.
  * @param {Env} env
  * @returns {Promise<string | null>}
+ */
+/**
+ * @param {Env} env
+ * @returns {Promise<{ token: string | null, status: number }>}
  */
 async function accessToken(env) {
   const res = await fetch('https://accounts.spotify.com/api/token', {
@@ -82,9 +93,12 @@ async function accessToken(env) {
       refresh_token: env.SPOTIFY_REFRESH_TOKEN,
     }),
   });
-  if (!res.ok) return null;
+  if (!res.ok) return { token: null, status: res.status };
   const body = await res.json();
-  return body && typeof body.access_token === 'string' ? body.access_token : null;
+  return {
+    token: body && typeof body.access_token === 'string' ? body.access_token : null,
+    status: res.status,
+  };
 }
 
 export default {
@@ -95,6 +109,16 @@ export default {
    */
   async fetch(request, env) {
     const url = new URL(request.url);
+    /**
+     * `?debug=1` explains a false rather than just asserting it. "Nothing is
+     * playing", "the refresh token has expired" and "the token lacks
+     * user-read-currently-playing" are three different problems that otherwise
+     * look identical from outside, which is not a debuggable design.
+     *
+     * It reports HTTP statuses and whether each secret is set — never a value —
+     * so there is nothing here worth hiding behind auth.
+     */
+    const debug = url.searchParams.has('debug');
 
     // The endpoint answers on its own root as well as the .json path. Behind
     // the smr.et/api/* route only the latter is ever reached, but on a
@@ -119,23 +143,44 @@ export default {
 
     // Missing secrets should read as "nothing playing", not as an error the
     // page has to handle differently.
-    if (!env.SPOTIFY_CLIENT_ID || !env.SPOTIFY_CLIENT_SECRET || !env.SPOTIFY_REFRESH_TOKEN) {
-      return json({ playing: false }, CACHE_SECONDS_IDLE);
+    const secrets = {
+      SPOTIFY_CLIENT_ID: Boolean(env.SPOTIFY_CLIENT_ID),
+      SPOTIFY_CLIENT_SECRET: Boolean(env.SPOTIFY_CLIENT_SECRET),
+      SPOTIFY_REFRESH_TOKEN: Boolean(env.SPOTIFY_REFRESH_TOKEN),
+    };
+    if (
+      !secrets.SPOTIFY_CLIENT_ID ||
+      !secrets.SPOTIFY_CLIENT_SECRET ||
+      !secrets.SPOTIFY_REFRESH_TOKEN
+    ) {
+      return json(
+        debug ? { playing: false, reason: 'missing_secrets', secrets } : { playing: false },
+        debug ? 0 : CACHE_SECONDS_IDLE,
+      );
     }
 
     // Cache on the request URL. The edge serves repeat visitors without this
     // Worker touching Spotify at all.
+
     const cache = caches.default;
     const cacheKey = new Request(url.toString(), { method: 'GET' });
-    const hit = await cache.match(cacheKey);
-    if (hit) return hit;
+    // A debug read must be live, or it reports on a minute-old answer.
+    if (!debug) {
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+    }
 
     /** @type {Payload} */
     let payload = { playing: false };
     let maxAge = CACHE_SECONDS_IDLE;
+    let reason = 'unknown';
 
     try {
-      const token = await accessToken(env);
+      const { token, status: tokenStatus } = await accessToken(env);
+      if (!token) {
+        // 400 here is almost always an expired or revoked refresh token.
+        reason = `token_exchange_failed_${tokenStatus}`;
+      }
       if (token) {
         const res = await fetch(
           // additional_types surfaces podcast episodes, which otherwise come
@@ -144,7 +189,17 @@ export default {
           { headers: { Authorization: `Bearer ${token}` } },
         );
 
-        // 204 is Spotify's "nothing is playing" — a success, not a failure.
+        // 204 is Spotify's "nothing is playing" — a success, not a failure,
+        // and proof that both the token and its scope are good.
+        // 401 is a bad token; 403 is a token without
+        // user-read-currently-playing; 429 is a rate limit.
+        reason =
+          res.status === 204
+            ? 'spotify_204_nothing_playing'
+            : res.status === 200
+              ? 'spotify_200'
+              : `spotify_${res.status}`;
+
         if (res.status === 200) {
           const body = await res.json();
           const item = body && body.item;
@@ -171,12 +226,19 @@ export default {
               durationMs: typeof item.duration_ms === 'number' ? item.duration_ms : undefined,
             };
             maxAge = CACHE_SECONDS;
+            reason = 'ok';
+          } else {
+            reason = item ? 'paused' : 'no_item';
           }
         }
       }
     } catch {
       // A Spotify outage or an expired refresh token both mean the same thing
       // to the page: show nothing. Never surface a 500 for this.
+    }
+
+    if (debug) {
+      return json({ ...payload, reason, secrets }, 0);
     }
 
     const response = json(payload, maxAge);
