@@ -1,0 +1,99 @@
+---
+/**
+ * Three things for anyone who pokes around: a note in the page source, a
+ * greeting in the console, and the Konami code, which turns on the layout
+ * grid the design is built against.
+ *
+ * All of it is inert until someone goes looking — no extra requests, no
+ * dependencies, and nothing that changes the page for a normal visitor.
+ */
+import { site } from '@/lib/site';
+---
+
+<!--
+     ____  __  __
+    / ___||  \/  |
+    \___ \| |\/| |
+     ___) | |  | |
+    |____/|_|  |_|
+
+    No software engineering problem is too big to solve.
+
+    You are reading the source. Good instinct.
+    Try ⌘K for the command palette, or the Konami code for the layout grid.
+
+    Built with Astro, deployed from GitHub Actions, no client framework.
+    Source:  github.com/samu-el/personal-website
+    Say hi:  me@smr.et
+-->
+<div
+  id="debug-badge"
+  hidden
+  class="fixed bottom-4 left-1/2 z-[9998] -translate-x-1/2 rounded-full border border-accent bg-surface px-4 py-2 font-mono text-2xs uppercase tracking-[0.12em] text-accent shadow-lg"
+  role="status"
+>
+  Layout grid on · Konami again to hide
+</div>
+
+<script is:inline define:vars={{ email: site.email }}>
+  (() => {
+    // Registered on `window` so a re-run of this script cannot stack listeners.
+    if (window.__eggs) return;
+    window.__eggs = true;
+
+    const label = 'color:#e9a23b;font-weight:600';
+    const body = 'color:#96979d';
+
+    console.log(
+      `%cNo software engineering problem is too big to solve.%c
+Built with Astro. No client framework, no analytics, no cookies.
+Source:  https://github.com/samu-el/personal-website
+Hiring?  ${email}
+
+Try ⌘K for the command palette. Or the Konami code.`,
+      label,
+      body,
+    );
+
+    // ↑ ↑ ↓ ↓ ← → ← → B A
+    const SEQUENCE = [
+      'arrowup',
+      'arrowup',
+      'arrowdown',
+      'arrowdown',
+      'arrowleft',
+      'arrowright',
+      'arrowleft',
+      'arrowright',
+      'b',
+      'a',
+    ];
+    let at = 0;
+    let hideTimer;
+
+    document.addEventListener('keydown', (e) => {
+      const key = e.key.toLowerCase();
+      // Advance on a hit, and fall back to 1 when the wrong key still happens
+      // to start the sequence again.
+      at = key === SEQUENCE[at] ? at + 1 : key === SEQUENCE[0] ? 1 : 0;
+      if (at < SEQUENCE.length) return;
+      at = 0;
+
+      const root = document.documentElement;
+      const on = !root.hasAttribute('data-debug');
+      root.toggleAttribute('data-debug', on);
+
+      const badge = document.getElementById('debug-badge');
+      if (badge) {
+        badge.hidden = !on;
+        window.clearTimeout(hideTimer);
+        if (on) hideTimer = window.setTimeout(() => (badge.hidden = true), 4000);
+      }
+      console.log(
+        `%cLayout grid ${on ? 'on' : 'off'}.%c Every box outlined, twelve columns behind the container.`,
+        label,
+        body,
+      );
+    });
+  })();
+</script>

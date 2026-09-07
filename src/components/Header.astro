@@ -5,6 +5,7 @@ import { hasWriting, visibleNav } from '@/lib/posts';
 import { Image } from 'astro:assets';
 import avatar from '@/assets/avatar.jpg';
 import ThemeToggle from './ThemeToggle.astro';
+import { Icon } from 'astro-icon/components';
 
 const current = Astro.url.pathname;
 
@@ -58,7 +59,7 @@ const items = await visibleNav();
               href={href(item.href)}
               aria-current={active ? 'page' : undefined}
               class:list={[
-                'relative rounded-full px-3.5 py-2 text-sm transition-colors duration-200',
+                'nav-link relative rounded-full px-3.5 py-2 text-sm transition-colors duration-200',
                 active ? 'text-fg' : 'text-muted hover:text-fg',
               ]}
             >
@@ -73,6 +74,17 @@ const items = await visibleNav();
     </nav>
 
     <div class="flex items-center gap-2">
+      <button
+        type="button"
+        id="cmdk-open"
+        class="hidden h-9 items-center gap-2 rounded-full border border-line pl-3 pr-2 text-subtle transition-colors hover:border-line-strong hover:text-fg md:inline-flex"
+        aria-label="Search and jump to a page"
+      >
+        <Icon name="lucide:search" class="size-3.5" aria-hidden="true" />
+        <kbd class="rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-2xs">
+          ⌘K
+        </kbd>
+      </button>
       <ThemeToggle />
       <a
         href={href('/contact')}
