@@ -29,6 +29,8 @@ const REDIRECT_URI = `http://127.0.0.1:${PORT}/callback`;
 // the now-playing Worker needs the current track. Minting one token for both
 // means one authorisation and one secret to rotate.
 const SCOPES = 'user-read-recently-played user-read-currently-playing';
+/** Without this one the now-playing Worker can only ever answer 401. */
+const REQUIRED_SCOPE = 'user-read-currently-playing';
 
 const clientId = process.env.SPOTIFY_CLIENT_ID;
 const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
@@ -54,7 +56,11 @@ authUrl.search = new URLSearchParams({
   state,
   // Force the consent screen so re-running always returns a fresh token.
   show_dialog: 'true',
-}).toString();
+})
+  .toString()
+  // URLSearchParams writes a space as "+", which a query parameter is only
+  // conventionally read as a space. %20 leaves nothing to interpret.
+  .replace(/\+/g, '%20');
 
 async function exchange(code) {
   const res = await fetch('https://accounts.spotify.com/api/token', {
@@ -76,7 +82,7 @@ async function exchange(code) {
     );
   }
   if (!json.refresh_token) throw new Error('no refresh_token in the response');
-  return json.refresh_token;
+  return { refreshToken: json.refresh_token, scope: json.scope ?? '' };
 }
 
 const page = (title, body) =>
@@ -114,7 +120,9 @@ const server = createServer(async (req, res) => {
   }
 
   try {
-    const refreshToken = await exchange(code);
+    const { refreshToken, scope } = await exchange(code);
+    const granted = scope.split(' ').filter(Boolean);
+    const hasRequired = granted.includes(REQUIRED_SCOPE);
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(page('Done', '<p>Refresh token printed in your terminal. You can close this tab.</p>'));
 
@@ -122,6 +130,22 @@ const server = createServer(async (req, res) => {
     console.log('SPOTIFY_REFRESH_TOKEN');
     console.log(refreshToken);
     console.log('─────────────────────────────────────────────────────────');
+    console.log(`\nGranted scopes: ${granted.join(', ') || '(none reported)'}`);
+
+    if (!hasRequired) {
+      // Worth stopping on. Scopes are bound at authorisation time, so this
+      // token can never acquire the missing one by being refreshed — pasting
+      // it anywhere just reproduces the 401 it is going to cause.
+      console.error(
+        `\n!! This token is MISSING ${REQUIRED_SCOPE}.\n` +
+          '   The now-playing Worker will answer 401 "Permissions missing" with it.\n' +
+          '   Scopes are fixed when you approve, so refreshing cannot add it later.\n\n' +
+          '   Most likely this checkout is out of date — run: git pull\n' +
+          `   The consent screen must list "currently playing". Requested: ${SCOPES}`,
+      );
+      process.exitCode = 1;
+      return;
+    }
     console.log('\nAdd it, plus the client id and secret, as repository secrets:');
     console.log('  Settings → Secrets and variables → Actions → New repository secret');
     console.log('\n  SPOTIFY_CLIENT_ID');
