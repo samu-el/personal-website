@@ -32,6 +32,7 @@
  * @property {boolean} playing
  * @property {string} [reason] Only set on a ?debug=1 request.
  * @property {object} [secrets] Only set on a ?debug=1 request. Presence, never values.
+ * @property {string} [spotifyMessage] Only set on a ?debug=1 request.
  * @property {string} [title]
  * @property {string} [artist]
  * @property {string} [album]
@@ -174,6 +175,9 @@ export default {
     let payload = { playing: false };
     let maxAge = CACHE_SECONDS_IDLE;
     let reason = 'unknown';
+    /** Spotify's own words for a rejection — the only thing that separates a
+     * missing scope from a non-Premium account, since both answer 401. */
+    let spotifyMessage = '';
 
     try {
       const { token, status: tokenStatus } = await accessToken(env);
@@ -199,6 +203,18 @@ export default {
             : res.status === 200
               ? 'spotify_200'
               : `spotify_${res.status}`;
+
+        // Read the error body on a rejection. Spotify says things like
+        // "Permissions missing" for a scope problem and "Player command
+        // failed: Premium required" for a free account — indistinguishable
+        // from the status code alone.
+        if (res.status >= 400) {
+          spotifyMessage = await res
+            .clone()
+            .text()
+            .then((t) => t.slice(0, 300))
+            .catch(() => '');
+        }
 
         if (res.status === 200) {
           const body = await res.json();
@@ -238,7 +254,10 @@ export default {
     }
 
     if (debug) {
-      return json({ ...payload, reason, secrets }, 0);
+      return json(
+        { ...payload, reason, ...(spotifyMessage ? { spotifyMessage } : {}), secrets },
+        0,
+      );
     }
 
     const response = json(payload, maxAge);

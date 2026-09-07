@@ -136,16 +136,27 @@ otherwise, which is not something you can debug from outside.
 curl -s 'https://now-playing.smr.et/?debug=1' | jq
 ```
 
-| `reason`                      | What it means                                            | Fix                                                  |
-| ----------------------------- | -------------------------------------------------------- | ---------------------------------------------------- |
-| `ok`                          | Playing, and reported                                    | nothing                                              |
-| `spotify_204_nothing_playing` | Genuinely nothing on. **Token and scope are both good.** | play something                                       |
-| `paused`                      | A track is loaded but paused                             | press play                                           |
-| `spotify_403`                 | The token lacks `user-read-currently-playing`            | re-mint the token, overwrite `SPOTIFY_REFRESH_TOKEN` |
-| `spotify_401`                 | The access token was rejected                            | re-mint the token                                    |
-| `token_exchange_failed_400`   | The refresh token is expired or revoked                  | re-mint the token                                    |
-| `spotify_429`                 | Rate limited                                             | wait                                                 |
-| `missing_secrets`             | One or more secrets are not set — the reply names which  | add them                                             |
+| `reason`                      | What it means                                                                                                                      | Fix                                                  |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `ok`                          | Playing, and reported                                                                                                              | nothing                                              |
+| `spotify_204_nothing_playing` | Genuinely nothing on. **Token and scope are both good.**                                                                           | play something                                       |
+| `paused`                      | A track is loaded but paused                                                                                                       | press play                                           |
+| `spotify_403`                 | The token lacks `user-read-currently-playing`                                                                                      | re-mint the token, overwrite `SPOTIFY_REFRESH_TOKEN` |
+| `spotify_401`                 | The access token was rejected. **Read `spotifyMessage`** — the status alone cannot tell a missing scope from a non-Premium account | see below                                            |
+| `token_exchange_failed_400`   | The refresh token is expired or revoked                                                                                            | re-mint the token                                    |
+| `spotify_429`                 | Rate limited                                                                                                                       | wait                                                 |
+| `missing_secrets`             | One or more secrets are not set — the reply names which                                                                            | add them                                             |
+
+A rejection also carries `spotifyMessage`, Spotify's own words for it. That
+matters most for a 401, which has two very different causes:
+
+- **"Permissions missing"** — the token lacks `user-read-currently-playing`.
+  Re-mint it and overwrite the secret.
+- **Anything mentioning Premium** — as of the February 2026 Web API changes,
+  [all Development Mode apps require the app owner to have an active Spotify
+  Premium subscription](https://developer.spotify.com/documentation/web-api/tutorials/february-2026-migration-guide).
+  A free account cannot use the API in Development Mode at all, whatever the
+  scopes say. Subscribe, or apply for extended quota mode.
 
 Debug replies are `no-store`, so they are always a live read rather than a
 minute-old cached answer. They report HTTP statuses and whether each secret is
