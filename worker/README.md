@@ -204,11 +204,11 @@ Three things distinguish them:
 curl -si https://smr.et/api/now-playing.json | head -20
 ```
 
-| Signal                | Worker answered              | Origin answered (route not live) |
-| --------------------- | ---------------------------- | -------------------------------- |
-| Body whitespace       | `{"playing":false}`          | `{ "playing": false }`           |
-| `cache-control`       | `max-age=30, s-maxage=30, …` | `max-age=600`                    |
-| `x-github-request-id` | absent                       | present                          |
+| Signal                | Worker answered         | Origin answered (route not live) |
+| --------------------- | ----------------------- | -------------------------------- |
+| Body whitespace       | `{"playing":false}`     | `{ "playing": false }`           |
+| `cache-control`       | `max-age=5, s-maxage=5` | `max-age=600`                    |
+| `x-github-request-id` | absent                  | present                          |
 
 If the origin is answering, the route is not intercepting. Check
 **Workers & Pages → smr-now-playing → Settings → Domains & Routes** in the
@@ -234,9 +234,24 @@ scope — the Worker needs `user-read-currently-playing`.
 
 - The route is on the site's own domain, so the page fetch is same-origin: no
   CORS preflight, no third-party request, nothing for a blocker to catch.
-- Responses are cached at the edge for 30 seconds while playing and 60 when
-  idle. Spotify's rate limit stays comfortable no matter the traffic, and
-  visitors see "roughly now" rather than a live feed of your listening.
+- Responses are cached at the edge for 5 seconds while playing and 10 when
+  paused or idle, with no `stale-while-revalidate`. The cache is there to
+  shield Spotify's rate limit, not to save latency: a miss costs two Spotify
+  calls, so the ceiling is 24 a minute however much traffic arrives — 12 per
+  Spotify's rolling 30-second window, a small fraction of the allowance, and
+  flat regardless of how many people are watching.
+
+  These were 30 and 60 with `stale-while-revalidate` on top, which is how a
+  refresh could return the byte-identical payload for a minute or more and look
+  broken. Raising them again brings that back; if the rate limit ever needs the
+  headroom, cache the access token instead — it is valid for an hour, and
+  caching it halves the cost of a miss.
+
+- There is no push. Spotify offers no webhook or subscription for playback, so
+  how fresh this can be is bounded by the edge TTL plus the page's poll
+  interval — about ten seconds in practice, and about five on a manual refresh.
+  Nothing short of a process polling Spotify continuously does better, and that
+  would poll whether or not anyone is looking.
 - The refresh token expires after 180 days on this Spotify app. When it does,
   the endpoint starts answering `playing: false` and the section quietly
   disappears — mint a new token and `wrangler secret put` it again.

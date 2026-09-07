@@ -199,12 +199,17 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     if (window.__np) return;
     window.__np = true;
 
-    const REFRESH_MS = 45000;
-    /* Ceiling on the staleness correction below. The edge holds a response for
-       30s and may serve it for another 60 while revalidating, so 90s is the
-       real worst case; 120 leaves room without letting a wrong clock run away
-       with the bar. */
-    const MAX_AGE_MS = 120000;
+    /* Poll interval while the tab is visible. The edge caches for a few
+       seconds, so polling faster than this mostly re-reads the same answer;
+       polling slower is what made the card feel dead. Between the two, a
+       state change shows up in about ten seconds without a refresh. */
+    const REFRESH_MS = 15000;
+    /* Ceiling on the staleness correction below. The edge now holds a response
+       for only a few seconds, so in practice the correction is tiny — this is
+       a bound on how far a badly set clock can shove the bar, not a tuning
+       knob, and it stays generous so that raising the Worker's TTL again does
+       not silently start clipping a legitimate correction. */
+    const MAX_AGE_MS = 60000;
 
     /* Where the bar is, and when that was true. Progress is derived from these
        rather than stored, so a missed tick self-corrects on the next one. */
@@ -270,7 +275,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       try {
         // cache: 'no-store' bypasses the browser's HTTP cache. Necessary
         // because Cloudflare's zone-level Browser Cache TTL rewrites the
-        // Worker's max-age=30 to its own default — 4 hours on this zone — so
+        // Worker's max-age to its own default — 4 hours on this zone — so
         // without this every poll would re-read a stale copy and the card
         // would pin one track for the afternoon. The edge cache still
         // shields Spotify: s-maxage survives the rewrite.
@@ -403,7 +408,14 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       }, REFRESH_MS);
     }
 
+    /* Both, because they do not fire interchangeably: switching tabs gives
+       visibilitychange, while returning to an already-visible window from
+       another application gives only focus. Coming back to the page is the
+       moment a stale card is most obvious, so neither is worth missing. */
     document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) poll();
+    });
+    window.addEventListener('focus', () => {
       if (!document.hidden) poll();
     });
 
