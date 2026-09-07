@@ -3,6 +3,10 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [master, main]
+  # The Now page reads GitHub and Letterboxd at build time; a daily rebuild
+  # keeps both current without a push. 05:00 UTC is 08:00 in Addis Ababa.
+  schedule:
+    - cron: '0 5 * * *'
   workflow_dispatch:
 
 # Allow GITHUB_TOKEN to deploy to Pages.
@@ -40,6 +44,9 @@ jobs:
           # variables SITE / BASE override them without touching this file.
           SITE: ${{ vars.SITE || 'https://smr.et' }}
           BASE: ${{ vars.BASE || '/' }}
+          # Lifts the build's GitHub API calls off the runner's shared
+          # anonymous rate limit. Read-only; the build never writes.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: actions/configure-pages@v5
         with:

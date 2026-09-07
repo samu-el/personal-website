@@ -21,8 +21,15 @@ jobs:
       - name: Typecheck
         run: npm run check
 
+      - name: Unit tests
+        run: npm run test:unit
+
       - name: Build
         run: npm run build:fast
+        env:
+          # Same as the deploy workflow: keeps the build's GitHub API calls off
+          # the runner's shared anonymous rate limit.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Check formatting
         run: npx prettier --check .
