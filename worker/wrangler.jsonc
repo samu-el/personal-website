@@ -4,12 +4,17 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-09-01",
 
+  // Also publish a *.workers.dev URL. That makes the Worker testable on its
+  // own, separately from whether the zone route below is intercepting —
+  // which is the thing that usually goes wrong first.
+  "workers_dev": true,
+
   // Mounted on the site's own domain so the page fetch is same-origin. The
   // zone already exists in Cloudflare; this route sits in front of the
   // GitHub Pages origin and never reaches it.
   "routes": [
     {
-      "pattern": "smr.et/api/now-playing.json",
+      "pattern": "smr.et/api/*",
       "zone_name": "smr.et",
     },
   ],
