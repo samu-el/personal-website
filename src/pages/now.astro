@@ -1,0 +1,197 @@
+---
+/**
+ * Live signals, fetched at build time and refreshed by a daily scheduled run.
+ *
+ * Every block here is conditional: when a feed cannot be reached the section
+ * is simply absent rather than empty or stale. If both are unreachable the
+ * page still renders with its header, so the route never 404s.
+ */
+import Layout from '@/layouts/Layout.astro';
+import { site } from '@/lib/site';
+import { href } from '@/lib/paths';
+import { navIndex } from '@/lib/posts';
+import { githubActivity, recentFilms } from '@/lib/feeds';
+import { Icon } from 'astro-icon/components';
+
+const index = await navIndex('/now');
+const [github, films] = await Promise.all([githubActivity(), recentFilms()]);
+
+/** "3 days ago" — coarse on purpose, so a stale build cannot look precise. */
+function ago(iso: string): string {
+  const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
+  if (days <= 0) return 'today';
+  if (days === 1) return 'yesterday';
+  if (days < 30) return `${days} days ago`;
+  const months = Math.round(days / 30);
+  if (months < 12) return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+  const years = Math.round(days / 365);
+  return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+}
+
+/** Half-star ratings render as glyphs; Letterboxd stores them as decimals. */
+function stars(rating: number): string {
+  return '★'.repeat(Math.floor(rating)) + (rating % 1 ? '½' : '');
+}
+---
+
+<Layout
+  title="Now"
+  description={`What ${site.shortName} has pushed and watched most recently — pulled from public sources at build time.`}
+  path="/now"
+>
+  <!-- ── Header ───────────────────────────────────────────────────── -->
+  <section class="relative overflow-hidden border-b border-line">
+    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
+    </div>
+    <div class="wrap relative py-10 lg:py-24">
+      <p class="eyebrow" data-reveal>
+        {index && <span class="text-accent">{index}</span>}
+        Now
+      </p>
+      <div class="mt-5 grid gap-5 lg:mt-7 lg:grid-cols-12 lg:gap-8">
+        <h1 class="display text-[clamp(2.4rem,7vw,4.75rem)] lg:col-span-7" data-reveal>Lately.</h1>
+        <p
+          class="text-[1.0625rem] leading-relaxed text-muted lg:col-span-5 lg:self-end"
+          data-reveal
+          style="--reveal-delay:80ms"
+        >
+          Pulled from public sources when the site was last built, not written by hand. Each entry
+          carries its own date.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {
+    github && github.recent.length > 0 && (
+      <section class="scroll-mt-24">
+        <div class="wrap py-10 lg:py-20">
+          <div class="flex flex-wrap items-baseline justify-between gap-4">
+            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle" data-reveal>
+              Recently pushed
+            </h2>
+            <p class="font-mono text-2xs tracking-wide text-subtle" data-reveal>
+              {github.publicRepos} public repositories
+            </p>
+          </div>
+
+          <ul class="mt-6 divide-y divide-line border-y border-line">
+            {github.recent.map((repo, i) => (
+              <li data-reveal style={`--reveal-delay:${Math.min(i, 6) * 60}ms`}>
+                <a
+                  href={repo.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group flex flex-col gap-2 py-4 transition-colors sm:flex-row sm:items-baseline sm:gap-6"
+                >
+                  <span class="flex min-w-0 flex-1 items-baseline gap-3">
+                    <span class="truncate font-mono text-sm text-fg transition-colors group-hover:text-accent">
+                      {repo.name}
+                    </span>
+                    <Icon
+                      name="lucide:arrow-up-right"
+                      class="size-3 shrink-0 text-subtle transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-accent"
+                      aria-hidden="true"
+                    />
+                  </span>
+                  {repo.description && (
+                    <span class="min-w-0 flex-1 truncate text-[0.9375rem] text-muted sm:text-right">
+                      {repo.description}
+                    </span>
+                  )}
+                  <span class="flex shrink-0 items-center gap-3 font-mono text-2xs uppercase tracking-[0.1em] text-subtle">
+                    {repo.language && <span>{repo.language}</span>}
+                    <span class="tabular-nums">{ago(repo.pushedAt)}</span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <a
+              href="https://github.com/samu-el?tab=repositories"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-ghost"
+            >
+              <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
+              All repositories
+            </a>
+            {github.languages.length > 0 && (
+              <p class="text-[0.9375rem] text-subtle">
+                Primary languages across them: {github.languages.join(', ')}.
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    films && films.length > 0 && (
+      <section class="scroll-mt-24">
+        <div class="rule" />
+        <div class="wrap py-10 lg:py-20">
+          <div class="flex flex-wrap items-baseline justify-between gap-4">
+            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle" data-reveal>
+              Recently watched
+            </h2>
+            <a
+              href="https://letterboxd.com/rocin4nte/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-accent"
+            >
+              Letterboxd ↗
+            </a>
+          </div>
+
+          <ul class="mt-6 divide-y divide-line border-y border-line">
+            {films.map((film, i) => (
+              <li data-reveal style={`--reveal-delay:${Math.min(i, 6) * 60}ms`}>
+                <a
+                  href={film.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="group flex flex-wrap items-baseline gap-x-4 gap-y-1.5 py-4"
+                >
+                  <span class="text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
+                    {film.title}
+                  </span>
+                  {film.year && (
+                    <span class="font-mono text-2xs tracking-wide text-subtle">{film.year}</span>
+                  )}
+                  {film.rewatch && <span class="chip">Rewatch</span>}
+                  <span class="ml-auto flex items-center gap-4">
+                    {film.rating !== null && (
+                      <span class="text-sm text-accent" aria-label={`${film.rating} out of 5`}>
+                        {stars(film.rating)}
+                      </span>
+                    )}
+                    <span class="font-mono text-2xs uppercase tracking-[0.1em] tabular-nums text-subtle">
+                      {ago(film.watchedAt)}
+                    </span>
+                  </span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    )
+  }
+
+  {
+    !github && !films && (
+      <section class="scroll-mt-24">
+        <div class="wrap py-10 lg:py-20">
+          <p class="text-[1.0625rem] text-muted">
+            Neither feed could be reached when this page was built. It refreshes daily.
+          </p>
+        </div>
+      </section>
+    )
+  }
+</Layout>

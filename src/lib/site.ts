@@ -31,10 +31,11 @@ export type NavItem = { label: string; href: string; index: string };
 export const nav: NavItem[] = [
   { label: 'Home', href: '/', index: '01' },
   { label: 'About', href: '/about', index: '02' },
-  { label: 'Work', href: '/work', index: '03' },
-  { label: 'Writing', href: '/writing', index: '04' },
-  { label: 'Stack', href: '/stack', index: '05' },
-  { label: 'Contact', href: '/contact', index: '06' },
+  { label: 'Now', href: '/now', index: '03' },
+  { label: 'Work', href: '/work', index: '04' },
+  { label: 'Writing', href: '/writing', index: '05' },
+  { label: 'Stack', href: '/stack', index: '06' },
+  { label: 'Contact', href: '/contact', index: '07' },
 ];
 
 export type Social = {

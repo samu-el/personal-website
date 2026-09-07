@@ -135,6 +135,32 @@ One stylesheet, `src/styles/global.css`, holds all of it:
 
 ---
 
+## Live feeds
+
+The **Now** page (`/now`) reads two public sources at build time, in
+`src/lib/feeds.ts`:
+
+| Source           | Endpoint                                    | Auth                                                                              |
+| ---------------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
+| GitHub activity  | `/users/samu-el` and `/users/samu-el/repos` | none required; `GITHUB_TOKEN` is used when set, to avoid the anonymous rate limit |
+| Letterboxd diary | `letterboxd.com/rocin4nte/rss/`             | none                                                                              |
+
+Both are allowed to fail. On a network error, a rate limit or an unexpected
+payload the fetch returns `null`, the section that would have used it is not
+rendered, and the build still succeeds — the home page's repository count
+falls back to the curated figure in `src/data/experience.ts`. Nothing is
+cached to disk on purpose: a stale "recently pushed" list is worse than none,
+and rendering each item's own date means the page never claims its own
+freshness.
+
+A `schedule` trigger in `deploy.yml` rebuilds daily at 05:00 UTC (08:00 in
+Addis Ababa) so the feeds stay current between pushes.
+
+The parsers are pure and unit-tested against fixtures — `npm run test:unit`.
+That matters because the GitHub user-level endpoints are unreachable from some
+sandboxes, so the transform cannot always be exercised against a live
+response.
+
 ## Deployment
 
 `.github/workflows/deploy.yml` builds and publishes to GitHub Pages on every push to `master`.
