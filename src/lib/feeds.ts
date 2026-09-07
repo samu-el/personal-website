@@ -16,6 +16,15 @@ const GITHUB_USER = 'samu-el';
 const LETTERBOXD_USER = 'rocin4nte';
 const TIMEOUT_MS = 8000;
 
+/**
+ * Forks are excluded as somebody else's work, but a fork that was taken over
+ * and rewritten is not. This site's own repository began in 2019 as a fork of
+ * github/personal-website and has since been replaced wholesale, so GitHub
+ * still reports `fork: true` for the repository pushed to most often here.
+ * Name them explicitly rather than guessing from commit counts.
+ */
+const OWNED_FORKS = new Set(['personal-website']);
+
 export type Repo = {
   name: string;
   url: string;
@@ -115,8 +124,10 @@ export function normalizeGitHub(
   user: { public_repos: number },
   repos: Array<Record<string, unknown>>,
 ): GitHubActivity {
-  // Forks are someone else's work and archived repositories are not activity.
-  const own = repos.filter((r) => !r.fork && !r.archived && !r.private);
+  // Archived repositories are not activity, and private ones are not public.
+  const own = repos.filter(
+    (r) => (!r.fork || OWNED_FORKS.has(String(r.name))) && !r.archived && !r.private,
+  );
 
   return {
     publicRepos: user.public_repos,
