@@ -1,12 +1,11 @@
 ---
 /**
- * The header block every inner page opens with: index eyebrow, a display
- * headline, and an aside column for the one-line description — over the
- * twelve-column hairlines the layout is built on, with the page's index set
- * huge and faint behind it.
+ * The header block every inner page opens with: an ink field the width of the
+ * viewport, the page's index set huge in gold behind it, the headline in
+ * paper, and an aside column for the one-line description.
  *
- * One component so the pages cannot drift from each other, and so the
- * watermark, the grid and the reveal timings are decided once.
+ * One component so the pages cannot drift from each other, and so the field,
+ * the watermark and the reveal timings are decided once.
  */
 interface Props {
   /** Two-digit index from the nav, e.g. "02". Also the watermark. */
@@ -21,13 +20,13 @@ const { index, label, compact = false } = Astro.props;
 const hasAside = Astro.slots.has('aside');
 ---
 
-<section class="relative overflow-hidden border-b border-line">
-  <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-50" aria-hidden="true">
+<section class="field-ink relative overflow-hidden">
+  <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true">
   </div>
-  <div class:list={['wrap relative', compact ? 'py-10 lg:py-16' : 'py-10 lg:py-24']}>
+  <div class:list={['wrap relative', compact ? 'py-12 lg:py-20' : 'py-14 lg:py-32']}>
     {
       index && (
-        <span class="rail-index" aria-hidden="true">
+        <span class="rail-index rail-index--gold" aria-hidden="true">
           {index}
         </span>
       )
@@ -38,10 +37,10 @@ const hasAside = Astro.slots.has('aside');
       {label}
     </p>
 
-    <div class="relative mt-6 grid gap-6 lg:mt-8 lg:grid-cols-12 lg:gap-8">
+    <div class="relative mt-8 grid gap-8 lg:mt-10 lg:grid-cols-12 lg:gap-8">
       <div class:list={[hasAside ? 'lg:col-span-8' : 'lg:col-span-12']}>
         <h1
-          class="display-hero text-[clamp(2.6rem,7.2vw,5.5rem)]"
+          class="display-hero text-[clamp(3rem,8.6vw,7rem)]"
           data-reveal
           style="--reveal-delay:60ms"
         >
@@ -52,7 +51,7 @@ const hasAside = Astro.slots.has('aside');
         hasAside && (
           <div class="lg:col-span-4 lg:col-start-9 lg:self-end">
             <div
-              class="border-l border-line pl-5 text-[0.9375rem] leading-relaxed text-muted lg:text-base"
+              class="border-l-2 border-accent pl-5 text-[0.9375rem] leading-relaxed text-muted lg:text-base"
               data-reveal
               style="--reveal-delay:120ms"
             >
