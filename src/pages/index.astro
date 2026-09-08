@@ -76,12 +76,12 @@ const statusTone: Record<string, string> = {
   <!-- Full-width rather than in .wrap on purpose: the headline is sized to
        the viewport, and a poster runs to the edge of the sheet. Everything
        below returns to the centred column. -->
-  <section class="field-ink relative overflow-hidden">
+  <section class="field-ink relative overflow-hidden" style="view-transition-name:field">
     <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true">
     </div>
 
     <div class="relative px-5 pb-14 pt-10 sm:px-8 lg:pb-24 lg:pt-20 xl:px-12 2xl:px-16">
-      <p class="eyebrow" data-reveal>
+      <p class="eyebrow hero-enter" style="--enter:0ms">
         <span class="flex items-center gap-2">
           <span class="relative flex size-1.5">
             <span
@@ -123,9 +123,8 @@ const statusTone: Record<string, string> = {
         <!-- Intro -->
         <div class="lg:col-span-7">
           <p
-            class="max-w-2xl text-[1.125rem] leading-[1.6] text-muted lg:text-[1.5rem] lg:leading-[1.45]"
-            data-reveal
-            style="--reveal-delay:140ms"
+            class="hero-enter max-w-2xl text-[1.125rem] leading-[1.6] text-muted lg:text-[1.5rem] lg:leading-[1.45]"
+            style="--enter:950ms"
           >
             <strong class="font-medium text-fg">Samuel Mussie</strong> — software engineer based in Addis
             Ababa, Ethiopia. Ten years building web and mobile products: Python and TypeScript services,
@@ -133,9 +132,8 @@ const statusTone: Record<string, string> = {
           </p>
 
           <div
-            class="mt-10 flex flex-wrap items-center gap-x-8 gap-y-5"
-            data-reveal
-            style="--reveal-delay:200ms"
+            class="hero-enter mt-10 flex flex-wrap items-center gap-x-8 gap-y-5"
+            style="--enter:1080ms"
           >
             <div class="flex flex-wrap gap-3">
               <a href={href('/work')} class="btn btn-primary">
@@ -166,7 +164,7 @@ const statusTone: Record<string, string> = {
         </div>
 
         <!-- Currently: the same facts, as a ruled table. -->
-        <aside class="lg:col-span-4 lg:col-start-9" data-reveal style="--reveal-delay:260ms">
+        <aside class="hero-enter lg:col-span-4 lg:col-start-9" style="--enter:1200ms">
           <h2 class="meta">Currently</h2>
           <dl class="ledger mt-4 text-sm">
             <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
@@ -208,7 +206,7 @@ const statusTone: Record<string, string> = {
   </section>
 
   <!-- ── Stack ticker: a gold band ─────────────────────────────────── -->
-  <div class="field-gold relative py-5 lg:py-6">
+  <div class="marquee-band field-gold relative py-5 lg:py-6">
     <div class="mask-fade-r flex overflow-hidden" aria-hidden="true">
       <ul class="flex shrink-0 animate-marquee items-center gap-10 pr-10 lg:gap-14 lg:pr-14">
         {
@@ -245,7 +243,9 @@ const statusTone: Record<string, string> = {
             style={`--reveal-delay:${i * 70}ms`}
           >
             <dt class="meta">{m.label}</dt>
-            <dd class="numeral mt-5 text-[clamp(3rem,7.4vw,6rem)] text-fg">{m.value}</dd>
+            <dd class="numeral mt-5 text-[clamp(3rem,7.4vw,6rem)] text-fg" data-count>
+              {m.value}
+            </dd>
             {m.note && <p class="mt-3 text-[0.8125rem] leading-snug text-subtle">{m.note}</p>}
           </div>
         ))
@@ -265,14 +265,14 @@ const statusTone: Record<string, string> = {
       {
         services.map((s, i) => (
           <li
-            class="group grid gap-3 py-8 sm:grid-cols-12 sm:items-baseline sm:gap-6 lg:py-11"
+            class="ledger-row group grid gap-3 py-8 sm:grid-cols-12 sm:items-baseline sm:gap-6 lg:py-11"
             data-reveal
             style={`--reveal-delay:${i * 70}ms`}
           >
-            <span class="numeral text-[1.5rem] text-subtle sm:col-span-1">
+            <span class="row-index numeral text-[1.5rem] text-subtle sm:col-span-1">
               {String(i + 1).padStart(2, '0')}
             </span>
-            <h3 class="display text-[clamp(1.75rem,3.8vw,2.9rem)] sm:col-span-6 lg:col-span-5">
+            <h3 class="row-title display text-[clamp(1.75rem,3.8vw,2.9rem)] sm:col-span-6 lg:col-span-5">
               {s.title}
             </h3>
             <p class="text-[0.9375rem] leading-relaxed text-muted sm:col-span-4 lg:col-span-5 lg:text-base">
@@ -390,3 +390,45 @@ const statusTone: Record<string, string> = {
     )
   }
 </Layout>
+
+<script is:inline>
+  // Figures count up from zero when they scroll into view. The markup holds
+  // the final value, so with no script, reduced motion, or an old browser the
+  // number is simply there. The suffix — " yrs", "+" — rides along untouched.
+  (() => {
+    if (
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
+      !('IntersectionObserver' in window)
+    ) {
+      return;
+    }
+    const ease = (t) => 1 - Math.pow(1 - t, 5);
+    const DURATION = 1400;
+
+    function run(el) {
+      const match = el.textContent.trim().match(/^(\d+)(.*)$/);
+      if (!match) return;
+      const target = Number(match[1]);
+      const suffix = match[2];
+      const start = performance.now();
+      const tick = (now) => {
+        const p = Math.min(1, (now - start) / DURATION);
+        el.textContent = Math.round(target * ease(p)) + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          run(entry.target);
+          io.unobserve(entry.target);
+        }
+      },
+      { threshold: 0.4 },
+    );
+    document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
+  })();
+</script>

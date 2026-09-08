@@ -92,7 +92,7 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
   <Tag
     {...linkAttrs}
     class:list={[
-      'card relative block overflow-hidden group-hover/frame:-translate-y-1 group-hover/row:-translate-y-1',
+      'card frame-card relative block overflow-hidden',
       // A phone is held, not docked: rounder, and the bezel is the padding.
       phone ? 'rounded-[1.75rem] bg-surface-2 p-2.5' : 'rounded-xl',
     ]}
@@ -180,18 +180,54 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
     const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
     const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+    /** Degrees of tilt at the frame's edge. Enough to feel held, not to warp. */
+    const TILT = 4;
+    let active: HTMLElement | null = null;
+
+    function settle(frame: HTMLElement | null) {
+      const card = frame?.querySelector('.frame-card') as HTMLElement | null;
+      if (!card) return;
+      card.style.removeProperty('--rx');
+      card.style.removeProperty('--ry');
+    }
+
     function track(event: PointerEvent) {
       if (!fine.matches || calm.matches) return;
       const frame = (event.target as Element)?.closest?.('.group\\/frame') as HTMLElement | null;
-      const glow = frame?.querySelector('[data-frame]') as HTMLElement | null;
-      if (!frame || !glow) return;
+      if (frame !== active) {
+        // Left one frame for another, or for nothing: the old one settles.
+        settle(active);
+        active = frame;
+      }
+      if (!frame) return;
       const box = frame.getBoundingClientRect();
-      glow.style.setProperty('--mx', `${((event.clientX - box.left) / box.width) * 100}%`);
-      glow.style.setProperty('--my', `${((event.clientY - box.top) / box.height) * 100}%`);
+      const px = (event.clientX - box.left) / box.width;
+      const py = (event.clientY - box.top) / box.height;
+
+      const glow = frame.querySelector('[data-frame]') as HTMLElement | null;
+      if (glow) {
+        glow.style.setProperty('--mx', `${px * 100}%`);
+        glow.style.setProperty('--my', `${py * 100}%`);
+      }
+      // The card tilts toward the cursor: right of centre turns the right
+      // edge away, below centre tips the top forward.
+      const card = frame.querySelector('.frame-card') as HTMLElement | null;
+      if (card) {
+        card.style.setProperty('--ry', `${((px - 0.5) * 2 * TILT).toFixed(2)}deg`);
+        card.style.setProperty('--rx', `${((0.5 - py) * 2 * TILT).toFixed(2)}deg`);
+      }
     }
 
     // One delegated listener rather than two per frame, and passive so it
-    // never blocks a scroll on a trackpad.
+    // never blocks a scroll on a trackpad. Leaving the document settles too.
     document.addEventListener('pointermove', track, { passive: true });
+    document.addEventListener(
+      'pointerleave',
+      () => {
+        settle(active);
+        active = null;
+      },
+      { passive: true },
+    );
   })();
 </script>

@@ -122,7 +122,13 @@
     *::after {
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
+      /* Delays as well: a staggered entrance with its durations zeroed still
+         waits out each delay before snapping in, which for the hero words is
+         most of a second of missing sentence — for exactly the people who
+         asked for calm. */
+      animation-delay: 0ms !important;
       transition-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
     }
   }
 
@@ -820,5 +826,149 @@
   html[data-debug] .wrap {
     background-image: linear-gradient(to right, rgb(var(--c-accent) / 0.07) 1px, transparent 1px);
     background-size: 8.333% 100%;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Motion
+   Appended last on purpose: everything here answers scroll or pointer,
+   and last-in-layer means these win their ties with the base rules.
+   All of it is gated the same three ways — the reveal script opts
+   elements in, `(pointer: fine)` guards anything cursor-driven, and the
+   global reduced-motion rule flattens every duration to nothing.
+   ------------------------------------------------------------------ */
+@layer components {
+  /* Heavy rules draw in from the left as they arrive. Same contract as the
+     reveal: JS adds .draw-pending to a rule it is watching, so without
+     script the rule is simply there. */
+  .rule-heavy {
+    transform-origin: left center;
+  }
+  .rule-heavy.draw-pending {
+    transform: scaleX(0);
+    transition: transform 1.1s var(--ease-out-quint);
+  }
+  .rule-heavy.draw-pending.is-visible {
+    transform: scaleX(1);
+  }
+
+  /* A ledger row answers the pointer: an accent hairline draws along its
+     foot, the index lights, the title nudges right. Nothing moves that
+     would push the text under the cursor away from it. */
+  .ledger-row {
+    position: relative;
+  }
+  .ledger-row::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background-color: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.55s var(--ease-out-quint);
+  }
+  .ledger-row:hover::after,
+  .ledger-row:focus-within::after {
+    transform: scaleX(1);
+  }
+  .ledger-row .row-index {
+    transition: color 0.3s ease;
+  }
+  .ledger-row .row-title {
+    transition: transform 0.45s var(--ease-out-quint);
+  }
+  .ledger-row:hover .row-title,
+  .ledger-row:focus-within .row-title {
+    transform: translateX(0.5rem);
+  }
+
+  /* Entrance for the text around the hero headline, timed to follow the
+     last word in. Gated on .js like the words. */
+  .js .hero-enter {
+    opacity: 0;
+    animation: fade-up 0.9s var(--ease-out-quint) forwards;
+    animation-delay: var(--enter, 900ms);
+  }
+
+  /* Watermark numerals drift against the scroll — slower than the page, so
+     they read as a layer behind it. Scroll-driven and declarative; a
+     browser without the timeline simply leaves them still. */
+  @supports (animation-timeline: view()) {
+    .rail-index {
+      /* Longhands on purpose: the minifier folds animation-timeline into the
+         animation shorthand when it can, and Chromium rejects that form. */
+      animation-name: drift;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+    }
+  }
+  @keyframes drift {
+    from {
+      translate: 0 5rem;
+    }
+    to {
+      translate: 0 -5rem;
+    }
+  }
+
+  /* The frame card lifts and tilts from variables the pointer script sets.
+     Lift and tilt live in one transform so they cannot fight, and the
+     selector outranks .card:hover, which otherwise wins the transform. */
+  .card.frame-card,
+  .card.frame-card:hover {
+    transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
+      translateY(var(--lift, 0px));
+    transition:
+      transform 0.55s var(--ease-out-quint),
+      border-color 0.35s var(--ease-out-quint),
+      box-shadow 0.35s var(--ease-out-quint);
+    will-change: transform;
+  }
+  .group\/frame:hover .frame-card,
+  .group\/row:hover .frame-card {
+    --lift: -4px;
+  }
+
+  /* Buttons lean a few pixels toward the cursor. Uses the translate
+     property rather than transform so the :active press still lands. */
+  .btn {
+    transition:
+      background-color 0.25s ease,
+      color 0.25s ease,
+      border-color 0.25s ease,
+      transform 0.25s var(--ease-out-quint),
+      translate 0.45s var(--ease-out-quint);
+  }
+
+  /* A theme change eases rather than snapping. The toggle adds this class
+     for one transition's length and removes it, so nothing else slows. */
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition:
+      background-color 0.4s ease,
+      color 0.4s ease,
+      border-color 0.4s ease,
+      fill 0.4s ease !important;
+  }
+}
+
+/* Hover states that have to beat a utility on the same element. Utilities are
+   the last layer, so a components-layer rule loses to text-subtle or to the
+   animate-marquee shorthand however specific it is. These live here. */
+@layer utilities {
+  .ledger-row:hover .row-index,
+  .ledger-row:focus-within .row-index {
+    color: var(--color-accent);
+  }
+  /* The ticker pauses under the pointer, so a word can actually be read. */
+  .marquee-band:hover .animate-marquee {
+    animation-play-state: paused;
   }
 }

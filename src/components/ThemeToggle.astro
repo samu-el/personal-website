@@ -79,11 +79,16 @@
       dark: 'Dark theme',
     };
 
+    let easing = 0;
     function apply(pref) {
       const root = document.documentElement;
       const isDark =
         pref === 'dark' ||
         (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      // Let colours cross-fade for one transition, then stop slowing things.
+      root.classList.add('theme-transition');
+      window.clearTimeout(easing);
+      easing = window.setTimeout(() => root.classList.remove('theme-transition'), 450);
       root.classList.toggle('dark', isDark);
       root.dataset.theme = pref;
       const state = document.getElementById('theme-state');
