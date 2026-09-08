@@ -10,32 +10,38 @@ const writing = await hasWriting();
 const items = await visibleNav();
 ---
 
-<footer id="site-footer" class="mt-8 border-t border-line bg-sunken lg:mt-32">
-  <div class="wrap py-10 lg:py-20">
-    <div class="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-12 lg:gap-8">
-      <!-- Call to action -->
-      <div class="col-span-2 lg:col-span-5">
+<footer id="site-footer" class="mt-12 border-t border-line bg-sunken lg:mt-36">
+  <div class="wrap py-12 lg:py-20">
+    <!-- Call to action: the one line, at the size it deserves. -->
+    <div class="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-8">
+      <div class="lg:col-span-8">
         <p class="eyebrow">Contact</p>
-        <h2 class="display mt-5 text-[clamp(1.9rem,4.4vw,2.75rem)]">Available to collaborate.</h2>
-        <div class="mt-7 flex flex-wrap gap-3">
-          <a href={`mailto:${site.email}`} class="btn btn-primary">
-            <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
-            {site.email}
-          </a>
-          <a href={href('/contact')} class="btn btn-ghost">More ways to reach me</a>
-        </div>
+        <h2 class="display-hero mt-5 text-[clamp(2.4rem,6.4vw,5rem)]">Available to collaborate.</h2>
       </div>
+      <div class="flex flex-wrap gap-3 lg:col-span-4 lg:justify-end">
+        <a href={`mailto:${site.email}`} class="btn btn-primary">
+          <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
+          {site.email}
+        </a>
+        <a href={href('/contact')} class="btn btn-ghost">More ways to reach me</a>
+      </div>
+    </div>
 
-      <div class="lg:col-span-2 lg:col-start-7">
-        <h3 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Pages</h3>
+    <!-- Link columns, ruled. -->
+    <div
+      class="mt-12 grid grid-cols-2 gap-x-6 gap-y-10 border-t border-line pt-10 lg:mt-16 lg:grid-cols-12 lg:gap-8 lg:pt-12"
+    >
+      <div class="lg:col-span-3 lg:col-start-5">
+        <h3 class="meta">Pages</h3>
         <ul class="mt-5 space-y-2.5">
           {
             items.map((item) => (
               <li>
                 <a
                   href={href(item.href)}
-                  class="text-sm text-muted transition-colors hover:text-fg"
+                  class="inline-flex items-baseline gap-2.5 text-sm text-muted transition-colors hover:text-fg"
                 >
+                  <span class="font-mono text-2xs text-subtle">{item.index}</span>
                   {item.label}
                 </a>
               </li>
@@ -44,67 +50,57 @@ const items = await visibleNav();
         </ul>
       </div>
 
-      <div class="flex flex-col gap-10 lg:contents">
-        <div class="lg:col-span-2">
-          <h3 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Elsewhere</h3>
-          <ul class="mt-5 space-y-2.5">
-            {
-              socials.map((s) => (
-                <li>
-                  <a
-                    href={s.href}
-                    class="group inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
-                    rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
-                    target={s.href.startsWith('http') ? '_blank' : undefined}
-                  >
-                    <Icon name={s.icon} class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
-                    {s.label}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
-        </div>
+      <div class="lg:col-span-2">
+        <h3 class="meta">Elsewhere</h3>
+        <ul class="mt-5 space-y-2.5">
+          {
+            socials.map((s) => (
+              <li>
+                <a
+                  href={s.href}
+                  class="group inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+                  rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
+                  target={s.href.startsWith('http') ? '_blank' : undefined}
+                >
+                  <Icon name={s.icon} class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+                  {s.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </div>
 
-        <div class="lg:col-span-2">
-          <h3 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">This site</h3>
-          <ul class="mt-5 space-y-2.5">
-            {
-              writing && (
-                <li>
-                  <a
-                    href={href('/rss.xml')}
-                    class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
-                  >
-                    <Icon
-                      name="lucide:rss"
-                      class="size-3.5 shrink-0 opacity-70"
-                      aria-hidden="true"
-                    />
-                    RSS feed
-                  </a>
-                </li>
-              )
-            }
-            <li>
-              <a
-                href={href('/stack')}
-                class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
-              >
-                <Icon
-                  name="lucide:layers"
-                  class="size-3.5 shrink-0 opacity-70"
-                  aria-hidden="true"
-                />
-                Built with
-              </a>
-            </li>
-          </ul>
-        </div>
+      <div class="lg:col-span-2">
+        <h3 class="meta">This site</h3>
+        <ul class="mt-5 space-y-2.5">
+          {
+            writing && (
+              <li>
+                <a
+                  href={href('/rss.xml')}
+                  class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+                >
+                  <Icon name="lucide:rss" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+                  RSS feed
+                </a>
+              </li>
+            )
+          }
+          <li>
+            <a
+              href={href('/stack')}
+              class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+            >
+              <Icon name="lucide:layers" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+              Built with
+            </a>
+          </li>
+        </ul>
       </div>
     </div>
 
-    <div class="rule mt-9 lg:mt-14"></div>
+    <div class="rule mt-10 lg:mt-14"></div>
 
     <div
       class="mt-6 flex flex-col gap-3 font-mono text-2xs tracking-wide text-subtle sm:flex-row sm:items-center sm:justify-between"

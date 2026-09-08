@@ -9,26 +9,24 @@ const items = await visibleNav();
 
 <Layout title="Not found" description="That page does not exist." path="/404" noindex>
   <section class="relative flex overflow-hidden lg:min-h-[70dvh] lg:items-center">
-    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
+    <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-50" aria-hidden="true">
     </div>
     <div class="wrap relative py-10 lg:py-20">
       <p class="eyebrow">Error 404</p>
-      <h1 class="display mt-6 text-[clamp(3.5rem,14vw,9rem)]">
+      <h1 class="display-hero mt-6 text-[clamp(3.5rem,14vw,9rem)]">
         Not <em class="block italic text-accent">found.</em>
       </h1>
       <p class="mt-6 max-w-lg text-[1.0625rem] leading-relaxed text-muted">
         That page does not exist. Everything that does:
       </p>
 
-      <ul
-        class="mt-10 grid max-w-2xl gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2"
-      >
+      <ul class="ledger mt-10 max-w-2xl sm:grid sm:grid-cols-2">
         {
-          items.map((item) => (
-            <li>
+          items.map((item, i) => (
+            <li class:list={[i % 2 === 0 ? 'sm:border-r sm:pr-6' : 'sm:pl-6']}>
               <a
                 href={href(item.href)}
-                class="group flex items-baseline gap-3 bg-surface px-5 py-4 transition-colors hover:bg-surface-2"
+                class="group flex items-baseline gap-3 py-4 transition-colors"
               >
                 <span class="font-mono text-2xs text-subtle">{item.index}</span>
                 <span class="text-[0.9375rem] transition-colors group-hover:text-accent">
@@ -36,7 +34,7 @@ const items = await visibleNav();
                 </span>
                 <Icon
                   name="lucide:arrow-right"
-                  class="ml-auto size-3.5 self-center text-subtle transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-accent"
+                  class="ml-auto size-3.5 self-center text-subtle transition-transform duration-300 group-hover:translate-x-1 group-hover:text-accent"
                   aria-hidden="true"
                 />
               </a>

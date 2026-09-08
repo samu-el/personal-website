@@ -1,7 +1,8 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import { navIndex } from '@/lib/posts';
+import PageHeader from '@/components/PageHeader.astro';
 import Section from '@/components/Section.astro';
+import { navIndex } from '@/lib/posts';
 import { site, socials } from '@/lib/site';
 import { href } from '@/lib/paths';
 import { roles } from '@/data/experience';
@@ -12,41 +13,33 @@ const description =
   'Samuel Mussie — software engineer in Addis Ababa. Ten years building web and mobile products end to end, across eight languages and three platforms.';
 
 const index = await navIndex('/about');
+
+const glance = [
+  ['Role', site.role],
+  ['Focus', 'Full-stack, web & mobile'],
+  ['Based in', 'Addis Ababa, ET'],
+  ['Studied at', 'Addis Ababa University'],
+  ['Since', '2016'],
+  ['Languages', 'Amharic, English'],
+  ['Timezone', 'EAT / GMT+3'],
+];
 ---
 
 <Layout {title} {description} path="/about" type="profile">
-  <!-- ── Header ───────────────────────────────────────────────────── -->
-  <section class="relative overflow-hidden border-b border-line">
-    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
-    </div>
-    <div class="wrap relative py-10 lg:py-24">
-      <p class="eyebrow" data-reveal>{index} &nbsp;About</p>
-      <div class="mt-5 grid gap-5 lg:mt-7 lg:grid-cols-12 lg:gap-8">
-        <div class="lg:col-span-7">
-          <h1
-            class="display text-[clamp(2.4rem,6.6vw,4.25rem)]"
-            data-reveal
-            style="--reveal-delay:60ms"
-          >
-            Software engineer,
-            <em class="block italic text-accent">Addis Ababa.</em>
-          </h1>
-        </div>
-        <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
-          <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
-            Ten years of web and mobile development across eight languages and three platforms.
-            Currently at Mereb Technologies, building products for clients in Europe and the US.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
+  <PageHeader {index} label="About">
+    Software engineer,
+    <em class="block italic text-accent">Addis Ababa.</em>
+    <Fragment slot="aside">
+      Ten years of web and mobile development across eight languages and three platforms. Currently
+      at Mereb Technologies, building products for clients in Europe and the US.
+    </Fragment>
+  </PageHeader>
 
   <!-- ── Narrative ────────────────────────────────────────────────── -->
-  <div class="wrap py-10 lg:py-24">
-    <div class="grid gap-10 lg:grid-cols-12 lg:gap-10">
+  <div class="wrap py-12 lg:py-28">
+    <div class="grid gap-12 lg:grid-cols-12 lg:gap-8">
       <div class="lg:col-span-7">
-        <div class="prose" data-reveal>
+        <div class="prose prose-lg" data-reveal>
           <p>
             Samuel Mussie is a software engineer based in Addis Ababa, Ethiopia. He works across the
             stack on web and mobile products — data modelling and services through to front ends and
@@ -82,130 +75,129 @@ const index = await navIndex('/about');
         </div>
       </div>
 
-      <!-- Sidebar -->
+      <!-- At a glance: a ruled table, sticky beside the prose. -->
       <aside class="lg:col-span-4 lg:col-start-9">
-        <div class="sticky top-24 space-y-8" data-reveal style="--reveal-delay:80ms">
-          <div class="card rounded-lg p-6">
-            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">At a glance</h2>
-            <dl class="mt-5 space-y-3.5 text-sm">
-              <div class="flex justify-between gap-4">
-                <dt class="text-subtle">Role</dt>
-                <dd class="text-right text-fg">{site.role}</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-subtle">Focus</dt>
-                <dd class="text-right text-fg">Full-stack, web &amp; mobile</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-subtle">Based in</dt>
-                <dd class="text-right text-fg">Addis Ababa, ET</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-subtle">Studied at</dt>
-                <dd class="text-right text-fg">Addis Ababa University</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-subtle">Since</dt>
-                <dd class="text-right text-fg">2016</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-subtle">Languages</dt>
-                <dd class="text-right text-fg">Amharic, English</dd>
-              </div>
-              <div class="flex justify-between gap-4">
-                <dt class="text-subtle">Timezone</dt>
-                <dd class="text-right text-fg">EAT / GMT+3</dd>
-              </div>
-            </dl>
-            <div class="rule my-5"></div>
-            <ul class="space-y-2.5">
-              {
-                socials.map((s) => (
-                  <li>
-                    <a
-                      href={s.href}
-                      target={s.href.startsWith('http') ? '_blank' : undefined}
-                      rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
-                      class="group flex items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-fg"
-                    >
-                      <span class="inline-flex items-center gap-2">
-                        <Icon name={s.icon} class="size-3.5 opacity-70" aria-hidden="true" />
-                        {s.label}
-                      </span>
-                      <span class="font-mono text-2xs text-subtle group-hover:text-accent">
-                        {s.handle}
-                      </span>
-                    </a>
-                  </li>
-                ))
-              }
-            </ul>
-          </div>
+        <div class="lg:sticky lg:top-24" data-reveal style="--reveal-delay:80ms">
+          <h2 class="meta">At a glance</h2>
+          <dl class="ledger mt-4 text-sm">
+            {
+              glance.map(([k, v]) => (
+                <div class="flex justify-between gap-4 py-3">
+                  <dt class="text-subtle">{k}</dt>
+                  <dd class="text-right text-fg">{v}</dd>
+                </div>
+              ))
+            }
+          </dl>
+          <ul class="mt-6 space-y-3">
+            {
+              socials.map((s) => (
+                <li>
+                  <a
+                    href={s.href}
+                    target={s.href.startsWith('http') ? '_blank' : undefined}
+                    rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
+                    class="group flex items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-fg"
+                  >
+                    <span class="inline-flex items-center gap-2.5">
+                      <Icon
+                        name={s.icon}
+                        class="size-3.5 text-subtle transition-colors group-hover:text-accent"
+                        aria-hidden="true"
+                      />
+                      {s.label}
+                    </span>
+                    <span class="font-mono text-2xs text-subtle transition-colors group-hover:text-accent">
+                      {s.handle}
+                    </span>
+                  </a>
+                </li>
+              ))
+            }
+          </ul>
         </div>
       </aside>
     </div>
   </div>
 
   <!-- ── Timeline ─────────────────────────────────────────────────── -->
+  <!-- A rail rather than a stack of boxes: the years run down the left, the
+       roles hang off it, and the hairline between them is the timeline. -->
   <Section index="05" eyebrow="Timeline" title="Timeline." id="timeline">
-    <ol class="space-y-px overflow-hidden rounded-lg border border-line bg-line">
+    <ol class="ledger">
       {
         roles.map((role, i) => (
-          <li class="bg-surface p-5 sm:p-7 lg:p-9" data-reveal style={`--reveal-delay:${i * 80}ms`}>
-            <div class="grid gap-6 lg:grid-cols-12 lg:gap-8">
-              <div class="lg:col-span-3">
-                <p class="flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-subtle">
-                  {role.from && role.to ? `${role.from} — ${role.to}` : 'Earlier'}
-                  {role.current && (
-                    <span class="relative flex size-1.5">
-                      <span class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-70" />
-                      <span class="relative inline-flex size-1.5 rounded-full bg-jade" />
+          <li
+            class="relative grid gap-5 py-9 lg:grid-cols-12 lg:gap-8 lg:py-12"
+            data-reveal
+            style={`--reveal-delay:${i * 80}ms`}
+          >
+            {/* Period column */}
+            <div class="lg:col-span-4">
+              <p class="numeral flex items-baseline gap-3 text-[clamp(1.75rem,3.4vw,2.5rem)] text-fg">
+                {role.from ? (
+                  <>
+                    {role.from}
+                    <span class="text-subtle" aria-hidden="true">
+                      —
                     </span>
-                  )}
-                </p>
-                <p class="mt-2 text-[0.8125rem] leading-snug text-subtle">{role.location}</p>
-              </div>
+                    <span class={role.current ? 'text-accent' : ''}>{role.to}</span>
+                  </>
+                ) : (
+                  <span class="text-subtle">Earlier</span>
+                )}
+                {role.current && (
+                  <span class="relative ml-1 flex size-2 self-center">
+                    <span class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-70" />
+                    <span class="relative inline-flex size-2 rounded-full bg-jade" />
+                  </span>
+                )}
+              </p>
+              <p class="meta mt-3 normal-case tracking-normal">{role.location}</p>
+            </div>
 
-              <div class="lg:col-span-9">
-                <h3 class="text-xl font-medium tracking-tight lg:text-[1.375rem]">{role.title}</h3>
-                <p class="mt-1.5 text-[0.9375rem] text-accent">
-                  {role.url ? (
-                    <a
-                      href={role.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="link link-accent"
-                    >
-                      {role.org}
-                    </a>
-                  ) : (
-                    role.org
-                  )}
-                </p>
-                <p class="mt-4 max-w-2xl text-[0.9375rem] leading-relaxed text-muted">
+            {/* Role */}
+            <div class="lg:col-span-7 lg:col-start-6">
+              <h3 class="display text-[clamp(1.5rem,2.6vw,1.9rem)]">{role.title}</h3>
+              <p class="mt-1.5 text-[0.9375rem] text-accent">
+                {role.url ? (
+                  <a
+                    href={role.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="link link-accent"
+                  >
+                    {role.org}
+                  </a>
+                ) : (
+                  role.org
+                )}
+              </p>
+              {role.summary && (
+                <p class="mt-5 max-w-2xl text-[0.9375rem] leading-relaxed text-muted lg:text-base">
                   {role.summary}
                 </p>
-                {role.highlights.length > 0 && (
-                  <ul class="mt-5 space-y-2.5">
-                    {role.highlights.map((h) => (
-                      <li class="relative max-w-2xl pl-5 text-[0.9375rem] leading-relaxed text-muted">
-                        <span
-                          class="absolute left-0 top-[0.72em] h-px w-2.5 bg-accent"
-                          aria-hidden="true"
-                        />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {role.tags.length > 0 && (
-                  <ul class="mt-6 flex flex-wrap gap-1.5" aria-label="Focus areas">
-                    {role.tags.map((t) => (
-                      <li class="chip">{t}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              )}
+              {role.highlights.length > 0 && (
+                <ul class="mt-6 space-y-2.5">
+                  {role.highlights.map((h) => (
+                    <li class="relative max-w-2xl pl-5 text-[0.9375rem] leading-relaxed text-muted">
+                      <span
+                        class="absolute left-0 top-[0.72em] h-px w-2.5 bg-accent"
+                        aria-hidden="true"
+                      />
+                      {h}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {role.tags.length > 0 && (
+                <ul class="mt-7 flex flex-wrap gap-1.5" aria-label="Focus areas">
+                  {role.tags.map((t) => (
+                    <li class="chip">{t}</li>
+                  ))}
+                </ul>
+              )}
             </div>
           </li>
         ))

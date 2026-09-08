@@ -8,11 +8,11 @@
  */
 import Layout from '@/layouts/Layout.astro';
 import { site } from '@/lib/site';
-import { href } from '@/lib/paths';
 import { navIndex } from '@/lib/posts';
 import { githubActivity, recentFilms, recentTracks } from '@/lib/feeds';
 import { Icon } from 'astro-icon/components';
 import NowPlaying from '@/components/NowPlaying.astro';
+import PageHeader from '@/components/PageHeader.astro';
 
 const index = await navIndex('/now');
 const [github, films, tracks] = await Promise.all([
@@ -44,18 +44,7 @@ function stars(rating: number): string {
   description={`Recent public repository activity and recent films — ${site.name}.`}
   path="/now"
 >
-  <!-- ── Header ───────────────────────────────────────────────────── -->
-  <section class="relative overflow-hidden border-b border-line">
-    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
-    </div>
-    <div class="wrap relative py-10 lg:py-24">
-      <p class="eyebrow" data-reveal>
-        {index && <span class="text-accent">{index}</span>}
-        Now
-      </p>
-      <h1 class="display mt-5 text-[clamp(2.4rem,7vw,4.75rem)] lg:mt-7" data-reveal>Lately.</h1>
-    </div>
-  </section>
+  <PageHeader {index} label="Now" compact>Lately.</PageHeader>
 
   <NowPlaying />
 

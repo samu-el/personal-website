@@ -227,6 +227,73 @@
     line-height: 0.98;
   }
 
+  /* The headline cut: tighter still, so a two-line hero reads as one shape
+     rather than two stacked lines. Only for the largest sizes. */
+  .display-hero {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 0.9;
+  }
+
+  /* Big figures. Lining, tabular numerals so a row of them aligns, and the
+     serif's natural swing kept for everything that is not a digit. */
+  .numeral {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 0.9;
+  }
+
+  /* Watermark numeral behind a section header — the index the eyebrow
+     already carries, set at a size where it becomes texture. Faint enough
+     never to compete with text laid over it; it is there for the rhythm of
+     the page when scrolling, not to be read. */
+  .rail-index {
+    position: absolute;
+    right: -0.04em;
+    top: -0.32em;
+    font-family: var(--font-display);
+    font-size: clamp(7rem, 22vw, 16rem);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: rgb(var(--c-fg) / 0.045);
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+  }
+  .dark .rail-index {
+    color: rgb(var(--c-fg) / 0.06);
+  }
+  /* For rows whose right side is the busy one — the stack's item columns —
+     the numeral sits behind the title instead, low, where there is room. */
+  .rail-index--left {
+    right: auto;
+    left: -0.06em;
+    top: auto;
+    bottom: -0.18em;
+  }
+
+  /* Ledger: rows separated by hairlines. Replaces the boxed grids — the
+     divider carries the structure, and nothing paints a background that
+     shows through while its content is still revealing. */
+  .ledger {
+    border-top: 1px solid var(--color-line);
+  }
+  .ledger > * {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  /* Mono metadata label, the one used everywhere for dates, indices, kinds. */
+  .meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-subtle);
+  }
+
   /* Underline that wipes in on hover — used for all inline prose links. */
   .link {
     position: relative;
@@ -523,6 +590,12 @@
   .grid-lines {
     background-image: linear-gradient(to right, var(--color-line) 1px, transparent 1px);
     background-size: 25% 100%;
+  }
+  /* Twelve columns, for the pages built on them — the debug overlay's grid,
+     made visible on purpose behind a header. */
+  .grid-lines-12 {
+    background-image: linear-gradient(to right, var(--color-line) 1px, transparent 1px);
+    background-size: calc(100% / 12) 100%;
   }
 
   .mask-fade-r {
