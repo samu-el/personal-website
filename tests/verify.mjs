@@ -180,12 +180,17 @@ for (const [w, h, tag] of [
   const page = await ctx.newPage();
   await page.goto(BASE + '/', { waitUntil: 'load' });
   await page.click('#menu-toggle');
-  await page.waitForTimeout(200);
+  // The panel animates open, then animates shut before it is hidden again,
+  // so both states are read after the transition has had its time.
+  await page.waitForTimeout(600);
   if (!(await page.isVisible('#mobile-menu'))) issues.push('mobile menu did not open');
   await page.screenshot({ path: `${OUT}/mobile-menu-open.png` });
   await page.keyboard.press('Escape');
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(700);
   if (await page.isVisible('#mobile-menu')) issues.push('mobile menu did not close on Escape');
+  if ((await page.getAttribute('#menu-toggle', 'aria-expanded')) !== 'false') {
+    issues.push('mobile menu trigger still reports itself expanded after Escape');
+  }
   await ctx.close();
 }
 

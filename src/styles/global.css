@@ -972,3 +972,46 @@
     animation-play-state: paused;
   }
 }
+
+/* ------------------------------------------------------------------
+   Touch and press
+   A phone never hovers, so every hover-only affordance above is
+   invisible there. These give the same acknowledgements to a press,
+   and lock the page behind the mobile panel.
+   ------------------------------------------------------------------ */
+@layer components {
+  /* Presses use `scale`, not `transform`: the magnetic lean and the frame
+     tilt both own transform, and these have to compose with them. */
+  .btn:active {
+    scale: 0.975;
+  }
+  .card:active {
+    scale: 0.995;
+  }
+  .btn,
+  .card {
+    transition-property:
+      background-color, color, border-color, box-shadow, transform, translate, scale;
+  }
+
+  @media (hover: none) {
+    .ledger-row:active::after {
+      transform: scaleX(1);
+    }
+    .ledger-row:active .row-title {
+      transform: translateX(0.35rem);
+    }
+  }
+}
+
+@layer utilities {
+  /* Colour on press has to beat the text-* utility on the element. */
+  @media (hover: none) {
+    .ledger-row:active .row-index {
+      color: var(--color-accent);
+    }
+  }
+  .menu-row:active {
+    color: var(--color-accent);
+  }
+}
