@@ -39,7 +39,7 @@ const items = await visibleNav();
               <li>
                 <a
                   href={href(item.href)}
-                  class="inline-flex items-baseline gap-2.5 text-sm text-muted transition-colors hover:text-fg"
+                  class="hit inline-flex items-baseline gap-2.5 text-sm text-muted transition-colors hover:text-fg"
                 >
                   <span class="font-mono text-2xs text-subtle">{item.index}</span>
                   {item.label}
@@ -58,7 +58,7 @@ const items = await visibleNav();
               <li>
                 <a
                   href={s.href}
-                  class="group inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+                  class="hit group inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
                   rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
                   target={s.href.startsWith('http') ? '_blank' : undefined}
                 >

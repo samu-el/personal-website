@@ -47,12 +47,12 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
         width={72}
         height={72}
         loading="eager"
-        class="size-8 shrink-0 rounded-full object-cover ring-1 ring-line-strong transition-[box-shadow] duration-300 group-hover:ring-accent"
+        class="wordmark-avatar size-8 shrink-0 rounded-full object-cover ring-1 ring-line-strong group-hover:ring-accent"
       />
       <span class="flex flex-col leading-none">
         <span class="display text-[1.2rem] tracking-tight">{site.name}</span>
         <span
-          class="mt-1 hidden whitespace-nowrap font-mono text-2xs tracking-wider text-subtle lg:block"
+          class="wordmark-sub hidden whitespace-nowrap font-mono text-2xs tracking-wider text-subtle lg:block"
           >{site.role} · {site.locationShort}</span
         >
       </span>
@@ -195,20 +195,45 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
 </header>
 
 <style>
-  /* The bar compresses once the page is scrolling, and eases back at the
-     top. data-scrolled is set by the script below. Scoped to .header-bar
-     rather than .wrap: the mobile panel's nav is a .wrap too, and clamping
-     its height spilled the links out from under their own background. */
-  .header-bar {
-    transition: height 0.35s var(--ease-out-quint);
+  /* ── Compression ──────────────────────────────────────────────────
+     The bar tightens once the page is scrolling: the role and location
+     line collapses and the avatar draws in. data-scrolled is set by the
+     script below.
+
+     It deliberately does NOT animate the header's height. The header is
+     sticky and in flow, so shrinking it moved every following element up
+     by 8px — measured — which read as the page twitching each time you
+     crossed the threshold. The bar now keeps one height and compresses
+     inside it, so nothing below it moves at all. */
+  .wordmark-avatar {
+    transition:
+      box-shadow var(--t-2) var(--ease-out-quint),
+      scale var(--t-3) var(--ease-out-quint);
   }
-  #site-header[data-scrolled] .header-bar {
-    height: 3.5rem;
+  #site-header[data-scrolled] .wordmark-avatar {
+    scale: 0.86;
+  }
+  /* Collapsed by max-height rather than display, so it animates; the bar
+     is a fixed height with its items centred, so this cannot reach the
+     page. */
+  .wordmark-sub {
+    margin-top: 0.25rem;
+    max-height: 1.5em;
+    overflow: hidden;
+    transition:
+      max-height var(--t-3) var(--ease-out-quint),
+      margin-top var(--t-3) var(--ease-out-quint),
+      opacity var(--t-2) var(--ease-out-quint);
+  }
+  #site-header[data-scrolled] .wordmark-sub {
+    max-height: 0;
+    margin-top: 0;
+    opacity: 0;
   }
 
   .menu-bar-top,
   .menu-bar-bottom {
-    transition: transform 0.3s var(--ease-out-quint);
+    transition: transform var(--t-2) var(--ease-out-quint);
     transform-origin: center;
   }
   #menu-toggle[aria-expanded='true'] .menu-bar-top {
@@ -254,7 +279,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     opacity: 0;
   }
   .scroll-progress {
-    transition: opacity 0.25s ease;
+    transition: opacity var(--t-1) var(--ease-out-quint);
   }
 
   /* ── Desktop nav indicator ────────────────────────────────────────
@@ -266,15 +291,20 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     bottom: -1px;
     left: 0;
     height: 1px;
-    width: var(--w, 0px);
+    /* A 1px-wide bar scaled to the link's width, rather than a width
+       transition: width is a layout property and was the only animation
+       on the page still triggering one every frame. */
+    width: 1px;
+    transform-origin: left center;
+    scale: var(--w, 0) 1;
     background-color: var(--color-accent);
     translate: var(--x, 0px) 0;
     opacity: 0;
     pointer-events: none;
     transition:
-      translate 0.4s var(--ease-out-quint),
-      width 0.4s var(--ease-out-quint),
-      opacity 0.25s ease;
+      translate var(--t-3) var(--ease-out-quint),
+      scale var(--t-3) var(--ease-out-quint),
+      opacity var(--t-1) var(--ease-out-quint);
   }
   .nav-rail[data-indicator] .nav-indicator {
     opacity: 1;
@@ -303,7 +333,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     grid-template-rows: 0fr;
     border-top: 1px solid var(--color-line);
     background-color: var(--color-bg);
-    transition: grid-template-rows 0.45s var(--ease-out-quint);
+    transition: grid-template-rows var(--t-3) var(--ease-out-quint);
   }
   .menu-panel[hidden] {
     display: none;
@@ -318,8 +348,8 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
 
   /* Rows arrive one after another once the panel is on its way open. */
   .menu-panel.is-open .menu-row {
-    animation: menu-row-in 0.45s var(--ease-out-quint) both;
-    animation-delay: calc(90ms + var(--i, 0) * 45ms);
+    animation: menu-row-in var(--t-3) var(--ease-out-quint) both;
+    animation-delay: calc(70ms + var(--i, 0) * 38ms);
   }
   @keyframes menu-row-in {
     from {
@@ -343,7 +373,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     pointer-events: none;
     touch-action: none;
     overscroll-behavior: contain;
-    transition: opacity 0.35s var(--ease-out-quint);
+    transition: opacity var(--t-3) var(--ease-out-quint);
   }
   .menu-scrim.is-open {
     opacity: 1;
@@ -458,7 +488,8 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
         const box = link.getBoundingClientRect();
         const base = rail.getBoundingClientRect();
         bar.style.setProperty('--x', `${(box.left - base.left).toFixed(1)}px`);
-        bar.style.setProperty('--w', `${box.width.toFixed(1)}px`);
+        // Unitless: --w scales a 1px bar, it is not a width.
+        bar.style.setProperty('--w', box.width.toFixed(1));
         rail.setAttribute('data-indicator', '');
       };
 

@@ -49,6 +49,10 @@
  * @property {number} [progressMs]
  * @property {number} [durationMs]
  * @property {number} [fetchedAt] Epoch ms at which progressMs was read.
+ * @property {boolean} [stale] Set when this is a remembered answer served
+ *   because the live read failed — a rate limit or a Spotify blip.
+ * @property {number} [retryAfter] Only set on a ?debug=1 request.
+ * @property {boolean} [tokenCached] Only set on a ?debug=1 request.
  */
 
 /**
@@ -81,6 +85,47 @@ const CACHE_SECONDS_IDLE = 10;
  * screen has to be approved again.
  */
 const REQUIRED_SCOPE = 'user-read-currently-playing';
+
+/**
+ * How long before an access token's stated expiry to stop trusting it, so a
+ * token is never presented to Spotify in the second it turns over.
+ */
+const TOKEN_SKEW_MS = 60_000;
+
+/**
+ * The access token, reused across requests in this isolate.
+ *
+ * Spotify access tokens last an hour. Before this, the refresh token was
+ * exchanged on *every* cache miss: at a 5s TTL that is up to 12 exchanges a
+ * minute, ~720 an hour, to obtain a credential that one exchange would have
+ * covered. It doubled the Spotify calls behind every miss and pointed half of
+ * them at accounts.spotify.com, which is rate-limited in its own right and is
+ * the part most likely to start refusing.
+ *
+ * Isolate-local on purpose: no KV, no Durable Object, and above all not the
+ * edge cache — `caches.default` is keyed by URL on a real zone, and putting a
+ * credential in it risks handing it to whoever requests that URL. Several
+ * isolates each holding one token is bounded by isolate count rather than by
+ * traffic, which is the whole point.
+ *
+ * @type {{ token: string, scope: string, expires: number } | null}
+ */
+let cachedToken = null;
+
+/**
+ * The last payload that actually had a title, and when it was built.
+ *
+ * A 429 or a Spotify blip used to answer `{ playing: false }`, which the page
+ * reads as "nothing to show" and hides the card — so a momentary rate limit
+ * blanked a card that was correct a second earlier. Holding the last good
+ * answer means a blip degrades to "slightly stale" instead of "gone".
+ *
+ * @type {{ payload: Payload, at: number } | null}
+ */
+let lastGood = null;
+
+/** How long a remembered payload may still be served after a failure. */
+const LAST_GOOD_MAX_MS = 10 * 60_000;
 
 /**
  * The last thing that finished, for when the player is empty. Needs
@@ -154,15 +199,17 @@ function json(body, maxAge) {
 }
 
 /**
- * Trades the long-lived refresh token for an access token good for an hour.
+ * Trades the long-lived refresh token for an access token good for an hour,
+ * or hands back the one this isolate is already holding.
+ *
  * @param {Env} env
- * @returns {Promise<string | null>}
- */
-/**
- * @param {Env} env
- * @returns {Promise<{ token: string | null, status: number, scope: string }>}
+ * @returns {Promise<{ token: string | null, status: number, scope: string, cached: boolean }>}
  */
 async function accessToken(env) {
+  // Still good for at least TOKEN_SKEW_MS: reuse it and make no call at all.
+  if (cachedToken && cachedToken.expires - TOKEN_SKEW_MS > Date.now()) {
+    return { token: cachedToken.token, status: 200, scope: cachedToken.scope, cached: true };
+  }
   const res = await fetch('https://accounts.spotify.com/api/token', {
     method: 'POST',
     headers: {
@@ -175,15 +222,36 @@ async function accessToken(env) {
       refresh_token: env.SPOTIFY_REFRESH_TOKEN,
     }),
   });
-  if (!res.ok) return { token: null, status: res.status, scope: '' };
+  if (!res.ok) {
+    // A rejected exchange invalidates whatever we were holding: a revoked
+    // refresh token must not keep answering from memory.
+    cachedToken = null;
+    return { token: null, status: res.status, scope: '', cached: false };
+  }
   const body = await res.json();
-  return {
-    token: body && typeof body.access_token === 'string' ? body.access_token : null,
-    status: res.status,
-    // Spotify echoes the scopes the refresh token actually carries, which is
-    // the only way to see a missing one without waiting for a 401.
-    scope: body && typeof body.scope === 'string' ? body.scope : '',
-  };
+  const token = body && typeof body.access_token === 'string' ? body.access_token : null;
+  // Spotify echoes the scopes the refresh token actually carries, which is
+  // the only way to see a missing one without waiting for a 401.
+  const scope = body && typeof body.scope === 'string' ? body.scope : '';
+  if (token) {
+    const ttl = typeof body.expires_in === 'number' ? body.expires_in : 3600;
+    cachedToken = { token, scope, expires: Date.now() + ttl * 1000 };
+  }
+  return { token, status: res.status, scope, cached: false };
+}
+
+/**
+ * Seconds Spotify asked us to wait, from a 429's Retry-After. Bounded: the
+ * header is attacker-adjacent input in the sense that a bad value would
+ * otherwise pin the card to one answer for as long as it liked.
+ *
+ * @param {Response} res
+ * @returns {number}
+ */
+function retryAfter(res) {
+  const raw = Number(res.headers.get('Retry-After'));
+  if (!Number.isFinite(raw) || raw <= 0) return 0;
+  return Math.min(Math.round(raw), 300);
 }
 
 export default {
@@ -265,13 +333,26 @@ export default {
     let grantedScopes = '';
     /** Set only if the recently-played fallback was reached. */
     let recentReason = '';
+    /** Whether this request reused a token rather than exchanging for one. */
+    let tokenCached = false;
+    /** Seconds Spotify asked us to back off, when it did. */
+    let backoff = 0;
+    /**
+     * Whether this request failed to get an answer, as opposed to getting the
+     * answer "nothing". A rate limit, a dead token or an outage are failures;
+     * a 204 with an empty history is Spotify telling us the truth, and the
+     * card should hide rather than show a remembered track for ten minutes.
+     */
+    let failed = false;
 
     try {
-      const { token, status: tokenStatus, scope } = await accessToken(env);
+      const { token, status: tokenStatus, scope, cached } = await accessToken(env);
       grantedScopes = scope;
+      tokenCached = Boolean(cached);
       if (!token) {
         // 400 here is almost always an expired or revoked refresh token.
         reason = `token_exchange_failed_${tokenStatus}`;
+        failed = true;
       }
       if (token) {
         const res = await fetch(
@@ -302,6 +383,17 @@ export default {
             .text()
             .then((t) => t.slice(0, 300))
             .catch(() => '');
+        }
+
+        // A rate limit is the one rejection where the answer is to make fewer
+        // calls, not more: hold whatever Spotify asked for, and skip the
+        // history endpoint below, which would spend another call on the same
+        // limit. A 401 invalidates the token so the next request re-exchanges.
+        if (res.status >= 400) failed = true;
+        if (res.status === 429) {
+          backoff = retryAfter(res);
+        } else if (res.status === 401) {
+          cachedToken = null;
         }
 
         if (res.status === 200) {
@@ -343,7 +435,7 @@ export default {
         // Reached after a rejection too, not just a 204: a token holding only
         // user-read-recently-played gets a 401 or 403 above and can still
         // answer this, which is a strictly better failure than a blank card.
-        if (!payload.title) {
+        if (!payload.title && res.status !== 429) {
           const rec = await fetch(RECENT_ENDPOINT, {
             headers: { Authorization: `Bearer ${token}` },
           });
@@ -369,7 +461,21 @@ export default {
       }
     } catch {
       // A Spotify outage or an expired refresh token both mean the same thing
-      // to the page: show nothing. Never surface a 500 for this.
+      // to the page: show nothing new. Never surface a 500 for this.
+      failed = true;
+    }
+
+    if (payload.title) {
+      lastGood = { payload, at: Date.now() };
+    } else if (failed && lastGood && Date.now() - lastGood.at < LAST_GOOD_MAX_MS) {
+      // Nothing to say this time round, and something true to say from a
+      // moment ago. `stale` marks it so the page can tell, and the fetchedAt
+      // stamp is dropped: a remembered position must not be corrected for
+      // cache age as though it had just been read.
+      const { fetchedAt: _drop, ...rest } = lastGood.payload;
+      payload = { ...rest, stale: true };
+      reason = `${reason}_served_last_good`;
+      maxAge = Math.max(maxAge, backoff || CACHE_SECONDS_IDLE);
     }
 
     if (debug) {
@@ -379,6 +485,8 @@ export default {
           reason,
           ...(spotifyMessage ? { spotifyMessage } : {}),
           ...(recentReason ? { recentReason } : {}),
+          ...(backoff ? { retryAfter: backoff } : {}),
+          tokenCached,
           grantedScopes,
           scopeOk: grantedScopes.split(' ').includes(REQUIRED_SCOPE),
           secrets,
@@ -386,6 +494,11 @@ export default {
         0,
       );
     }
+
+    // Under a rate limit, hold the answer for as long as Spotify asked. This
+    // is the only case where the TTL is allowed to grow: the alternative is
+    // to keep asking a service that has just said stop.
+    if (backoff) maxAge = Math.max(maxAge, backoff);
 
     const response = json(payload, maxAge);
     await cache.put(cacheKey, response.clone());

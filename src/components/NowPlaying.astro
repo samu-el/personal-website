@@ -199,11 +199,32 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     if (window.__np) return;
     window.__np = true;
 
-    /* Poll interval while the tab is visible. Sets the floor on how long a
-       play or pause takes to show up on a page nobody is touching: this plus
-       the edge TTL, so about fifteen seconds worst case. Polling much faster
-       than the 5s TTL would mostly re-read the same cached answer. */
-    const REFRESH_MS = 10000;
+    /* ── Polling ──────────────────────────────────────────────────────
+       The poll used to be a flat 10s interval, which fights the endpoint
+       rather than following it. The Worker holds a playing answer for 5s
+       and an idle one for 10s and says so in Cache-Control, and the
+       response carries the Age it has already spent — so the moment the
+       answer can possibly change is knowable, and every request before
+       that is one Spotify call's worth of nothing.
+
+       So the next poll is scheduled from the response itself: whatever
+       freshness is left, plus a beat. A paused or last-played answer is
+       not about to change on its own and is checked far less often. A
+       failure backs off geometrically rather than hammering. A hidden tab
+       does not poll at all, and coming back polls at once.
+
+       The progress bar advances locally between polls, so a longer gap
+       costs nothing visible while something is playing. */
+
+    /** Floor on the gap between polls, whatever the headers claim. */
+    const MIN_MS = 4000;
+    /** Used when the response says nothing useful about its own freshness. */
+    const FALLBACK_MS = 10000;
+    /** A paused or finished track is checked at this rate instead. */
+    const IDLE_MS = 30000;
+    /** First backoff step after a failure, doubling to BACKOFF_MAX_MS. */
+    const BACKOFF_MS = 5000;
+    const BACKOFF_MAX_MS = 5 * 60000;
     /* Ceiling on the staleness correction below. The edge now holds a response
        for only a few seconds, so in practice the correction is tiny — this is
        a bound on how far a badly set clock can shove the bar, not a tuning
@@ -218,6 +239,36 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     let total = 0;
     let ticker = 0;
     let lastTitle = '';
+    /** Pending next poll, so a focus or a navigation can supersede it. */
+    let timer = 0;
+    /** Consecutive failures, for the backoff. */
+    let strikes = 0;
+
+    /**
+     * When the answer we just received can next differ, in ms.
+     *
+     * s-maxage is what the edge actually honours and max-age is what a
+     * browser would; Age is how much of that window this copy has already
+     * spent. What is left is dead time — asking again inside it re-reads a
+     * byte-identical body.
+     */
+    function freshnessLeft(res) {
+      const cc = res.headers.get('Cache-Control') || '';
+      const ttl = Number((cc.match(/s-maxage=(\d+)/) || cc.match(/max-age=(\d+)/) || [])[1]);
+      if (!Number.isFinite(ttl) || ttl <= 0) return 0;
+      const age = Number(res.headers.get('Age')) || 0;
+      // A tenth of a second of slack, so we land just after it turns over
+      // rather than just before and having to come straight back.
+      return Math.max(0, ttl - age) * 1000 + 100;
+    }
+
+    /** Schedules the next poll, replacing any already pending. */
+    function schedule(ms) {
+      window.clearTimeout(timer);
+      if (document.hidden) return;
+      // A little jitter, so several open tabs do not line up on the edge.
+      timer = window.setTimeout(poll, ms + Math.random() * 400);
+    }
 
     /** 3:07, or 1:02:44 for a long podcast episode. */
     function clock(ms) {
@@ -272,6 +323,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       if (!section) return;
 
       let data = null;
+      let res = null;
       try {
         // cache: 'no-store' bypasses the browser's HTTP cache. Necessary
         // because Cloudflare's zone-level Browser Cache TTL rewrites the
@@ -279,13 +331,28 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
         // without this every poll would re-read a stale copy and the card
         // would pin one track for the afternoon. The edge cache still
         // shields Spotify: s-maxage survives the rewrite.
-        const res = await fetch(endpoint, {
+        res = await fetch(endpoint, {
           headers: { Accept: 'application/json' },
           cache: 'no-store',
         });
         if (res.ok) data = await res.json();
       } catch {
         // Offline, blocked, or DNS still catching up. Leave the card hidden.
+      }
+
+      if (data) {
+        strikes = 0;
+        /* A remembered answer means the Worker could not reach Spotify —
+           usually a rate limit, and it has already told the edge how long to
+           sit on it. Following that is the whole point of the flag. */
+        const idle = !data.playing || data.stale;
+        const left = freshnessLeft(res);
+        schedule(Math.max(MIN_MS, left || (idle ? IDLE_MS : FALLBACK_MS)));
+      } else {
+        // Geometric, capped: a Worker that is down or a network that is gone
+        // does not get better for being asked twice a second.
+        strikes += 1;
+        schedule(Math.min(BACKOFF_MS * 2 ** (strikes - 1), BACKOFF_MAX_MS));
       }
 
       // A title is the only requirement. Paused counts, and so does the last
@@ -399,27 +466,22 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       section.hidden = false;
     }
 
-    function start() {
-      poll();
-      window.clearInterval(window.__npTimer);
-      // Only poll while the tab is visible — a background tab has no reason to.
-      window.__npTimer = window.setInterval(() => {
-        if (!document.hidden) poll();
-      }, REFRESH_MS);
-    }
-
     /* Both, because they do not fire interchangeably: switching tabs gives
        visibilitychange, while returning to an already-visible window from
        another application gives only focus. Coming back to the page is the
-       moment a stale card is most obvious, so neither is worth missing. */
+       moment a stale card is most obvious, so neither is worth missing.
+
+       Going away cancels the pending poll rather than letting it fire into a
+       background tab; coming back polls at once and starts the chain again. */
     document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) poll();
+      if (document.hidden) window.clearTimeout(timer);
+      else poll();
     });
     window.addEventListener('focus', () => {
       if (!document.hidden) poll();
     });
 
-    start();
+    poll();
     document.addEventListener('astro:page-load', poll);
   })();
 </script>

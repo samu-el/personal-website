@@ -22,6 +22,20 @@
 
   --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
 
+  /* One duration scale. Everything below picks from it rather than inventing
+     a number, so a hover, a panel and a reveal read as the same hand. The
+     measured spread before this was 0.2s to 1.1s across nine values.
+       t-1  pointer-following and colour — must feel instant
+       t-2  hover state changes
+       t-3  movement and panels
+       t-4  scroll reveals
+       t-5  the heavy rule drawing itself in */
+  --t-1: 140ms;
+  --t-2: 260ms;
+  --t-3: 420ms;
+  --t-4: 700ms;
+  --t-5: 900ms;
+
   --animate-fade-up: fade-up 0.7s var(--ease-out-quint) both;
   --animate-marquee: marquee 42s linear infinite;
 
@@ -380,8 +394,8 @@
   .js .hero-words .w {
     opacity: 0;
     transform: translate3d(0, 0.45em, 0) rotate(0.6deg);
-    animation: word-up 0.95s var(--ease-out-quint) forwards;
-    animation-delay: calc(140ms + var(--i, 0) * 75ms);
+    animation: word-up 0.62s var(--ease-out-quint) forwards;
+    animation-delay: calc(110ms + var(--i, 0) * 40ms);
   }
   @keyframes word-up {
     to {
@@ -428,7 +442,7 @@
     background-repeat: no-repeat;
     background-position: 0 100%;
     background-size: 0% 1px;
-    transition: background-size 0.4s var(--ease-out-quint);
+    transition: background-size var(--t-3) var(--ease-out-quint);
     padding-bottom: 1px;
     box-decoration-break: clone;
   }
@@ -466,9 +480,9 @@
     border: 1px solid var(--color-line);
     background-color: var(--color-surface);
     transition:
-      border-color 0.35s var(--ease-out-quint),
-      transform 0.35s var(--ease-out-quint),
-      box-shadow 0.35s var(--ease-out-quint);
+      border-color var(--t-2) var(--ease-out-quint),
+      transform var(--t-2) var(--ease-out-quint),
+      box-shadow var(--t-2) var(--ease-out-quint);
   }
   .card:hover {
     border-color: var(--color-line-strong);
@@ -489,10 +503,10 @@
     font-weight: 500;
     letter-spacing: -0.005em;
     transition:
-      background-color 0.25s ease,
-      color 0.25s ease,
-      border-color 0.25s ease,
-      transform 0.25s var(--ease-out-quint);
+      background-color var(--t-2) var(--ease-out-quint),
+      color var(--t-2) var(--ease-out-quint),
+      border-color var(--t-2) var(--ease-out-quint),
+      transform var(--t-2) var(--ease-out-quint);
     will-change: transform;
   }
   .btn:active {
@@ -570,8 +584,8 @@
     text-decoration-thickness: 1px;
     text-underline-offset: 0.2em;
     transition:
-      text-decoration-color 0.25s ease,
-      color 0.25s ease;
+      text-decoration-color var(--t-2) var(--ease-out-quint),
+      color var(--t-2) var(--ease-out-quint);
   }
   .prose a:hover {
     color: var(--color-accent);
@@ -697,8 +711,8 @@
     opacity: 0;
     transform: translate3d(0, 14px, 0);
     transition:
-      opacity 0.7s var(--ease-out-quint),
-      transform 0.7s var(--ease-out-quint);
+      opacity var(--t-4) var(--ease-out-quint),
+      transform var(--t-4) var(--ease-out-quint);
     transition-delay: var(--reveal-delay, 0ms);
   }
   [data-reveal].reveal-pending.is-visible {
@@ -789,7 +803,7 @@
   /* Arrows lead the eye out of the button they sit in. */
   .btn [data-icon],
   .btn svg {
-    transition: transform 0.3s var(--ease-out-quint);
+    transition: transform var(--t-2) var(--ease-out-quint);
   }
   .btn:hover [data-icon],
   .btn:hover svg {
@@ -806,7 +820,7 @@
     height: 1px;
     background-color: var(--color-accent);
     transform: scaleX(0);
-    transition: transform 0.35s var(--ease-out-quint);
+    transition: transform var(--t-3) var(--ease-out-quint);
   }
   .nav-link:hover::after,
   .nav-link:focus-visible::after {
@@ -846,7 +860,7 @@
   }
   .rule-heavy.draw-pending {
     transform: scaleX(0);
-    transition: transform 1.1s var(--ease-out-quint);
+    transition: transform var(--t-5) var(--ease-out-quint);
   }
   .rule-heavy.draw-pending.is-visible {
     transform: scaleX(1);
@@ -868,17 +882,17 @@
     background-color: var(--color-accent);
     transform: scaleX(0);
     transform-origin: left center;
-    transition: transform 0.55s var(--ease-out-quint);
+    transition: transform var(--t-3) var(--ease-out-quint);
   }
   .ledger-row:hover::after,
   .ledger-row:focus-within::after {
     transform: scaleX(1);
   }
   .ledger-row .row-index {
-    transition: color 0.3s ease;
+    transition: color var(--t-1) var(--ease-out-quint);
   }
   .ledger-row .row-title {
-    transition: transform 0.45s var(--ease-out-quint);
+    transition: transform var(--t-3) var(--ease-out-quint);
   }
   .ledger-row:hover .row-title,
   .ledger-row:focus-within .row-title {
@@ -889,8 +903,8 @@
      last word in. Gated on .js like the words. */
   .js .hero-enter {
     opacity: 0;
-    animation: fade-up 0.9s var(--ease-out-quint) forwards;
-    animation-delay: var(--enter, 900ms);
+    animation: fade-up 0.62s var(--ease-out-quint) forwards;
+    animation-delay: var(--enter, 560ms);
   }
 
   /* Watermark numerals drift against the scroll — slower than the page, so
@@ -923,11 +937,21 @@
   .card.frame-card:hover {
     transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
       translateY(var(--lift, 0px));
+    /* Duration and easing come from variables so the state below can shorten
+       them without restating the whole list. */
     transition:
-      transform 0.55s var(--ease-out-quint),
-      border-color 0.35s var(--ease-out-quint),
-      box-shadow 0.35s var(--ease-out-quint);
+      transform var(--tilt-t, var(--t-3)) var(--tilt-e, var(--ease-out-quint)),
+      border-color var(--t-2) var(--ease-out-quint),
+      box-shadow var(--t-2) var(--ease-out-quint);
     will-change: transform;
+  }
+  /* Under the cursor the tilt is a direct reading of where the pointer is,
+     not a destination to ease toward: at 420ms it lagged half a second
+     behind the hand and read as rubber. Linear and short is what makes it
+     feel attached. The long ease returns for the settle. */
+  .card.frame-card[data-tracking] {
+    --tilt-t: 90ms;
+    --tilt-e: linear;
   }
   .group\/frame:hover .frame-card,
   .group\/row:hover .frame-card {
@@ -938,11 +962,17 @@
      property rather than transform so the :active press still lands. */
   .btn {
     transition:
-      background-color 0.25s ease,
-      color 0.25s ease,
-      border-color 0.25s ease,
-      transform 0.25s var(--ease-out-quint),
-      translate 0.45s var(--ease-out-quint);
+      background-color var(--t-2) var(--ease-out-quint),
+      color var(--t-2) var(--ease-out-quint),
+      border-color var(--t-2) var(--ease-out-quint),
+      transform var(--t-2) var(--ease-out-quint),
+      translate var(--lean-t, var(--t-3)) var(--lean-e, var(--ease-out-quint));
+  }
+  /* Same as the tilt: while the pointer is on the button the lean is a
+     reading, and 420ms of easing put it 250ms behind the cursor. */
+  .btn[data-lean] {
+    --lean-t: 110ms;
+    --lean-e: linear;
   }
 
   /* A theme change eases rather than snapping. The toggle adds this class
@@ -952,10 +982,10 @@
   html.theme-transition *::before,
   html.theme-transition *::after {
     transition:
-      background-color 0.4s ease,
-      color 0.4s ease,
-      border-color 0.4s ease,
-      fill 0.4s ease !important;
+      background-color var(--t-3) ease,
+      color var(--t-3) ease,
+      border-color var(--t-3) ease,
+      fill var(--t-3) ease !important;
   }
 }
 
@@ -1013,5 +1043,29 @@
   }
   .menu-row:active {
     color: var(--color-accent);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Touch targets
+   Standalone links set in metadata sizes measure 15-22px tall, which
+   is under every guideline and under what a thumb can reliably hit.
+   `.hit` grows the touchable area with a pseudo-element, so the type
+   and the layout are untouched. Inline links inside prose are left
+   alone: they cannot be padded without breaking the line, and the
+   guidelines exempt them for that reason.
+   ------------------------------------------------------------------ */
+@layer components {
+  @media (pointer: coarse) {
+    .hit {
+      position: relative;
+    }
+    .hit::after {
+      content: '';
+      position: absolute;
+      /* Takes a 15px line to 45px without overlapping the next row,
+         which is at least 28px away everywhere this is used. */
+      inset: -14px -6px;
+    }
   }
 }
