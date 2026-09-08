@@ -8,9 +8,26 @@
  *
  * Run with: npm test  (from worker/)
  */
-import { test } from 'node:test';
+import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
-import worker from '../src/index.js';
+
+/**
+ * A fresh copy of the module per test.
+ *
+ * The Worker deliberately holds two things in module scope — the access token
+ * and the last payload that had a title — because an isolate is reused across
+ * requests and that is exactly where they should live. In a test file that
+ * same persistence leaks one case into the next, so each test gets its own
+ * instance rather than the Worker growing a reset hook it does not need in
+ * production.
+ *
+ * @type {typeof import('../src/index.js').default}
+ */
+let worker;
+let load = 0;
+beforeEach(async () => {
+  worker = (await import(`../src/index.js?fresh=${load++}`)).default;
+});
 
 // Minimal Workers runtime surface. The Cache API is a no-op so every call is
 // a live read; `btoa` exists in Workers but not in Node's global scope.
@@ -24,6 +41,9 @@ const ENV = {
 };
 
 /** Replaces global fetch with canned Spotify answers. */
+/** Tallies the calls the Worker made, per test. */
+let calls;
+
 function stub({
   tokenStatus = 200,
   playStatus = 200,
@@ -34,25 +54,36 @@ function stub({
   // Defaults to failing, so a test only sees it when it asks for it.
   recentStatus = 404,
   recentBody = null,
+  /** Seconds in the Retry-After of a 429, when the test wants one. */
+  retryAfter = null,
+  /** Seconds the token is said to be good for. */
+  expiresIn = 3600,
 } = {}) {
+  calls = { token: 0, play: 0, recent: 0 };
   globalThis.fetch = async (input) => {
     const url = typeof input === 'string' ? input : input.url;
     if (url.includes('accounts.spotify.com')) {
+      calls.token++;
       return new Response(
-        tokenStatus === 200 ? JSON.stringify({ access_token: 'tok', scope: tokenScope }) : 'no',
+        tokenStatus === 200
+          ? JSON.stringify({ access_token: 'tok', scope: tokenScope, expires_in: expiresIn })
+          : 'no',
         { status: tokenStatus },
       );
     }
     // Checked first: both endpoints live on api.spotify.com.
     if (url.includes('recently-played')) {
+      calls.recent++;
       return new Response(recentStatus === 200 ? JSON.stringify(recentBody ?? RECENT) : 'no', {
         status: recentStatus,
       });
     }
     if (url.includes('api.spotify.com')) {
+      calls.play++;
       if (playStatus >= 400) {
         return new Response(errorBody ?? JSON.stringify({ error: { status: playStatus } }), {
           status: playStatus,
+          headers: retryAfter === null ? {} : { 'Retry-After': String(retryAfter) },
         });
       }
       return new Response(playStatus === 204 ? null : JSON.stringify(playBody ?? {}), {
@@ -348,4 +379,107 @@ test('a Spotify outage is reported as not playing, never as an error', async () 
   const res = await get('/now-playing.json');
   assert.equal(res.status, 200);
   assert.equal((await res.json()).playing, false);
+});
+
+/* ------------------------------------------------------------------
+   Rate limiting
+   The endpoint is polled, so the cost of a miss and the behaviour
+   under a 429 are the whole of whether Spotify keeps answering.
+   ------------------------------------------------------------------ */
+
+test('the access token is exchanged once and then reused', async () => {
+  stub(PLAYING);
+  await get('/');
+  assert.equal(calls.token, 1, 'first request exchanges');
+  await get('/');
+  await get('/');
+  assert.equal(calls.token, 1, 'later requests reuse it');
+  assert.equal(calls.play, 3, 'and still read the player each time');
+});
+
+test('debug reports whether the token was reused', async () => {
+  stub(PLAYING);
+  assert.equal((await (await get('/?debug=1')).json()).tokenCached, false);
+  assert.equal((await (await get('/?debug=1')).json()).tokenCached, true);
+});
+
+test('a token about to expire is exchanged again rather than presented', async () => {
+  // Inside the skew window, so it must not be trusted for the next request.
+  stub({ ...PLAYING, expiresIn: 30 });
+  await get('/');
+  await get('/');
+  assert.equal(calls.token, 2);
+});
+
+test('a rejected token is not held on to', async () => {
+  stub({ ...PLAYING, playStatus: 401 });
+  await get('/');
+  await get('/');
+  assert.equal(calls.token, 2, '401 clears the cached token so the next request re-exchanges');
+});
+
+test('a rate limit does not spend another call on the history endpoint', async () => {
+  stub({ playStatus: 429, recentStatus: 200 });
+  await get('/');
+  assert.equal(calls.recent, 0);
+});
+
+test('a rate limit is held for as long as Spotify asked', async () => {
+  stub({ playStatus: 429, retryAfter: 45 });
+  const res = await get('/');
+  assert.match(res.headers.get('Cache-Control'), /s-maxage=45/);
+  assert.equal((await (await get('/?debug=1')).json()).retryAfter, 45);
+});
+
+test('an implausible Retry-After is clamped rather than obeyed', async () => {
+  stub({ playStatus: 429, retryAfter: 99999 });
+  const res = await get('/');
+  assert.match(res.headers.get('Cache-Control'), /s-maxage=300/);
+});
+
+test('a 429 without a Retry-After still falls back to the idle window', async () => {
+  stub({ playStatus: 429 });
+  const res = await get('/');
+  assert.match(res.headers.get('Cache-Control'), /s-maxage=10/);
+});
+
+test('a rate limit serves the last good answer rather than blanking the card', async () => {
+  stub(PLAYING);
+  const good = await (await get('/')).json();
+  assert.equal(good.title, 'Yèkèrmo Sèw');
+  assert.equal(good.stale, undefined, 'a live answer is not marked stale');
+
+  stub({ playStatus: 429 });
+  const under = await (await get('/')).json();
+  assert.equal(under.title, 'Yèkèrmo Sèw', 'the card keeps its title');
+  assert.equal(under.stale, true, 'and says the answer is remembered');
+  assert.equal(under.fetchedAt, undefined, 'with no stamp to correct a stale position against');
+});
+
+test('an outage serves the last good answer too', async () => {
+  stub(PLAYING);
+  await get('/');
+  globalThis.fetch = async () => {
+    throw new Error('network');
+  };
+  const out = await (await get('/')).json();
+  assert.equal(out.title, 'Yèkèrmo Sèw');
+  assert.equal(out.stale, true);
+});
+
+test('an empty player is reported as empty, not as a remembered track', async () => {
+  stub(PLAYING);
+  await get('/');
+  // 204 with no history is Spotify telling the truth: nothing is playing.
+  stub({ playStatus: 204, recentStatus: 404 });
+  const empty = await (await get('/')).json();
+  assert.equal(empty.title, undefined, 'the card hides rather than showing a stale track');
+  assert.equal(empty.playing, false);
+});
+
+test('debug names the substitution so it cannot be mistaken for a live read', async () => {
+  stub(PLAYING);
+  await get('/');
+  stub({ playStatus: 429 });
+  assert.match((await (await get('/?debug=1')).json()).reason, /served_last_good$/);
 });

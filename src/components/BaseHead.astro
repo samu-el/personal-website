@@ -4,6 +4,20 @@ import { href } from '@/lib/paths';
 import { hasWriting } from '@/lib/posts';
 import '@/styles/global.css';
 
+/**
+ * The three faces the top of every page is set in. Declared with
+ * `font-display: swap`, so without a preload the first paint uses the
+ * fallback and the page reflows when the real face lands — measured as a
+ * 14px shift and the site's only layout shift worth naming (CLS 0.0166).
+ * Vite resolves each to its content-hashed URL, so these stay correct
+ * across builds.
+ */
+import geistSans from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
+import instrumentSerif from '@fontsource/instrument-serif/files/instrument-serif-latin-400-normal.woff2?url';
+
+const preloadFonts = [geistSans, geistMono, instrumentSerif];
+
 interface Props {
   title: string;
   description?: string;
@@ -87,6 +101,12 @@ const personSchema = {
 <!-- Theme is resolved before first paint by the inline script in Layout.astro -->
 <meta name="theme-color" content="#0c0c0d" media="(prefers-color-scheme: dark)" />
 <meta name="theme-color" content="#f7f5f1" media="(prefers-color-scheme: light)" />
+
+{
+  preloadFonts.map((src) => (
+    <link rel="preload" href={src} as="font" type="font/woff2" crossorigin="anonymous" />
+  ))
+}
 
 <link rel="icon" href={href('/favicon.svg')} type="image/svg+xml" />
 <link rel="apple-touch-icon" href={href('/apple-touch-icon.png')} />

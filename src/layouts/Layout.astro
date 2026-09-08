@@ -139,6 +139,9 @@ const section =
             const box = btn.getBoundingClientRect();
             const x = ((e.clientX - box.left) / box.width - 0.5) * 2 * REACH;
             const y = ((e.clientY - box.top) / box.height - 0.5) * 2 * REACH;
+            // data-lean shortens the transition while the pointer is on the
+            // button; without it the lean trailed the cursor by 250ms.
+            btn.setAttribute('data-lean', '');
             btn.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
           },
           { passive: true },
@@ -148,6 +151,8 @@ const section =
           (e) => {
             const btn = e.target instanceof Element ? e.target.closest('.btn') : null;
             if (btn && !(e.relatedTarget instanceof Node && btn.contains(e.relatedTarget))) {
+              // Long ease back, so releasing settles rather than snapping.
+              btn.removeAttribute('data-lean');
               btn.style.translate = '';
             }
           },

@@ -124,7 +124,7 @@ const statusTone: Record<string, string> = {
         <div class="lg:col-span-7">
           <p
             class="hero-enter max-w-2xl text-[1.125rem] leading-[1.6] text-muted lg:text-[1.5rem] lg:leading-[1.45]"
-            style="--enter:950ms"
+            style="--enter:470ms"
           >
             <strong class="font-medium text-fg">Samuel Mussie</strong> — software engineer based in Addis
             Ababa, Ethiopia. Ten years building web and mobile products: Python and TypeScript services,
@@ -133,7 +133,7 @@ const statusTone: Record<string, string> = {
 
           <div
             class="hero-enter mt-10 flex flex-wrap items-center gap-x-8 gap-y-5"
-            style="--enter:1080ms"
+            style="--enter:570ms"
           >
             <div class="flex flex-wrap gap-3">
               <a href={href('/work')} class="btn btn-primary">
@@ -151,7 +151,7 @@ const statusTone: Record<string, string> = {
                       href={s.href}
                       target={s.href.startsWith('http') ? '_blank' : undefined}
                       rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
-                      class="group inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-fg"
+                      class="hit group inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-fg"
                     >
                       <Icon name={s.icon} class="size-3.5" aria-hidden="true" />
                       {s.handle}
@@ -164,7 +164,7 @@ const statusTone: Record<string, string> = {
         </div>
 
         <!-- Currently: the same facts, as a ruled table. -->
-        <aside class="hero-enter lg:col-span-4 lg:col-start-9" style="--enter:1200ms">
+        <aside class="hero-enter lg:col-span-4 lg:col-start-9" style="--enter:670ms">
           <h2 class="meta">Currently</h2>
           <dl class="ledger mt-4 text-sm">
             <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
@@ -191,7 +191,7 @@ const statusTone: Record<string, string> = {
           </dl>
           <a
             href={href('/contact')}
-            class="group mt-5 inline-flex items-center gap-2 text-sm text-fg transition-colors hover:text-accent"
+            class="hit group mt-5 inline-flex items-center gap-2 text-sm text-fg transition-colors hover:text-accent"
           >
             <span class="link">Start a conversation</span>
             <Icon

@@ -4,6 +4,22 @@
  * Declared by hand rather than importing the Fontsource stylesheets so the
  * build ships exactly four files instead of every subset the packages carry
  * (Cyrillic, Greek, Vietnamese…). Vite resolves and content-hashes each URL.
+ *
+ * ── font-display ──────────────────────────────────────────────────────
+ * The text faces are `optional`, the display face is `swap`.
+ *
+ * Measured: with the system fallback the hero's intro paragraph wraps to
+ * five lines and with Geist to four, so the swap moved everything below it
+ * by a line — the whole of the page's layout shift (CLS 0.018 with the
+ * fonts, 0.000 with them blocked). `optional` gives the browser a short
+ * window to use the real face and then commits to whichever it has for
+ * that load, so nothing reflows either way. Both faces are preloaded in
+ * BaseHead, so on any reasonable connection the real one wins the window,
+ * and a repeat visit reads it from cache.
+ *
+ * The display serif keeps `swap`: it is the one face worth waiting for,
+ * and it cannot cause this — its headings are set at a fixed line-height,
+ * and the measurement above found no height change from it at all.
  */
 
 /* ── Geist Variable — body and UI ──────────────────────────────────── */
@@ -11,7 +27,7 @@
   font-family: 'Geist Variable';
   font-style: normal;
   font-weight: 100 900;
-  font-display: swap;
+  font-display: optional;
   src: url('@fontsource-variable/geist/files/geist-latin-wght-normal.woff2')
     format('woff2-variations');
   unicode-range:
@@ -22,7 +38,7 @@
   font-family: 'Geist Variable';
   font-style: normal;
   font-weight: 100 900;
-  font-display: swap;
+  font-display: optional;
   src: url('@fontsource-variable/geist/files/geist-latin-ext-wght-normal.woff2')
     format('woff2-variations');
   unicode-range:
@@ -36,7 +52,7 @@
   font-family: 'Geist Mono Variable';
   font-style: normal;
   font-weight: 100 900;
-  font-display: swap;
+  font-display: optional;
   src: url('@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2')
     format('woff2-variations');
   unicode-range:

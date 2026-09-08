@@ -222,7 +222,39 @@ const barShort = await page.$eval(
   '#site-header .header-bar',
   (el) => el.getBoundingClientRect().height,
 );
-check('header: compresses on scroll', barShort < barTall, `${barTall} -> ${barShort}`);
+/* The bar compresses inside a height it never changes. It used to animate
+   its own height, which moved every following element up by 8px each time
+   the threshold was crossed — so the assertions are that the compression
+   happened AND that the page did not move. */
+const compressed = await page.evaluate(() => {
+  const sub = getComputedStyle(document.querySelector('.wordmark-sub'));
+  return {
+    subMaxHeight: parseFloat(sub.maxHeight) || 0,
+    subOpacity: Number(sub.opacity),
+    avatarScale: getComputedStyle(document.querySelector('.wordmark-avatar')).scale,
+    scrolledAttr: document.getElementById('site-header').hasAttribute('data-scrolled'),
+  };
+});
+check(
+  'header: compresses on scroll',
+  compressed.scrolledAttr && compressed.subMaxHeight === 0 && compressed.subOpacity === 0,
+  JSON.stringify(compressed),
+);
+check(
+  'header: compressing never changes the bar height',
+  Math.abs(barShort - barTall) < 0.5,
+  `${barTall} -> ${barShort}`,
+);
+const shifted = await page.evaluate(async () => {
+  const first = document.querySelector('main > *');
+  window.scrollTo({ top: 0, behavior: 'instant' });
+  await new Promise((r) => setTimeout(r, 600));
+  const top = first.getBoundingClientRect().top + window.scrollY;
+  window.scrollTo({ top: 400, behavior: 'instant' });
+  await new Promise((r) => setTimeout(r, 600));
+  return Math.round(first.getBoundingClientRect().top + window.scrollY - top);
+});
+check('header: compressing does not move the page', shifted === 0, `${shifted}px`);
 const progress = await page.$eval('.scroll-progress', (el) => ({
   supports: CSS.supports('animation-timeline: scroll()'),
   timeline: getComputedStyle(el).animationTimeline,
@@ -236,13 +268,17 @@ check(
   JSON.stringify(progress),
 );
 await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-await sleep(450);
+await sleep(600);
 check(
   'header: restores at the top',
-  Math.abs(
-    (await page.$eval('#site-header .header-bar', (el) => el.getBoundingClientRect().height)) -
-      barTall,
-  ) < 1,
+  await page.evaluate(() => {
+    const sub = getComputedStyle(document.querySelector('.wordmark-sub'));
+    return (
+      !document.getElementById('site-header').hasAttribute('data-scrolled') &&
+      Number(sub.opacity) === 1 &&
+      parseFloat(sub.maxHeight) > 0
+    );
+  }),
 );
 
 // The nav indicator sits under the current page and follows the pointer.
@@ -511,6 +547,109 @@ await ctx.close();
     JSON.stringify(open),
   );
   await calm.close();
+}
+
+// ── 5. Now-playing poll cadence ─────────────────────────────────────────
+/* The endpoint is stubbed so the headers can be controlled exactly. What is
+   under test is that the page follows the freshness the Worker advertises
+   instead of a fixed interval, backs off when it cannot reach it, and does
+   not poll a tab nobody is looking at. */
+{
+  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const hits = [];
+  let mode = 'playing';
+  await ctx.route('**/api/now-playing.json*', async (route) => {
+    hits.push({ t: Date.now(), mode });
+    if (mode === 'down') return route.fulfill({ status: 503, body: 'no' });
+    const playing = mode === 'playing';
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json; charset=utf-8',
+      headers: {
+        // 5s while playing, 10s idle — what the Worker actually sends — and
+        // 1s already spent at the edge.
+        'Cache-Control': `public, max-age=${playing ? 5 : 10}, s-maxage=${playing ? 5 : 10}`,
+        Age: '1',
+      },
+      body: JSON.stringify({
+        playing,
+        state: playing ? 'playing' : 'paused',
+        ...(mode === 'stale' ? { stale: true } : {}),
+        title: 'Yèkèrmo Sèw',
+        artist: 'Mulatu Astatke',
+        progressMs: 30000,
+        durationMs: 300000,
+        ...(playing ? { fetchedAt: Date.now() } : {}),
+      }),
+    });
+  });
+  const page = await ctx.newPage();
+  // The card, and so the poll, lives on /now.
+  await page.goto(`${BASE}/now/`, { waitUntil: 'networkidle' });
+
+  const gapsFor = async (label, ms) => {
+    hits.length = 0;
+    await sleep(ms);
+    const g = [];
+    for (let i = 1; i < hits.length; i++) g.push(hits[i].t - hits[i - 1].t);
+    return { label, count: hits.length, gaps: g };
+  };
+
+  const playing = await gapsFor('playing', 13000);
+  // 5s advertised, 1s spent, so about 4s of freshness left each time.
+  check(
+    'poll: playing follows the freshness the response advertises',
+    playing.gaps.length >= 2 && playing.gaps.every((g) => g > 3600 && g < 6200),
+    JSON.stringify(playing),
+  );
+
+  mode = 'paused';
+  await sleep(6500);
+  const paused = await gapsFor('paused', 22000);
+  check(
+    'poll: a paused answer is checked less often',
+    paused.gaps.length >= 1 && paused.gaps.every((g) => g > 8000),
+    JSON.stringify(paused),
+  );
+
+  /* Reloaded so the backoff is measured from its first step: left running,
+     it had already doubled past the width of any reasonable test window —
+     which is the behaviour under test working, not failing. */
+  mode = 'down';
+  await page.reload({ waitUntil: 'commit' });
+  const down = await gapsFor('down', 20000);
+  check(
+    'poll: a failing endpoint is backed off, not hammered',
+    down.gaps.length >= 2 &&
+      down.gaps[0] > 4000 &&
+      down.gaps[1] > down.gaps[0] * 1.6 &&
+      down.count < 6,
+    JSON.stringify(down),
+  );
+
+  // A tab nobody is looking at makes no requests at all.
+  mode = 'playing';
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
+    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  hits.length = 0;
+  await sleep(9000);
+  check('poll: a hidden tab does not poll', hits.length === 0, `${hits.length} request(s)`);
+
+  // Coming back asks immediately rather than waiting out the interval.
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
+    Object.defineProperty(document, 'visibilityState', {
+      configurable: true,
+      get: () => 'visible',
+    });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await sleep(700);
+  check('poll: returning to the tab asks at once', hits.length >= 1, `${hits.length} request(s)`);
+  await ctx.close();
 }
 
 await browser.close();

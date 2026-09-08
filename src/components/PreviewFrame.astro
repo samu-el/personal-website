@@ -187,6 +187,9 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
     function settle(frame: HTMLElement | null) {
       const card = frame?.querySelector('.frame-card') as HTMLElement | null;
       if (!card) return;
+      // Dropping data-tracking first hands the long ease back, so leaving
+      // eases out rather than snapping to level.
+      card.removeAttribute('data-tracking');
       card.style.removeProperty('--rx');
       card.style.removeProperty('--ry');
     }
@@ -213,6 +216,7 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
       // edge away, below centre tips the top forward.
       const card = frame.querySelector('.frame-card') as HTMLElement | null;
       if (card) {
+        card.setAttribute('data-tracking', '');
         card.style.setProperty('--ry', `${((px - 0.5) * 2 * TILT).toFixed(2)}deg`);
         card.style.setProperty('--rx', `${((0.5 - py) * 2 * TILT).toFixed(2)}deg`);
       }
