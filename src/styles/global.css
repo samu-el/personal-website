@@ -268,6 +268,9 @@
   }
   /* For rows whose right side is the busy one — the stack's item columns —
      the numeral sits behind the title instead, low, where there is room. */
+  .rail-index--gold {
+    color: rgb(233 162 59 / 0.22);
+  }
   .rail-index--left {
     right: auto;
     left: -0.06em;
@@ -283,6 +286,122 @@
   }
   .ledger > * {
     border-bottom: 1px solid var(--color-line);
+  }
+
+  /* ── Colour as a field ─────────────────────────────────────────────
+     Redefining the --c-* channels on a subtree recolours every token-based
+     utility inside it — bg-bg, text-fg, border-line, the lot — so a whole
+     section can go to ink or gold without any child knowing. The
+     --color-* aliases are re-declared here too: they are computed where
+     they are declared, so the :root copies would otherwise carry the page's
+     channels into the field. */
+  .field-ink,
+  .field-gold {
+    --color-bg: rgb(var(--c-bg));
+    --color-sunken: rgb(var(--c-bg-sunken));
+    --color-surface: rgb(var(--c-surface));
+    --color-surface-2: rgb(var(--c-surface-2));
+    --color-line: rgb(var(--c-border) / var(--c-border-alpha));
+    --color-line-strong: rgb(var(--c-border) / calc(var(--c-border-alpha) * 2.4));
+    --color-fg: rgb(var(--c-fg));
+    --color-muted: rgb(var(--c-fg-muted));
+    --color-subtle: rgb(var(--c-fg-subtle));
+    --color-accent: rgb(var(--c-accent));
+    --color-accent-fg: rgb(var(--c-accent-fg));
+    --color-jade: rgb(var(--c-jade));
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  /* Ink: the page's own foreground as ground. Gold stays gold on it. */
+  .field-ink {
+    --c-bg: 22 23 26;
+    --c-bg-sunken: 16 17 19;
+    --c-surface: 30 31 35;
+    --c-surface-2: 36 37 42;
+    --c-border: 255 255 255;
+    --c-border-alpha: 0.14;
+    --c-fg: 247 245 241;
+    --c-fg-muted: 196 194 189;
+    --c-fg-subtle: 148 149 154;
+    --c-accent: 233 162 59;
+    --c-accent-fg: 18 14 6;
+    --c-jade: 74 190 138;
+    --c-shadow: 0 0 0;
+    color-scheme: dark;
+  }
+  .dark .field-ink {
+    --c-bg: 5 5 6;
+    --c-bg-sunken: 3 3 4;
+    --c-surface: 14 14 16;
+    --c-surface-2: 20 20 23;
+  }
+
+  /* Gold: the bright accent as ground, ink on it. The brighter of the two
+     golds in both themes, because ink on it clears 8:1 where ink on the
+     light theme's darker gold would not clear 4.5. */
+  .field-gold {
+    --c-bg: 233 162 59;
+    --c-bg-sunken: 222 150 48;
+    --c-surface: 240 176 82;
+    --c-surface-2: 236 170 70;
+    --c-border: 18 14 6;
+    --c-border-alpha: 0.22;
+    --c-fg: 18 14 6;
+    --c-fg-muted: 60 44 16;
+    --c-fg-subtle: 84 60 20;
+    --c-accent: 18 14 6;
+    --c-accent-fg: 233 162 59;
+    --c-jade: 18 14 6;
+    --c-shadow: 0 0 0;
+    color-scheme: light;
+  }
+
+  /* Heavy rule: two pixels of ink, for the boundaries between sections.
+     Hairlines stay inside; the heavy rule says a new thing begins. */
+  .rule-heavy {
+    height: 2px;
+    width: 100%;
+    background-color: var(--color-fg);
+  }
+
+  /* Word-by-word entrance for the hero headline. Gated on .js so a page
+     without script shows the words, and defeated wholesale by the global
+     reduced-motion rule, whose 0.01ms duration lands on the final frame. */
+  .w {
+    display: inline-block;
+  }
+  .js .hero-words .w {
+    opacity: 0;
+    transform: translate3d(0, 0.45em, 0) rotate(0.6deg);
+    animation: word-up 0.95s var(--ease-out-quint) forwards;
+    animation-delay: calc(140ms + var(--i, 0) * 75ms);
+  }
+  @keyframes word-up {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* The vertical rail: page name and author, set on their side in the right
+     gutter. Fixed, so it is the one thing that does not move as you scroll —
+     a running head, as a printed book has. */
+  .rail-vertical {
+    position: fixed;
+    right: 1rem;
+    top: 50%;
+    z-index: 40;
+    transform: translateY(-50%) rotate(180deg);
+    writing-mode: vertical-rl;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--color-subtle);
+    pointer-events: none;
+    user-select: none;
+    view-transition-name: rail;
   }
 
   /* Mono metadata label, the one used everywhere for dates, indices, kinds. */

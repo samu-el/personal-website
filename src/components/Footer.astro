@@ -10,13 +10,15 @@ const writing = await hasWriting();
 const items = await visibleNav();
 ---
 
-<footer id="site-footer" class="mt-12 border-t border-line bg-sunken lg:mt-36">
+<footer id="site-footer" class="field-gold mt-12 lg:mt-36">
   <div class="wrap py-12 lg:py-20">
     <!-- Call to action: the one line, at the size it deserves. -->
     <div class="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-8">
       <div class="lg:col-span-8">
         <p class="eyebrow">Contact</p>
-        <h2 class="display-hero mt-5 text-[clamp(2.4rem,6.4vw,5rem)]">Available to collaborate.</h2>
+        <h2 class="display-hero mt-5 text-[clamp(2.6rem,7.6vw,6.5rem)]">
+          Available to collaborate.
+        </h2>
       </div>
       <div class="flex flex-wrap gap-3 lg:col-span-4 lg:justify-end">
         <a href={`mailto:${site.email}`} class="btn btn-primary">

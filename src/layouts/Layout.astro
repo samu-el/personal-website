@@ -4,6 +4,7 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import CommandPalette from '@/components/CommandPalette.astro';
 import EasterEggs from '@/components/EasterEggs.astro';
+import { nav, site } from '@/lib/site';
 
 interface Props {
   title: string;
@@ -20,6 +21,17 @@ interface Props {
 }
 
 const { bareFooter = false, ...head } = Astro.props;
+
+/**
+ * Running head for the vertical rail: the section this page belongs to. A
+ * project or post page takes its section's name; the home page takes the
+ * role, since "Home" says nothing.
+ */
+const path = head.path ?? '/';
+const section =
+  path === '/'
+    ? site.role
+    : (nav.find((n) => n.href !== '/' && path.startsWith(n.href))?.label ?? site.role);
 ---
 
 <!doctype html>
@@ -46,6 +58,7 @@ const { bareFooter = false, ...head } = Astro.props;
   </head>
   <body class="min-h-dvh antialiased">
     <Header />
+    <div class="rail-vertical hidden xl:block" aria-hidden="true">{section} — {site.name}</div>
     <main id="main">
       <slot />
     </main>
