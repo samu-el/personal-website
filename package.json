@@ -3,7 +3,7 @@
   "type": "module",
   "version": "1.0.0",
   "private": true,
-  "description": "Personal site of Samuel Mussie — CTO & co-founder, Mereb Technologies.",
+  "description": "Personal site of Samuel Mussie \u2014 CTO & co-founder, Mereb Technologies.",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -15,8 +15,9 @@
     "images": "node scripts/gen-images.mjs",
     "shots": "node scripts/shots.mjs",
     "verify": "node tests/verify.mjs",
-    "test": "npm run check && npm run test:unit && npm run build:fast && node tests/verify.mjs",
-    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs"
+    "test": "npm run check && npm run test:unit && npm run build:fast && node tests/verify.mjs && node tests/interact.mjs",
+    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
+    "verify:interact": "node tests/interact.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",

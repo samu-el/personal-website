@@ -42,3 +42,8 @@ jobs:
           npx astro preview --port 4321 &
           npx wait-on http://localhost:4321/ --timeout 60000
           npm run verify
+
+      # Same server: the interaction suite drives the pointer, the keyboard
+      # and the scroll, which no static check can stand in for.
+      - name: Interaction test the built site
+        run: npm run verify:interact

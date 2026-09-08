@@ -25,11 +25,16 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
   Skip to content
 </a>
 
+<!-- Scrim for the mobile menu. Outside the header on purpose: the header
+     carries a backdrop-filter, which would make it the containing block for
+     a fixed child and stop the scrim covering the viewport. -->
+<div id="menu-scrim" class="menu-scrim md:hidden" aria-hidden="true"></div>
+
 <header
   id="site-header"
   class="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur-xl transition-shadow duration-300 data-[scrolled]:shadow-[0_1px_0_0_var(--color-line)]"
 >
-  <div class="wrap flex h-16 items-center justify-between gap-4">
+  <div class="header-bar wrap flex h-16 items-center justify-between gap-4">
     <!-- Wordmark -->
     <a
       href={href('/')}
@@ -54,7 +59,12 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     </a>
 
     <!-- Desktop nav -->
-    <nav aria-label="Primary" class="hidden items-center gap-0.5 md:flex">
+    <nav
+      id="primary-nav"
+      aria-label="Primary"
+      class="nav-rail relative hidden items-center gap-0.5 md:flex"
+    >
+      <span class="nav-indicator" aria-hidden="true"></span>
       {
         items
           .slice(1)
@@ -72,7 +82,10 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
               >
                 {item.label}
                 {active && (
-                  <span class="absolute inset-x-3.5 -bottom-px h-px bg-accent" aria-hidden="true" />
+                  <span
+                    class="nav-link-hairline absolute inset-x-3.5 -bottom-px h-px bg-accent"
+                    aria-hidden="true"
+                  />
                 )}
               </a>
             );
@@ -147,17 +160,18 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
   </div>
 
   <!-- Mobile menu -->
-  <div id="mobile-menu" hidden class="border-t border-line bg-bg md:hidden">
-    <nav aria-label="Mobile" class="wrap flex flex-col py-2">
+  <div id="mobile-menu" hidden class="menu-panel md:hidden">
+    <nav aria-label="Mobile" class="menu-panel-inner wrap flex flex-col py-2">
       {
-        items.map((item) => {
+        items.map((item, i) => {
           const active = isActive(current, href(item.href));
           return (
             <a
               href={href(item.href)}
               aria-current={active ? 'page' : undefined}
+              style={`--i:${i}`}
               class:list={[
-                'flex items-baseline gap-3 border-b border-line py-3.5 text-lg tracking-tight transition-colors last:border-b-0',
+                'menu-row flex items-baseline gap-3 border-b border-line py-3.5 text-lg tracking-tight transition-colors last:border-b-0',
                 active ? 'text-accent' : 'text-fg',
               ]}
             >
@@ -167,18 +181,28 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
           );
         })
       }
-      <a href={`mailto:${site.email}`} class="btn btn-primary my-4 w-full">{site.email}</a>
+      <a
+        href={`mailto:${site.email}`}
+        style={`--i:${items.length}`}
+        class="menu-row btn btn-primary my-4 w-full">{site.email}</a
+      >
     </nav>
   </div>
+
+  <!-- Reading progress: the hairline on the header's own bottom edge grows
+       with the document. Scroll-driven, so it costs no script. -->
+  <div class="scroll-progress" aria-hidden="true"></div>
 </header>
 
 <style>
   /* The bar compresses once the page is scrolling, and eases back at the
-     top. data-scrolled is set by the script below. */
-  .wrap {
+     top. data-scrolled is set by the script below. Scoped to .header-bar
+     rather than .wrap: the mobile panel's nav is a .wrap too, and clamping
+     its height spilled the links out from under their own background. */
+  .header-bar {
     transition: height 0.35s var(--ease-out-quint);
   }
-  #site-header[data-scrolled] .wrap {
+  #site-header[data-scrolled] .header-bar {
     height: 3.5rem;
   }
 
@@ -193,6 +217,138 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
   #menu-toggle[aria-expanded='true'] .menu-bar-bottom {
     transform: translateY(-4px) rotate(-45deg);
   }
+
+  /* ── Reading progress ─────────────────────────────────────────────
+     Scroll-driven, declared in longhands: the minifier folds
+     animation-timeline into the animation shorthand, and Chromium drops
+     the whole declaration when it does. */
+  .scroll-progress {
+    position: absolute;
+    inset-inline: 0;
+    bottom: -1px;
+    height: 2px;
+    background-color: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+  }
+  @supports (animation-timeline: scroll()) {
+    .scroll-progress {
+      animation-name: progress;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+    }
+  }
+  @keyframes progress {
+    from {
+      transform: scaleX(0);
+    }
+    to {
+      transform: scaleX(1);
+    }
+  }
+  /* The panel's top border lands on the same edge, and the two accent lines
+     read as one. The hairline steps aside while the menu is open. */
+  #site-header:has(.menu-panel.is-open) .scroll-progress {
+    opacity: 0;
+  }
+  .scroll-progress {
+    transition: opacity 0.25s ease;
+  }
+
+  /* ── Desktop nav indicator ────────────────────────────────────────
+     One hairline slides between the links rather than each drawing its
+     own. Until the script measures the links the per-link rules in
+     global.css do the work, so a scriptless page still shows the state. */
+  .nav-indicator {
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    height: 1px;
+    width: var(--w, 0px);
+    background-color: var(--color-accent);
+    translate: var(--x, 0px) 0;
+    opacity: 0;
+    pointer-events: none;
+    transition:
+      translate 0.4s var(--ease-out-quint),
+      width 0.4s var(--ease-out-quint),
+      opacity 0.25s ease;
+  }
+  .nav-rail[data-indicator] .nav-indicator {
+    opacity: 1;
+  }
+  /* With the indicator live, the per-link hairlines would double it. */
+  .nav-rail[data-indicator] .nav-link::after {
+    display: none;
+  }
+  .nav-rail[data-indicator] .nav-link-hairline {
+    display: none;
+  }
+
+  /* ── Mobile menu ──────────────────────────────────────────────────
+     The panel is a grid whose single row grows from 0fr to 1fr, so it
+     opens to whatever height its content needs with no magic number.
+     display:grid would beat the [hidden] rule, hence the explicit
+     [hidden] below. */
+  .menu-panel {
+    /* Absolute, so opening it neither grows the header nor pushes the page.
+       A panel in flow moved content above the viewport, and Chromium's
+       scroll anchoring then compensated with a jump of its own. */
+    position: absolute;
+    top: 100%;
+    inset-inline: 0;
+    display: grid;
+    grid-template-rows: 0fr;
+    border-top: 1px solid var(--color-line);
+    background-color: var(--color-bg);
+    transition: grid-template-rows 0.45s var(--ease-out-quint);
+  }
+  .menu-panel[hidden] {
+    display: none;
+  }
+  .menu-panel.is-open {
+    grid-template-rows: 1fr;
+  }
+  .menu-panel-inner {
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  /* Rows arrive one after another once the panel is on its way open. */
+  .menu-panel.is-open .menu-row {
+    animation: menu-row-in 0.45s var(--ease-out-quint) both;
+    animation-delay: calc(90ms + var(--i, 0) * 45ms);
+  }
+  @keyframes menu-row-in {
+    from {
+      opacity: 0;
+      transform: translate3d(-12px, 0, 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* The scrim veils the page under the panel and closes it on a tap. */
+  .menu-scrim {
+    position: fixed;
+    inset: 0;
+    z-index: 40;
+    background-color: rgb(var(--c-bg) / 0.6);
+    backdrop-filter: blur(6px);
+    opacity: 0;
+    pointer-events: none;
+    touch-action: none;
+    overscroll-behavior: contain;
+    transition: opacity 0.35s var(--ease-out-quint);
+  }
+  .menu-scrim.is-open {
+    opacity: 1;
+    pointer-events: auto;
+  }
 </style>
 
 <script is:inline>
@@ -200,43 +356,132 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     function init() {
       const btn = document.getElementById('menu-toggle');
       const menu = document.getElementById('mobile-menu');
+      const scrim = document.getElementById('menu-scrim');
       const header = document.getElementById('site-header');
       if (!btn || !menu || btn.dataset.bound === '1') return;
       btn.dataset.bound = '1';
 
+      const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+      let closing = 0;
+      /* Where the page was when the panel opened. The panel rides the sticky
+         header, so the page is left scrollable — locking it with
+         overflow:hidden stops sticky resolving and takes the header off
+         screen. A deliberate scroll closes the panel instead; a drag on the
+         scrim never scrolls at all (touch-action). */
+      let openedAt = null;
+
       const setOpen = (open) => {
         btn.setAttribute('aria-expanded', String(open));
         btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-        menu.hidden = !open;
+        scrim?.classList.toggle('is-open', open);
+        window.clearTimeout(closing);
+        openedAt = open ? window.scrollY : null;
+
+        if (open) {
+          menu.hidden = false;
+          // One frame between display and the class, or the row never
+          // animates from its closed height.
+          requestAnimationFrame(() => menu.classList.add('is-open'));
+          /* Focus stays on the trigger: this is a disclosure, not a dialog,
+             and the panel follows the button in source order, so Tab walks
+             straight into it. Moving focus here instead painted a focus ring
+             on the first link for anyone who opened the menu by tapping. */
+        } else {
+          menu.classList.remove('is-open');
+          const wait = calm.matches ? 0 : 450;
+          closing = window.setTimeout(() => {
+            menu.hidden = true;
+          }, wait);
+        }
       };
 
       btn.addEventListener('click', () => {
         setOpen(btn.getAttribute('aria-expanded') !== 'true');
       });
+      scrim?.addEventListener('click', () => setOpen(false));
 
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && btn.getAttribute('aria-expanded') === 'true') {
+        if (btn.getAttribute('aria-expanded') !== 'true') return;
+        if (e.key === 'Escape') {
           setOpen(false);
           btn.focus();
+          return;
+        }
+        /* Keep Tab inside the open panel. The trigger comes before the
+           panel in source order, so it is the first stop and the last row
+           wraps back to it. */
+        if (e.key === 'Tab') {
+          const stops = [btn, ...menu.querySelectorAll('a, button')];
+          const first = stops[0];
+          const last = stops[stops.length - 1];
+          if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          } else if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
         }
       });
 
       // Close when the viewport grows past the mobile breakpoint.
       window.matchMedia('(min-width: 48rem)').addEventListener('change', (e) => {
-        if (e.matches) setOpen(false);
+        if (e.matches && btn.getAttribute('aria-expanded') === 'true') setOpen(false);
       });
 
       if (header) {
         const onScroll = () => {
           if (window.scrollY > 8) header.setAttribute('data-scrolled', '');
           else header.removeAttribute('data-scrolled');
+          if (openedAt !== null && Math.abs(window.scrollY - openedAt) > 48) setOpen(false);
         };
         onScroll();
         window.addEventListener('scroll', onScroll, { passive: true });
       }
     }
 
-    init();
-    document.addEventListener('astro:page-load', init);
+    function nav() {
+      const rail = document.getElementById('primary-nav');
+      const bar = rail?.querySelector('.nav-indicator');
+      if (!rail || !bar || rail.dataset.bound === '1') return;
+      rail.dataset.bound = '1';
+
+      const links = [...rail.querySelectorAll('.nav-link')];
+      const home = links.find((a) => a.getAttribute('aria-current') === 'page');
+
+      const moveTo = (link) => {
+        if (!link) {
+          rail.removeAttribute('data-indicator');
+          return;
+        }
+        // Measured against the rail, so it survives the header compressing.
+        const box = link.getBoundingClientRect();
+        const base = rail.getBoundingClientRect();
+        bar.style.setProperty('--x', `${(box.left - base.left).toFixed(1)}px`);
+        bar.style.setProperty('--w', `${box.width.toFixed(1)}px`);
+        rail.setAttribute('data-indicator', '');
+      };
+
+      // Only take over once a measurement succeeded, so the CSS fallback
+      // stays in charge if the nav is not laid out yet.
+      const settle = () => moveTo(home);
+      if (home) settle();
+      links.forEach((link) => {
+        link.addEventListener('pointerenter', () => moveTo(link));
+        link.addEventListener('focus', () => moveTo(link));
+      });
+      rail.addEventListener('pointerleave', settle);
+      rail.addEventListener('focusout', (e) => {
+        if (!rail.contains(e.relatedTarget)) settle();
+      });
+      window.addEventListener('resize', settle, { passive: true });
+    }
+
+    const start = () => {
+      init();
+      nav();
+    };
+    start();
+    document.addEventListener('astro:page-load', start);
   })();
 </script>
