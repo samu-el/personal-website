@@ -21,13 +21,19 @@ import { chromium } from 'playwright';
 
 const BASE = process.env.BASE_URL ?? 'http://localhost:4321';
 const EXEC = process.env.CHROMIUM_PATH || undefined;
+// Same as the smoke suite: checking a deployed site from behind an egress
+// proxy needs the browser pointed at it, or every request is a 403.
+const PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || '';
+const proxy = PROXY
+  ? { server: PROXY, bypass: (process.env.NO_PROXY || 'localhost,127.0.0.1').split(',').join(',') }
+  : undefined;
 const results = [];
 const check = (name, ok, info = '') => results.push({ name, ok: Boolean(ok), info });
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 /** The word-by-word hero runs for about 1.4s; wait it out before measuring. */
 const ENTRANCE = 2200;
 
-const browser = await chromium.launch({ executablePath: EXEC });
+const browser = await chromium.launch({ executablePath: EXEC, proxy });
 
 // ── 1. Mobile menu ──────────────────────────────────────────────────────
 {
