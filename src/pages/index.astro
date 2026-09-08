@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
 import Section from '@/components/Section.astro';
-import ProjectCard from '@/components/ProjectCard.astro';
+import PreviewFrame from '@/components/PreviewFrame.astro';
 import PostCard from '@/components/PostCard.astro';
 import { site, socials } from '@/lib/site';
 import { publishedPosts } from '@/lib/posts';
@@ -17,6 +17,15 @@ const isPublished = (d: { draft?: boolean }) => import.meta.env.DEV || !d.draft;
 const projects = (await getCollection('projects', ({ data }) => isPublished(data)))
   .filter((p) => p.data.featured && !p.data.hidden)
   .sort((a, b) => b.data.weight - a.data.weight);
+
+/**
+ * The spread: desktop frames stack in the wide column, phones stand in the
+ * narrow one. Two shapes of screenshot laid out by shape rather than forced
+ * into equal cells, which would leave a 16:10 frame beside a portrait one
+ * with half a column of nothing under it.
+ */
+const wide = projects.filter((p) => p.data.device !== 'phone');
+const tall = projects.filter((p) => p.data.device === 'phone');
 
 const posts = (await publishedPosts()).slice(0, 3);
 
@@ -43,17 +52,23 @@ const marquee = [
   'Swift',
   'Terraform',
 ];
+
+const statusTone: Record<string, string> = {
+  Live: 'text-jade',
+  Ongoing: 'text-jade',
+  Shipped: 'text-muted',
+  Experiment: 'text-accent',
+  Archived: 'text-subtle',
+};
 ---
 
 <Layout title={site.title} description={site.description} path="/" type="profile">
   <!-- ── Hero ─────────────────────────────────────────────────────── -->
   <section class="relative overflow-hidden">
-    <!-- Quarter-column hairlines, echoing the grid the layout is built on -->
-    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
+    <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-50" aria-hidden="true">
     </div>
-    <div class="pointer-events-none absolute inset-x-0 top-0 h-px bg-line" aria-hidden="true"></div>
 
-    <div class="wrap relative pb-10 pt-8 lg:pb-24 lg:pt-24">
+    <div class="wrap relative pb-12 pt-10 lg:pb-20 lg:pt-24">
       <p class="eyebrow" data-reveal>
         <span class="flex items-center gap-2">
           <span class="relative flex size-1.5">
@@ -69,7 +84,7 @@ const marquee = [
       </p>
 
       <h1
-        class="display mt-8 text-[clamp(2.35rem,7.9vw,6.25rem)]"
+        class="display-hero mt-9 text-[clamp(2.75rem,9.4vw,8rem)] lg:mt-12"
         data-reveal
         style="--reveal-delay:60ms"
       >
@@ -80,95 +95,102 @@ const marquee = [
         <em class="block italic text-accent">is too big to solve.</em>
       </h1>
 
-      <div class="mt-8 grid gap-8 lg:mt-16 lg:grid-cols-12 lg:gap-10">
+      <div class="mt-12 grid gap-10 lg:mt-20 lg:grid-cols-12 lg:gap-8">
+        <!-- Intro -->
         <div class="lg:col-span-7">
-          <div class="max-w-2xl" data-reveal style="--reveal-delay:140ms">
-            <p class="text-[1.0625rem] leading-relaxed text-muted lg:text-lg">
-              <strong class="font-medium text-fg">Samuel Mussie</strong> — software engineer based in
-              Addis Ababa, Ethiopia. Ten years building web and mobile products: Python and TypeScript
-              services, React and Next.js front ends, Flutter and native iOS, and retrieval-augmented
-              AI features.
-            </p>
-          </div>
+          <p
+            class="max-w-2xl text-[1.125rem] leading-[1.6] text-muted lg:text-[1.375rem] lg:leading-[1.5]"
+            data-reveal
+            style="--reveal-delay:140ms"
+          >
+            <strong class="font-medium text-fg">Samuel Mussie</strong> — software engineer based in Addis
+            Ababa, Ethiopia. Ten years building web and mobile products: Python and TypeScript services,
+            React and Next.js front ends, Flutter and native iOS, and retrieval-augmented AI features.
+          </p>
 
-          <div class="mt-9 flex flex-wrap gap-3" data-reveal style="--reveal-delay:200ms">
-            <a href={href('/work')} class="btn btn-primary">
-              Work
-              <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
-            </a>
-            <a href={href('/about')} class="btn btn-ghost">About</a>
-          </div>
+          <div
+            class="mt-9 flex flex-wrap items-center gap-x-8 gap-y-5"
+            data-reveal
+            style="--reveal-delay:200ms"
+          >
+            <div class="flex flex-wrap gap-3">
+              <a href={href('/work')} class="btn btn-primary">
+                Work
+                <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
+              </a>
+              <a href={href('/about')} class="btn btn-ghost">About</a>
+            </div>
 
-          <ul class="mt-9 flex flex-wrap gap-x-6 gap-y-3" data-reveal style="--reveal-delay:260ms">
-            {
-              socials.map((s) => (
-                <li>
-                  <a
-                    href={s.href}
-                    target={s.href.startsWith('http') ? '_blank' : undefined}
-                    rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
-                    class="group inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-fg"
-                  >
-                    <Icon name={s.icon} class="size-3.5" aria-hidden="true" />
-                    {s.handle}
-                  </a>
-                </li>
-              ))
-            }
-          </ul>
+            <ul class="flex flex-wrap gap-x-6 gap-y-3">
+              {
+                socials.map((s) => (
+                  <li>
+                    <a
+                      href={s.href}
+                      target={s.href.startsWith('http') ? '_blank' : undefined}
+                      rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
+                      class="group inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-fg"
+                    >
+                      <Icon name={s.icon} class="size-3.5" aria-hidden="true" />
+                      {s.handle}
+                    </a>
+                  </li>
+                ))
+              }
+            </ul>
+          </div>
         </div>
 
-        <!-- "Currently" panel -->
-        <aside class="lg:col-span-4 lg:col-start-9" data-reveal style="--reveal-delay:320ms">
-          <div class="card rounded-lg p-6">
-            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Currently</h2>
-            <dl class="mt-5 space-y-4 text-sm">
-              <div>
-                <dt class="text-subtle">Role</dt>
-                <dd class="mt-1 leading-snug text-fg">Software Engineer</dd>
-              </div>
-              <div class="rule"></div>
-              <div>
-                <dt class="text-subtle">Based in</dt>
-                <dd class="mt-1 leading-snug text-fg">
-                  Addis Ababa, Ethiopia
-                  <span class="ml-1 font-mono text-2xs text-subtle">(GMT+3)</span>
-                </dd>
-              </div>
-              <div class="rule"></div>
-              <div>
-                <dt class="text-subtle">Focus</dt>
-                <dd class="mt-1 leading-snug text-fg">
-                  Full-stack web and mobile — TypeScript, Python, React, PostgreSQL.
-                </dd>
-              </div>
-              <div class="rule"></div>
-              <div>
-                <dt class="text-subtle">Status</dt>
-                <dd class="mt-1 leading-snug text-fg">Available to collaborate.</dd>
-              </div>
-            </dl>
-            <a
-              href={href('/contact')}
-              class="mt-6 inline-flex w-full items-center justify-between rounded-md border border-line px-4 py-3 text-sm transition-colors hover:border-accent hover:text-accent"
-            >
-              Start a conversation
-              <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
-            </a>
-          </div>
+        <!-- Currently: the same facts, as a ruled table rather than a card. -->
+        <aside class="lg:col-span-4 lg:col-start-9" data-reveal style="--reveal-delay:260ms">
+          <h2 class="meta">Currently</h2>
+          <dl class="ledger mt-4 text-sm">
+            <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
+              <dt class="text-subtle">Role</dt>
+              <dd class="leading-snug text-fg">Software Engineer</dd>
+            </div>
+            <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
+              <dt class="text-subtle">Based in</dt>
+              <dd class="leading-snug text-fg">
+                Addis Ababa, Ethiopia
+                <span class="ml-1 font-mono text-2xs text-subtle">(GMT+3)</span>
+              </dd>
+            </div>
+            <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
+              <dt class="text-subtle">Focus</dt>
+              <dd class="leading-snug text-fg">
+                Full-stack web and mobile — TypeScript, Python, React, PostgreSQL.
+              </dd>
+            </div>
+            <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
+              <dt class="text-subtle">Status</dt>
+              <dd class="leading-snug text-fg">Available to collaborate.</dd>
+            </div>
+          </dl>
+          <a
+            href={href('/contact')}
+            class="group mt-5 inline-flex items-center gap-2 text-sm text-fg transition-colors hover:text-accent"
+          >
+            <span class="link">Start a conversation</span>
+            <Icon
+              name="lucide:arrow-right"
+              class="size-4 transition-transform duration-300 group-hover:translate-x-1"
+              aria-hidden="true"
+            />
+          </a>
         </aside>
       </div>
     </div>
 
     <!-- Stack marquee -->
-    <div class="relative border-y border-line bg-sunken py-4">
+    <div class="relative border-y border-line bg-sunken py-3.5">
       <div class="mask-fade-r flex overflow-hidden" aria-hidden="true">
-        <ul class="flex shrink-0 animate-marquee items-center gap-10 pr-10">
+        <ul class="flex shrink-0 animate-marquee items-center gap-12 pr-12">
           {
             [...marquee, ...marquee].map((m) => (
-              <li class="whitespace-nowrap font-mono text-2xs uppercase tracking-[0.18em] text-subtle">
+              <li class="whitespace-nowrap font-mono text-2xs uppercase tracking-[0.22em] text-subtle">
                 {m}
-                <span class="ml-10 text-line-strong">◆</span>
+                <span class="ml-12 text-line-strong">◆</span>
               </li>
             ))
           }
@@ -181,14 +203,27 @@ const marquee = [
   </section>
 
   <!-- ── Metrics ──────────────────────────────────────────────────── -->
-  <div class="wrap py-10 lg:py-16">
-    <dl class="grid grid-cols-2 gap-x-6 gap-y-10 lg:grid-cols-4">
+  <!-- Four figures as one ruled row. Big enough to be read from across the
+       room, divided by hairlines rather than gaps, so the row is a table. -->
+  <div class="wrap py-4 lg:py-8">
+    <dl class="grid grid-cols-2 lg:grid-cols-4 lg:divide-x lg:divide-line">
       {
         liveMetrics.map((m, i) => (
-          <div data-reveal style={`--reveal-delay:${i * 70}ms`}>
-            <dt class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">{m.label}</dt>
-            <dd class="display mt-2 text-[clamp(2rem,4.5vw,2.9rem)] text-fg">{m.value}</dd>
-            {m.note && <p class="mt-1.5 text-[0.8125rem] leading-snug text-subtle">{m.note}</p>}
+          <div
+            class:list={[
+              'py-8 lg:py-10',
+              i > 0 && 'lg:pl-8',
+              i < 3 && 'lg:pr-8',
+              // Two-up on phones: a hairline between the columns and rows.
+              i % 2 === 1 && 'border-l border-line pl-6 lg:border-l-0 lg:pl-8',
+              i >= 2 && 'border-t border-line lg:border-t-0',
+            ]}
+            data-reveal
+            style={`--reveal-delay:${i * 70}ms`}
+          >
+            <dt class="meta">{m.label}</dt>
+            <dd class="numeral mt-4 text-[clamp(2.75rem,6vw,4.75rem)] text-fg">{m.value}</dd>
+            {m.note && <p class="mt-3 text-[0.8125rem] leading-snug text-subtle">{m.note}</p>}
           </div>
         ))
       }
@@ -203,25 +238,30 @@ const marquee = [
     lede="Full-stack, across web and mobile."
     id="services"
   >
-    <div class="grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-2">
+    <ol class="ledger">
       {
         services.map((s, i) => (
-          <div
-            class="group relative bg-surface p-5 transition-colors duration-300 hover:bg-surface-2 sm:p-7 lg:p-8"
+          <li
+            class="group grid gap-3 py-7 sm:grid-cols-12 sm:items-baseline sm:gap-6 lg:py-9"
             data-reveal
             style={`--reveal-delay:${i * 70}ms`}
           >
+            <span class="meta sm:col-span-1">{String(i + 1).padStart(2, '0')}</span>
+            <h3 class="display text-[clamp(1.6rem,3.2vw,2.35rem)] sm:col-span-6 lg:col-span-5">
+              {s.title}
+            </h3>
+            <p class="text-[0.9375rem] leading-relaxed text-muted sm:col-span-4 lg:col-span-5 lg:text-base">
+              {s.body}
+            </p>
             <Icon
               name={s.icon}
-              class="size-5 text-subtle transition-colors duration-300 group-hover:text-accent"
+              class="hidden size-5 justify-self-end text-subtle transition-colors duration-300 group-hover:text-accent sm:col-span-1 sm:block"
               aria-hidden="true"
             />
-            <h3 class="mt-5 text-lg font-medium tracking-tight">{s.title}</h3>
-            <p class="mt-3 text-[0.9375rem] leading-relaxed text-muted">{s.body}</p>
-          </div>
+          </li>
         ))
       }
-    </div>
+    </ol>
   </Section>
 
   <!-- ── Selected work ────────────────────────────────────────────── -->
@@ -232,10 +272,69 @@ const marquee = [
     lede="Client work ships under other names. These are the public ones."
     id="work"
   >
-    <div class="grid gap-5">
-      {projects.map((p) => <ProjectCard project={p} index={0} feature />)}
+    <div class="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-8">
+      <div class="grid gap-10 lg:col-span-7 lg:gap-14">
+        {
+          wide.map((p, i) => (
+            <figure data-reveal style={`--reveal-delay:${i * 80}ms`}>
+              <PreviewFrame project={p} eager={i === 0} />
+              <figcaption class="mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                <h3 class="display text-[1.5rem]" style={`view-transition-name:project-${p.id}`}>
+                  <a href={href(`/work/${p.id}`)} class="group/link">
+                    <span class="link">{p.data.title}</span>
+                    <Icon
+                      name="lucide:arrow-right"
+                      class="ml-0.5 inline-block size-[0.7em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:text-accent"
+                      aria-hidden="true"
+                    />
+                  </a>
+                </h3>
+                <p class="meta flex items-center gap-2">
+                  {p.data.kind}
+                  <span class="text-line-strong" aria-hidden="true">
+                    ·
+                  </span>
+                  <span class={statusTone[p.data.status] ?? 'text-muted'}>{p.data.status}</span>
+                </p>
+              </figcaption>
+            </figure>
+          ))
+        }
+      </div>
+
+      {
+        tall.length > 0 && (
+          <div class="grid gap-10 lg:col-span-4 lg:col-start-9 lg:gap-14">
+            {tall.map((p, i) => (
+              <figure data-reveal style={`--reveal-delay:${(wide.length + i) * 80}ms`}>
+                <PreviewFrame project={p} />
+                <figcaption class="mx-auto mt-4 flex max-w-[19rem] flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
+                  <h3 class="display text-[1.5rem]" style={`view-transition-name:project-${p.id}`}>
+                    <a href={href(`/work/${p.id}`)} class="group/link">
+                      <span class="link">{p.data.title}</span>
+                      <Icon
+                        name="lucide:arrow-right"
+                        class="ml-0.5 inline-block size-[0.7em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:text-accent"
+                        aria-hidden="true"
+                      />
+                    </a>
+                  </h3>
+                  <p class="meta flex items-center gap-2">
+                    {p.data.kind}
+                    <span class="text-line-strong" aria-hidden="true">
+                      ·
+                    </span>
+                    <span class={statusTone[p.data.status] ?? 'text-muted'}>{p.data.status}</span>
+                  </p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        )
+      }
     </div>
-    <div class="mt-10 flex justify-start">
+
+    <div class="mt-12 lg:mt-16">
       <a href={href('/work')} class="btn btn-ghost">
         Details
         <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />

@@ -4,6 +4,7 @@ import Layout from '@/layouts/Layout.astro';
 import { navIndex } from '@/lib/posts';
 import ProjectShowcase from '@/components/ProjectShowcase.astro';
 import { Icon } from 'astro-icon/components';
+import PageHeader from '@/components/PageHeader.astro';
 
 const isPublished = (d: { draft?: boolean }) => import.meta.env.DEV || !d.draft;
 
@@ -22,31 +23,14 @@ const index = await navIndex('/work');
 ---
 
 <Layout {title} {description} path="/work">
-  <section class="relative overflow-hidden border-b border-line">
-    <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
-    </div>
-    <div class="wrap relative py-10 lg:py-24">
-      <p class="eyebrow" data-reveal>{index} &nbsp;Work</p>
-      <div class="mt-5 grid gap-5 lg:mt-7 lg:grid-cols-12 lg:gap-8">
-        <div class="lg:col-span-7">
-          <h1
-            class="display text-[clamp(2.4rem,6.6vw,4.25rem)]"
-            data-reveal
-            style="--reveal-delay:60ms"
-          >
-            Selected <em class="italic text-accent">work.</em>
-          </h1>
-        </div>
-        <div class="lg:col-span-4 lg:col-start-9 lg:pt-3">
-          <p class="text-base leading-relaxed text-muted" data-reveal style="--reveal-delay:120ms">
-            Feel free to reach out about any of the projects I&rsquo;ve worked on.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
+  <PageHeader {index} label="Work">
+    Selected <em class="italic text-accent">work.</em>
+    <Fragment slot="aside">
+      Feel free to reach out about any of the projects I&rsquo;ve worked on.
+    </Fragment>
+  </PageHeader>
 
-  <div class="wrap py-10 lg:py-20">
+  <div class="wrap py-12 lg:py-24">
     <!-- Rows rather than cards, separated by a rule, so each project gets
          room for a screenshot instead of competing in a stack. -->
     <div class="grid gap-14 lg:gap-24">
