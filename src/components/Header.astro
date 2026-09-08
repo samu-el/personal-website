@@ -173,6 +173,15 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
 </header>
 
 <style>
+  /* The bar compresses once the page is scrolling, and eases back at the
+     top. data-scrolled is set by the script below. */
+  .wrap {
+    transition: height 0.35s var(--ease-out-quint);
+  }
+  #site-header[data-scrolled] .wrap {
+    height: 3.5rem;
+  }
+
   .menu-bar-top,
   .menu-bar-bottom {
     transition: transform 0.3s var(--ease-out-quint);

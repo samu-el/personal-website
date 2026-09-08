@@ -95,10 +95,12 @@ const section =
             );
 
           const fold = window.innerHeight * 0.92;
-          for (const el of document.querySelectorAll('[data-reveal]:not(.reveal-pending)')) {
+          const pending = '[data-reveal]:not(.reveal-pending), [data-draw]:not(.draw-pending)';
+          for (const el of document.querySelectorAll(pending)) {
             // Anything already on screen stays put — no stutter on first paint.
             if (el.getBoundingClientRect().top <= fold) continue;
-            el.classList.add('reveal-pending');
+            // A rule draws in; everything else fades up. Same observer.
+            el.classList.add(el.hasAttribute('data-draw') ? 'draw-pending' : 'reveal-pending');
             io.observe(el);
           }
         }
@@ -115,6 +117,42 @@ const section =
           init();
         }
         document.addEventListener('astro:page-load', init);
+      })();
+    </script>
+
+    <script is:inline>
+      // Buttons lean toward the cursor — a few pixels, on a spring — and
+      // settle back when it leaves. One delegated listener for every button
+      // on the page, and none of it for touch, coarse pointers or anyone who
+      // asked for less motion.
+      (() => {
+        const fine = window.matchMedia('(hover: hover) and (pointer: fine)');
+        const calm = window.matchMedia('(prefers-reduced-motion: reduce)');
+        const REACH = 5; // px, at the button's edge
+
+        document.addEventListener(
+          'pointermove',
+          (e) => {
+            if (!fine.matches || calm.matches) return;
+            const btn = e.target instanceof Element ? e.target.closest('.btn') : null;
+            if (!btn) return;
+            const box = btn.getBoundingClientRect();
+            const x = ((e.clientX - box.left) / box.width - 0.5) * 2 * REACH;
+            const y = ((e.clientY - box.top) / box.height - 0.5) * 2 * REACH;
+            btn.style.translate = `${x.toFixed(1)}px ${y.toFixed(1)}px`;
+          },
+          { passive: true },
+        );
+        document.addEventListener(
+          'pointerout',
+          (e) => {
+            const btn = e.target instanceof Element ? e.target.closest('.btn') : null;
+            if (btn && !(e.relatedTarget instanceof Node && btn.contains(e.relatedTarget))) {
+              btn.style.translate = '';
+            }
+          },
+          { passive: true },
+        );
       })();
     </script>
   </body>

@@ -128,13 +128,13 @@ const glance = [
       {
         roles.map((role, i) => (
           <li
-            class="relative grid gap-5 py-9 lg:grid-cols-12 lg:gap-8 lg:py-12"
+            class="ledger-row relative grid gap-5 py-9 lg:grid-cols-12 lg:gap-8 lg:py-12"
             data-reveal
             style={`--reveal-delay:${i * 80}ms`}
           >
             {/* Period column */}
             <div class="lg:col-span-4">
-              <p class="numeral flex items-baseline gap-3 text-[clamp(1.75rem,3.4vw,2.5rem)] text-fg">
+              <p class="row-index numeral flex items-baseline gap-3 text-[clamp(1.75rem,3.4vw,2.5rem)] text-fg">
                 {role.from ? (
                   <>
                     {role.from}
@@ -158,7 +158,7 @@ const glance = [
 
             {/* Role */}
             <div class="lg:col-span-7 lg:col-start-6">
-              <h3 class="display text-[clamp(1.5rem,2.6vw,1.9rem)]">{role.title}</h3>
+              <h3 class="row-title display text-[clamp(1.5rem,2.6vw,1.9rem)]">{role.title}</h3>
               <p class="mt-1.5 text-[0.9375rem] text-accent">
                 {role.url ? (
                   <a

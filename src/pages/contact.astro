@@ -73,15 +73,15 @@ const routes = [
       {
         routes.map((r, i) => (
           <li
-            class="group grid gap-4 py-8 sm:grid-cols-12 sm:gap-6 lg:py-10"
+            class="ledger-row group grid gap-4 py-8 sm:grid-cols-12 sm:gap-6 lg:py-10"
             data-reveal
             style={`--reveal-delay:${i * 70}ms`}
           >
-            <span class="numeral text-[1.75rem] text-subtle sm:col-span-1">
+            <span class="row-index numeral text-[1.75rem] text-subtle sm:col-span-1">
               {String(i + 1).padStart(2, '0')}
             </span>
             <div class="sm:col-span-6 lg:col-span-5">
-              <h2 class="display text-[clamp(1.6rem,3vw,2.25rem)]">{r.heading}</h2>
+              <h2 class="row-title display text-[clamp(1.6rem,3vw,2.25rem)]">{r.heading}</h2>
               <p class="mt-3 max-w-md text-[0.9375rem] leading-relaxed text-muted">{r.body}</p>
             </div>
             <div class="flex items-start sm:col-span-5 sm:col-start-8 sm:justify-end lg:col-span-6 lg:col-start-7">
@@ -152,7 +152,7 @@ const routes = [
     </div>
   </div>
 
-  <footer class="field-gold mt-12 lg:mt-20">
+  <footer class="mt-12 border-t border-line bg-sunken lg:mt-20">
     <div
       class="wrap flex flex-col gap-3 py-8 font-mono text-2xs tracking-wide text-subtle sm:flex-row sm:items-center sm:justify-between"
     >
