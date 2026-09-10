@@ -13,6 +13,8 @@
  *   6. Preview frames tilt and lift under the cursor and settle when it goes.
  *   7. Buttons lean toward the cursor; the nav indicator follows the links.
  *   8. Under prefers-reduced-motion none of it moves and nothing is hidden.
+ *   9. The now-playing card holds its shape as a skeleton until the first
+ *      answer, and swapping in the real content costs no layout shift.
  *
  * Usage:
  *   npm run build && npm run preview & npm run verify:interact
@@ -650,6 +652,203 @@ await ctx.close();
   await sleep(700);
   check('poll: returning to the tab asks at once', hits.length >= 1, `${hits.length} request(s)`);
   await ctx.close();
+}
+
+// ── 6. Now-playing skeleton ─────────────────────────────────────────────
+/* The card is filled entirely in the browser, so before this it appeared out
+   of nothing when the fetch resolved. What is under test is that it holds its
+   own shape first, that the swap costs no layout shift, and that a skeleton
+   is never left standing where no answer is coming. */
+{
+  const track = {
+    playing: true,
+    state: 'playing',
+    title: 'Yèkèrmo Sèw',
+    artist: 'Mulatu Astatke',
+    album: 'Mulatu of Ethiopia',
+    progressMs: 42000,
+    durationMs: 300000,
+  };
+
+  /**
+   * Loads /now with the endpoint held open, so the loading state can be
+   * measured before it resolves. `answer` is fulfilled on release.
+   */
+  const withGate = async (answer, viewport = { width: 1440, height: 900 }) => {
+    const ctx = await browser.newContext({ viewport });
+    let release;
+    const gate = new Promise((r) => (release = r));
+    await ctx.route('**/api/now-playing.json*', async (route) => {
+      await gate;
+      await route.fulfill(answer());
+    });
+    const page = await ctx.newPage();
+    await page.addInitScript(() => {
+      window.__cls = 0;
+      new PerformanceObserver((l) => {
+        for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value;
+      }).observe({ type: 'layout-shift', buffered: true });
+    });
+    await page.goto(`${BASE}/now/`, { waitUntil: 'commit' });
+    await sleep(1500);
+    return { ctx, page, release };
+  };
+
+  const ok = (body) => () => ({
+    status: 200,
+    contentType: 'application/json',
+    headers: { 'Cache-Control': 'public, max-age=5, s-maxage=5', Age: '1' },
+    body: JSON.stringify({ ...body, fetchedAt: Date.now() }),
+  });
+
+  const read = (page) =>
+    page.evaluate(() => {
+      const s = document.getElementById('now-playing');
+      const link = document.getElementById('np-link');
+      return {
+        state: s.dataset.state,
+        hidden: s.hidden,
+        height: Math.round(s.getBoundingClientRect().height),
+        busy: s.getAttribute('aria-busy'),
+        linkAriaHidden: link.getAttribute('aria-hidden'),
+        linkTabindex: link.getAttribute('tabindex'),
+        // The sleeve's placeholder is excluded: it is retired by the image
+        // loading, not by the state changing.
+        bars: document.querySelectorAll('#now-playing .sk:not(.sk-art)').length,
+        title: document.getElementById('np-title').textContent.trim(),
+        cls: +window.__cls.toFixed(4),
+      };
+    });
+
+  // A track: the common case, and the one the geometry is tuned against.
+  {
+    const { ctx, page, release } = await withGate(ok(track));
+    const loading = await read(page);
+    check(
+      'skeleton: the card is on screen before the answer is',
+      loading.state === 'loading' && !loading.hidden && loading.height > 200 && loading.bars >= 5,
+      JSON.stringify(loading),
+    );
+    check(
+      'skeleton: the card is marked busy and is not a link yet',
+      loading.busy === 'true' && loading.linkAriaHidden === 'true' && loading.linkTabindex === '-1',
+      `busy=${loading.busy} aria-hidden=${loading.linkAriaHidden} tabindex=${loading.linkTabindex}`,
+    );
+    release();
+    await sleep(1200);
+    const ready = await read(page);
+    check(
+      'skeleton: the real content replaces it',
+      ready.state === 'ready' && ready.title === track.title && ready.bars === 0,
+      JSON.stringify({ state: ready.state, title: ready.title, bars: ready.bars }),
+    );
+    check(
+      'skeleton: the swap does not move the page',
+      ready.height === loading.height && ready.cls - loading.cls < 0.002,
+      `height ${loading.height} -> ${ready.height}, CLS +${(ready.cls - loading.cls).toFixed(4)}`,
+    );
+    check(
+      'skeleton: the link and the busy flag are handed back',
+      ready.busy === null && ready.linkAriaHidden === null && ready.linkTabindex === null,
+      JSON.stringify({ busy: ready.busy, ah: ready.linkAriaHidden, ti: ready.linkTabindex }),
+    );
+    await ctx.close();
+  }
+
+  // Mobile, where the column is narrow enough for the title to be the risk.
+  {
+    const { ctx, page, release } = await withGate(ok(track), { width: 390, height: 800 });
+    const loading = await read(page);
+    release();
+    await sleep(1200);
+    const ready = await read(page);
+    check(
+      'skeleton: no shift on a phone either',
+      ready.state === 'ready' && Math.abs(ready.height - loading.height) <= 1,
+      `height ${loading.height} -> ${ready.height}`,
+    );
+    await ctx.close();
+  }
+
+  // Nothing to show: the card must leave, not sit there pulsing for ever.
+  {
+    const { ctx, page, release } = await withGate(ok({ playing: false }));
+    const loading = await read(page);
+    check('skeleton: shown while the answer is pending', loading.state === 'loading');
+    release();
+    await sleep(1200);
+    const empty = await read(page);
+    check(
+      'skeleton: an answer with no track hides the card',
+      empty.state === 'empty' && empty.hidden === true && empty.busy === null,
+      JSON.stringify({ state: empty.state, hidden: empty.hidden, busy: empty.busy }),
+    );
+    await ctx.close();
+  }
+
+  // A failing endpoint must not leave a skeleton standing either.
+  {
+    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    await ctx.route('**/api/now-playing.json*', (route) =>
+      route.fulfill({ status: 503, body: 'no' }),
+    );
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/now/`, { waitUntil: 'networkidle' });
+    await sleep(1200);
+    check(
+      'skeleton: a failing endpoint hides the card rather than pulsing at it',
+      await page.evaluate(() => {
+        const s = document.getElementById('now-playing');
+        return s.dataset.state === 'empty' && s.hidden === true;
+      }),
+    );
+    await ctx.close();
+  }
+
+  // Without script there is no answer coming, so there is nothing to promise.
+  {
+    const ctx = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      javaScriptEnabled: false,
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/now/`, { waitUntil: 'load' });
+    check(
+      'skeleton: no script means no skeleton',
+      await page.evaluate(() => document.getElementById('now-playing').hidden === true),
+    );
+    await ctx.close();
+  }
+
+  // Reduced motion: a placeholder that cannot pulse must still be a plain
+  // bar, not one frozen half-faded.
+  {
+    const ctx = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+      reducedMotion: 'reduce',
+    });
+    let release;
+    const gate = new Promise((r) => (release = r));
+    await ctx.route('**/api/now-playing.json*', async (route) => {
+      await gate;
+      await route.fulfill(ok(track)());
+    });
+    const page = await ctx.newPage();
+    await page.goto(`${BASE}/now/`, { waitUntil: 'commit' });
+    await sleep(1200);
+    const opacities = await page.evaluate(() =>
+      [...document.querySelectorAll('#now-playing .sk')].map((e) =>
+        Number(getComputedStyle(e).opacity),
+      ),
+    );
+    check(
+      'skeleton: under reduced motion the bars rest at full opacity',
+      opacities.length > 0 && opacities.every((o) => o === 1),
+      opacities.join(','),
+    );
+    release();
+    await ctx.close();
+  }
 }
 
 await browser.close();

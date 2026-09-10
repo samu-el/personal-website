@@ -10,6 +10,13 @@
  * that cannot name any track at all leaves the card hidden — before it is
  * deployed, or when Spotify is unreachable.
  *
+ * Until the first answer arrives the card holds its own shape as a skeleton
+ * rather than popping into existence when the fetch resolves. The placeholder
+ * bars live *inside* the elements the script fills, so each one inherits that
+ * element's line-height and the swap costs no layout shift — and every fill is
+ * a `textContent` assignment, which clears its own placeholder. The section
+ * stays hidden without script, where a skeleton could never resolve.
+ *
  * public/api/now-playing.json answers { playing: false } so the fetch is a 200
  * even with no Worker deployed. A caught exception still leaves the browser
  * logging a failed request to the console, and an endpoint that does not exist
@@ -34,13 +41,15 @@ import { href } from '@/lib/paths';
 const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playing.json');
 ---
 
-<section id="now-playing" hidden class="scroll-mt-24">
+<section id="now-playing" hidden data-state="loading" aria-busy="true" class="scroll-mt-24">
   <div class="wrap py-10 lg:py-16">
     <a
       id="np-link"
       href="https://open.spotify.com/"
       target="_blank"
       rel="noopener noreferrer"
+      aria-hidden="true"
+      tabindex="-1"
       class="group relative block overflow-hidden rounded-xl border border-line bg-surface p-5 transition-colors hover:border-line-strong sm:p-7"
     >
       <!-- Warmth behind the sleeve, so the card is not a flat rectangle. -->
@@ -59,20 +68,25 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
             <span id="np-eq" class="eq" aria-hidden="true">
               <span></span><span></span><span></span><span></span>
             </span>
-            <span id="np-state">Currently listening</span>
+            <span id="np-state"><span class="sk sk-state"></span></span>
           </p>
 
           <p
             id="np-title"
             class="display mt-4 text-[clamp(1.5rem,3.6vw,2.35rem)] leading-tight text-fg"
           >
+            <span class="sk sk-title"></span>
           </p>
-          <p id="np-artist" class="mt-2 text-[0.9375rem] text-muted sm:text-base"></p>
+          <p id="np-artist" class="mt-2 text-[0.9375rem] text-muted sm:text-base">
+            <span class="sk sk-artist"></span>
+          </p>
 
-          <!-- Stays hidden unless the track reports a duration. Podcast
-               episodes and local files do not always, and a bar with no end
-               is worse than no bar. -->
-          <div id="np-progress" class="mt-5 max-w-md" hidden>
+          <!-- Hidden by the script unless the track reports a duration —
+               podcast episodes and local files do not always, and a bar with
+               no end is worse than no bar. It starts *shown*, empty, so the
+               skeleton reserves the row: every path through the render sets
+               this either way on the first answer. -->
+          <div id="np-progress" class="mt-5 max-w-md">
             <div class="h-[3px] overflow-hidden rounded-full bg-line" aria-hidden="true">
               <!-- Width is set from JS every second; the matching linear
                    transition turns those steps into continuous movement. -->
@@ -87,8 +101,8 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
                  is decoration, and a progressbar role rewritten every second
                  is chatter. -->
             <p class="mt-2 flex justify-between font-mono text-2xs tabular-nums text-subtle">
-              <span id="np-elapsed">0:00</span>
-              <span id="np-duration">0:00</span>
+              <span id="np-elapsed"><span class="sk sk-time"></span></span>
+              <span id="np-duration"><span class="sk sk-time"></span></span>
             </p>
           </div>
 
@@ -102,8 +116,12 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
 
         <!-- Fixed box so the card does not reflow when the art loads. -->
         <div
+          id="np-sleeve"
+          data-art="pending"
           class="relative aspect-square w-24 shrink-0 overflow-hidden rounded-lg border border-line bg-surface-2 sm:w-32 lg:w-40"
         >
+          <!-- Behind the art, which fades in over it once loaded. -->
+          <div class="sk sk-art" aria-hidden="true"></div>
           <img
             id="np-art"
             alt=""
@@ -122,6 +140,89 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
 </section>
 
 <style>
+  /* ── Skeleton ──────────────────────────────────────────────────────
+     Placeholder bars, sized in `em` so each one scales with whatever it
+     sits inside — the title's font-size is a clamp, and a bar measured in
+     rem would stop matching it halfway across the viewport range.
+
+     Height is deliberately under 1em: an inline-block shorter than the
+     line box leaves the line box alone, so the element measures exactly
+     what it will measure with one line of text in it. That is what makes
+     the swap free of layout shift rather than approximately so.
+
+     The pulse rests at full opacity, so the global reduced-motion rule —
+     which collapses every animation to its last frame — leaves a plain
+     bar rather than a half-faded one. */
+  .sk {
+    display: inline-block;
+    vertical-align: middle;
+    height: 0.62em;
+    border-radius: 999px;
+    background-color: var(--color-line);
+    animation: sk-pulse 1.7s ease-in-out infinite;
+  }
+  @keyframes sk-pulse {
+    50% {
+      opacity: 0.45;
+    }
+    0%,
+    100% {
+      opacity: 1;
+    }
+  }
+  .sk-state {
+    width: 8.5rem;
+  }
+  .sk-title {
+    width: 72%;
+  }
+  .sk-artist {
+    width: 38%;
+  }
+  .sk-time {
+    width: 2.25rem;
+  }
+  /* The sleeve, filling its box rather than sitting on a text line. */
+  .sk-art {
+    position: absolute;
+    inset: 0;
+    height: auto;
+    border-radius: 0;
+    animation-delay: 0.2s;
+  }
+
+  /* Offsets so the bars breathe out of step, the way the meter does. */
+  .sk-title {
+    animation-delay: 0.08s;
+  }
+  .sk-artist {
+    animation-delay: 0.16s;
+  }
+
+  /* The sleeve's placeholder is the one that cannot clear itself: it has no
+     text to overwrite it, and the state changing is not the moment it should
+     go — the art fades in over 500ms after that, and removing the placeholder
+     any earlier just swaps a grey box for an emptier one. It waits for the
+     image, and stops pulsing as soon as there is an answer. */
+  #np-sleeve[data-art='ready'] .sk-art,
+  #np-sleeve[data-art='none'] .sk-art {
+    opacity: 0;
+  }
+  .sk-art {
+    transition: opacity var(--t-3) ease;
+  }
+  #now-playing:not([data-state='loading']) .sk-art {
+    animation: none;
+  }
+  /* A meter has nothing to report until there is a track, and the card is
+     not a link to anywhere until it names one. */
+  #now-playing[data-state='loading'] .eq {
+    display: none;
+  }
+  #now-playing[data-state='loading'] #np-link {
+    pointer-events: none;
+  }
+
   /* Four bars, each on its own duration as well as its own offset, so it
      reads as a level meter rather than four things blinking in step.
 
@@ -241,6 +342,31 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     let lastTitle = '';
     /** Pending next poll, so a focus or a navigation can supersede it. */
     let timer = 0;
+
+    /**
+     * Moves the card between its three states.
+     *
+     * `loading` is entered synchronously below, before the first paint, so
+     * the card holds its shape from the start instead of appearing when the
+     * fetch resolves. `ready` hands the link back to the pointer and to
+     * assistive technology. `empty` is the old behaviour: no Worker, or
+     * nothing it could name, and the card is not there at all.
+     */
+    function setState(next) {
+      const section = document.getElementById('now-playing');
+      if (!section) return;
+      section.dataset.state = next;
+      const link = document.getElementById('np-link');
+      if (next === 'ready') {
+        section.removeAttribute('aria-busy');
+        link?.removeAttribute('aria-hidden');
+        link?.removeAttribute('tabindex');
+      }
+      // `empty` keeps aria-busy off too: there is nothing still coming that
+      // a reader should be told to wait for.
+      if (next === 'empty') section.removeAttribute('aria-busy');
+      section.hidden = next === 'empty';
+    }
     /** Consecutive failures, for the backoff. */
     let strikes = 0;
 
@@ -359,7 +485,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       // thing that finished — the card is about what he is listening to, not
       // about whether a play button happens to be down right now.
       if (!data || !data.title) {
-        section.hidden = true;
+        setState('empty');
         total = 0;
         stopTicker();
         return;
@@ -398,17 +524,25 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
                 : 'Last played';
       }
 
+      const sleeve = document.getElementById('np-sleeve');
       if (data.art) {
-        // Only fade the sleeve in once it has actually decoded.
+        // Only fade the sleeve in once it has actually decoded, and only
+        // retire the placeholder behind it at the same moment.
         if (art.src !== data.art) {
           art.style.opacity = '0';
           art.src = data.art;
           art.alt = data.album ? `${data.album} — album art` : '';
-          art.onload = () => (art.style.opacity = '1');
+          art.onload = () => {
+            art.style.opacity = '1';
+            if (sleeve) sleeve.dataset.art = 'ready';
+          };
         }
       } else {
         art.removeAttribute('src');
         art.style.opacity = '0';
+        // Nothing coming: an empty sleeve is the honest answer, not a grey
+        // block that looks like it is still working.
+        if (sleeve) sleeve.dataset.art = 'none';
       }
 
       /* The bar advances locally between polls. Left to the poll alone it
@@ -463,7 +597,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       }
       lastTitle = data.title;
 
-      section.hidden = false;
+      setState('ready');
     }
 
     /* Both, because they do not fire interchangeably: switching tabs gives
@@ -481,6 +615,9 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       if (!document.hidden) poll();
     });
 
+    /* Synchronous, so the skeleton is up before the first paint rather than
+       one frame into it. */
+    setState('loading');
     poll();
     document.addEventListener('astro:page-load', poll);
   })();
