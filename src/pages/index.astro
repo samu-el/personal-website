@@ -82,15 +82,7 @@ const statusTone: Record<string, string> = {
 
     <div class="relative px-5 pb-14 pt-10 sm:px-8 lg:pb-24 lg:pt-20 xl:px-12 2xl:px-16">
       <p class="eyebrow hero-enter" style="--enter:0ms">
-        <span class="flex items-center gap-2">
-          <span class="relative flex size-1.5">
-            <span
-              class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-70"
-            ></span>
-            <span class="relative inline-flex size-1.5 rounded-full bg-jade"></span>
-          </span>
-          Available for work
-        </span>
+        <a href={href('/contact')} class="hit transition-colors hover:text-accent">Reach out</a>
         <span class="hidden text-line-strong sm:inline" aria-hidden="true">/</span>
         <span class="hidden sm:inline">{site.location}</span>
       </p>
@@ -183,10 +175,6 @@ const statusTone: Record<string, string> = {
               <dd class="leading-snug text-fg">
                 Full-stack web and mobile — TypeScript, Python, React, PostgreSQL.
               </dd>
-            </div>
-            <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
-              <dt class="text-subtle">Status</dt>
-              <dd class="leading-snug text-fg">Available to collaborate.</dd>
             </div>
           </dl>
           <a
