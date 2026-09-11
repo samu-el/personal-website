@@ -19,6 +19,14 @@ import { existsSync } from 'node:fs';
 import path from 'node:path';
 import sharp from 'sharp';
 import { chromium } from 'playwright';
+import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
+
+// Node's global fetch ignores HTTPS_PROXY, so a project that publishes its own
+// screenshot could not be read from behind an egress proxy. Same treatment as
+// tests/verify.mjs.
+if (process.env.HTTPS_PROXY || process.env.https_proxy) {
+  setGlobalDispatcher(new EnvHttpProxyAgent());
+}
 
 const CONTENT = 'src/content/projects';
 const OUT = 'src/assets/previews';
@@ -83,16 +91,26 @@ if (wanted.length === 0) {
 
 await mkdir(OUT, { recursive: true });
 
-const browser = await chromium.launch({
-  // Honour a preinstalled browser when one is provided, as tests/verify.mjs does.
-  executablePath: process.env.CHROMIUM_PATH || undefined,
-});
+/**
+ * Launched on first use, not up front: a project that publishes its own
+ * screenshot needs no browser at all, and `npm run shots monee` should not
+ * require one to be installed.
+ */
+let browser;
+async function browserFor() {
+  browser ??= await chromium.launch({
+    // Honour a preinstalled browser when one is provided, as tests/verify.mjs does.
+    executablePath: process.env.CHROMIUM_PATH || undefined,
+  });
+  return browser;
+}
 
 /** Contexts are per device and made on demand, then reused. */
 const contexts = new Map();
 async function contextFor(device) {
   const existing = contexts.get(device);
   if (existing) return existing;
+  const browser = await browserFor();
   const context = await browser.newContext({
     viewport: DEVICES[device].viewport,
     deviceScaleFactor: SCALE,
@@ -109,10 +127,15 @@ async function contextFor(device) {
 }
 
 /**
- * A project may ship scripts/seeds/<id>.mjs to put the app in a state worth
- * photographing — an empty first-run screen is a true picture of nothing.
- * `prepare(page)` runs before navigation; `path` overrides where to land;
- * `hold` is a reason the site can no longer be captured usefully.
+ * A project may ship scripts/seeds/<id>.mjs to change how it is captured:
+ *
+ *   image        a published screenshot to use instead of photographing a
+ *                page — for an app that ships its own, or one this script
+ *                cannot reach
+ *   prepare(page)  runs before navigation, to put the app in a state worth
+ *                  photographing — an empty first-run screen is a true
+ *                  picture of nothing
+ *   path         where to land, if not the site root
  */
 async function seedFor(id) {
   const file = new URL(`./seeds/${id}.mjs`, import.meta.url);
@@ -120,27 +143,30 @@ async function seedFor(id) {
   return import(file.href);
 }
 
-let failed = 0;
-let held = 0;
-
-for (const project of wanted) {
-  /* A seed may declare that the site has moved somewhere this script cannot
-     photograph — behind a login, say. Overwriting a good screenshot with
-     whatever stands in the way is worse than keeping the old one, and a run
-     that does it silently is worse still. Naming the project explicitly
-     overrides the hold, so it can always be re-checked by hand. */
-  const holdReason = only.length === 0 ? (await seedFor(project.id))?.hold : undefined;
-  if (holdReason) {
-    held += 1;
-    console.log(`hold  ${project.id.padEnd(22)} ${holdReason}`);
-    continue;
+/**
+ * The PNG bytes to save for a project, and a word for the log about where
+ * they came from.
+ *
+ * @returns {Promise<{ bytes: Buffer, from: string, how: string }>}
+ */
+async function capture(project, seed) {
+  // A project that publishes its own screenshot: take it at the source. It is
+  // the product's own picture of itself, it stays current as they replace it,
+  // and it does not depend on the app being reachable without an account.
+  if (seed?.image) {
+    const url = new URL(seed.image, project.demo).toString();
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return {
+      bytes: Buffer.from(await response.arrayBuffer()),
+      from: url,
+      how: `${project.device}, published`,
+    };
   }
 
   const context = await contextFor(project.device);
   const page = await context.newPage();
-  const target = path.join(OUT, `${project.id}.webp`);
   try {
-    const seed = await seedFor(project.id);
     if (seed?.prepare) await seed.prepare(page);
 
     const url = new URL(seed?.path ?? '/', project.demo).toString();
@@ -149,32 +175,41 @@ for (const project of wanted) {
     if (status >= 400) throw new Error(`HTTP ${status}`);
 
     await page.waitForTimeout(SETTLE_MS);
-    const shot = await page.screenshot({ type: 'png' });
+    return {
+      bytes: await page.screenshot({ type: 'png' }),
+      from: url,
+      how: `${project.device}${seed ? ', seeded' : ''}`,
+    };
+  } finally {
+    await page.close();
+  }
+}
 
-    const out = await sharp(shot)
+let failed = 0;
+
+for (const project of wanted) {
+  const target = path.join(OUT, `${project.id}.webp`);
+  try {
+    const seed = await seedFor(project.id);
+    const { bytes, from, how } = await capture(project, seed);
+
+    const out = await sharp(bytes)
       .resize({ width: DEVICES[project.device].outWidth, withoutEnlargement: true })
       .webp({ quality: 82 })
       .toBuffer();
     await writeFile(target, out);
 
     const kb = (out.length / 1024).toFixed(0);
-    const how = `${project.device}${seed ? ', seeded' : ''}`;
-    console.log(`ok    ${project.id.padEnd(22)} ${url}  ->  ${target} (${kb} kB, ${how})`);
+    console.log(`ok    ${project.id.padEnd(22)} ${from}  ->  ${target} (${kb} kB, ${how})`);
   } catch (error) {
     failed += 1;
     console.error(
       `FAIL  ${project.id.padEnd(22)} ${project.demo}  ${error.message.split('\n')[0]}`,
     );
-  } finally {
-    await page.close();
   }
 }
 
-await browser.close();
-
-if (held > 0) {
-  console.log(`\n${held} on hold; their committed screenshots were left alone.`);
-}
+await browser?.close();
 
 // A non-zero exit so CI does not quietly commit a partial set.
 if (failed > 0) {
