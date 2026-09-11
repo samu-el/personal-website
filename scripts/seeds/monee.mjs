@@ -209,5 +209,11 @@ export async function prepare(page) {
   );
 }
 
-/** Where to land after seeding. The dashboard is the screen worth showing. */
-export const path = '/';
+/**
+ * Where to land after seeding. The dashboard is the screen worth showing, and
+ * it is no longer at the root: monee.smr.et/ is now a marketing page, so a
+ * capture of `/` came back as that page's own phone mockup sitting inside the
+ * phone frame this site draws around it. The app itself is at /app, which is
+ * same-origin, so the snapshot written above still applies to it.
+ */
+export const path = '/app';
