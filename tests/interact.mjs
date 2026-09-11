@@ -307,19 +307,39 @@ check(
     !navHome,
 );
 
-// Metric numerals count up on arrival.
-const count = await page.evaluate(async () => {
-  const el = document.querySelector('[data-count]');
-  const initial = el.textContent.trim();
-  el.scrollIntoView({ block: 'center', behavior: 'instant' });
-  await new Promise((r) => setTimeout(r, 300));
-  const mid = el.textContent.trim();
-  await new Promise((r) => setTimeout(r, 1500));
-  return { initial, mid, end: el.textContent.trim() };
-});
+/* Metric numerals count up on arrival — on a page of its own.
+   The animation is one-shot and unobserves itself, so any earlier check
+   that scrolls past the metrics consumes it and this one then measures a
+   number that has already finished. That is not hypothetical: the counter
+   sits 40% into view at the scroll position the header check uses, which
+   is exactly the observer's threshold. */
+const count = await (async () => {
+  const own = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const fresh = await own.newPage();
+  await fresh.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  await sleep(ENTRANCE);
+  const out = await fresh.evaluate(async () => {
+    const el = document.querySelector('[data-count]');
+    const box = el.getBoundingClientRect();
+    const initial = el.textContent.trim();
+    el.scrollIntoView({ block: 'center', behavior: 'instant' });
+    await new Promise((r) => setTimeout(r, 300));
+    const mid = el.textContent.trim();
+    await new Promise((r) => setTimeout(r, 1500));
+    return {
+      initial,
+      mid,
+      end: el.textContent.trim(),
+      // Proof it had not already run before the scroll.
+      wasBelowFold: box.top >= window.innerHeight,
+    };
+  });
+  await own.close();
+  return out;
+})();
 check(
   'count-up: animates and lands on the real figure',
-  count.mid !== count.end && count.end === count.initial,
+  count.wasBelowFold && count.mid !== count.end && count.end === count.initial,
   JSON.stringify(count),
 );
 
