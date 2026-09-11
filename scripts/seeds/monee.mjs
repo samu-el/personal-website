@@ -210,10 +210,24 @@ export async function prepare(page) {
 }
 
 /**
- * Where to land after seeding. The dashboard is the screen worth showing, and
- * it is no longer at the root: monee.smr.et/ is now a marketing page, so a
- * capture of `/` came back as that page's own phone mockup sitting inside the
- * phone frame this site draws around it. The app itself is at /app, which is
- * same-origin, so the snapshot written above still applies to it.
+ * Where to land after seeding. The dashboard is the screen worth showing.
  */
 export const path = '/app';
+
+/**
+ * Why this project is not re-captured automatically.
+ *
+ * monee.smr.et has grown a front door since the committed screenshot was
+ * taken. `/` is now a marketing page — captured in the phone frame this site
+ * draws, it comes back as that page's own phone mockup inside a phone — and
+ * the app moved to `/app`, which now opens on a login screen that the
+ * localStorage snapshot above cannot get past. Neither is a picture of the
+ * product.
+ *
+ * The committed screenshot is a seeded dashboard and still matches the app,
+ * down to the layout in Monee's own marketing mockup, so it is kept rather
+ * than replaced with a login form. Remove this when the app has a demo mode
+ * the script can reach, then re-run `npm run shots monee`, which ignores the
+ * hold.
+ */
+export const hold = 'the app now opens on a login screen; keeping the seeded dashboard';

@@ -111,7 +111,8 @@ async function contextFor(device) {
 /**
  * A project may ship scripts/seeds/<id>.mjs to put the app in a state worth
  * photographing — an empty first-run screen is a true picture of nothing.
- * `prepare(page)` runs before navigation; `path` overrides where to land.
+ * `prepare(page)` runs before navigation; `path` overrides where to land;
+ * `hold` is a reason the site can no longer be captured usefully.
  */
 async function seedFor(id) {
   const file = new URL(`./seeds/${id}.mjs`, import.meta.url);
@@ -120,8 +121,21 @@ async function seedFor(id) {
 }
 
 let failed = 0;
+let held = 0;
 
 for (const project of wanted) {
+  /* A seed may declare that the site has moved somewhere this script cannot
+     photograph — behind a login, say. Overwriting a good screenshot with
+     whatever stands in the way is worse than keeping the old one, and a run
+     that does it silently is worse still. Naming the project explicitly
+     overrides the hold, so it can always be re-checked by hand. */
+  const holdReason = only.length === 0 ? (await seedFor(project.id))?.hold : undefined;
+  if (holdReason) {
+    held += 1;
+    console.log(`hold  ${project.id.padEnd(22)} ${holdReason}`);
+    continue;
+  }
+
   const context = await contextFor(project.device);
   const page = await context.newPage();
   const target = path.join(OUT, `${project.id}.webp`);
@@ -157,6 +171,10 @@ for (const project of wanted) {
 }
 
 await browser.close();
+
+if (held > 0) {
+  console.log(`\n${held} on hold; their committed screenshots were left alone.`);
+}
 
 // A non-zero exit so CI does not quietly commit a partial set.
 if (failed > 0) {
