@@ -2,24 +2,22 @@
 /**
  * Live signals, fetched at build time and refreshed by a daily scheduled run.
  *
- * Every block here is conditional: when a feed cannot be reached the section
- * is simply absent rather than empty or stale. If both are unreachable the
- * page still renders with its header, so the route never 404s.
+ * Every block here is conditional: when a feed cannot be reached the section is
+ * simply absent rather than empty or stale. If none are reachable the page
+ * still renders with its header, so the route never 404s.
  */
 import Layout from '@/layouts/Layout.astro';
 import { site } from '@/lib/site';
 import { navIndex } from '@/lib/posts';
 import { githubActivity, recentFilms, recentTracks } from '@/lib/feeds';
 import { Icon } from 'astro-icon/components';
+import FeedSection from '@/components/FeedSection.astro';
 import NowPlaying from '@/components/NowPlaying.astro';
 import PageHeader from '@/components/PageHeader.astro';
+import Thumb from '@/components/Thumb.astro';
 
 const index = await navIndex('/now');
-const [github, films, tracks] = await Promise.all([
-  githubActivity(),
-  recentFilms(),
-  recentTracks(),
-]);
+const [github, films, tracks] = await Promise.all([githubActivity(), recentFilms(), recentTracks()]);
 
 /** "3 days ago" — coarse on purpose, so a stale build cannot look precise. */
 function ago(iso: string): string {
@@ -34,221 +32,133 @@ function ago(iso: string): string {
 }
 
 /** Half-star ratings render as glyphs; Letterboxd stores them as decimals. */
-function stars(rating: number): string {
-  return '★'.repeat(Math.floor(rating)) + (rating % 1 ? '½' : '');
-}
+const stars = (rating: number) => '★'.repeat(Math.floor(rating)) + (rating % 1 ? '½' : '');
+
+/** Rows arrive in sequence, but only the first handful are worth staggering. */
+const stagger = (i: number) => `--reveal-delay:${Math.min(i, 6) * 60}ms`;
+
+const meta = 'meta';
+const stamp = `${meta} shrink-0 tabular-nums`;
+const outbound = { target: '_blank', rel: 'noopener noreferrer' };
 ---
 
-<Layout
-  title="Now"
-  description={`Recent public repository activity and recent films — ${site.name}.`}
-  path="/now"
->
+<Layout title="Now" description={`Recent public repository activity and recent films — ${site.name}.`} path="/now">
   <PageHeader {index} label="Now" compact>Lately.</PageHeader>
 
   <NowPlaying />
 
   {
     github && github.recent.length > 0 && (
-      <section class="scroll-mt-24">
-        <div class="wrap py-10 lg:py-20">
-          <div class="flex flex-wrap items-baseline justify-between gap-4">
-            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle" data-reveal>
-              Recently pushed
-            </h2>
-            <p class="font-mono text-2xs tracking-wide text-subtle" data-reveal>
-              {github.publicRepos} public repositories
-            </p>
-          </div>
-
-          <ul class="mt-6 divide-y divide-line border-y border-line">
-            {github.recent.map((repo, i) => (
-              <li data-reveal style={`--reveal-delay:${Math.min(i, 6) * 60}ms`}>
-                <a
-                  href={repo.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group flex flex-col gap-2 py-4 transition-colors sm:flex-row sm:items-baseline sm:gap-6"
-                >
-                  <span class="flex min-w-0 flex-1 items-baseline gap-3">
-                    <span class="truncate font-mono text-sm text-fg transition-colors group-hover:text-accent">
-                      {repo.name}
-                    </span>
-                    <Icon
-                      name="lucide:external-link"
-                      class="size-3 shrink-0 text-subtle transition-transform duration-300 group-hover:text-accent"
-                      aria-hidden="true"
-                    />
-                  </span>
-                  {repo.description && (
-                    <span class="min-w-0 flex-1 truncate text-[0.9375rem] text-muted sm:text-right">
-                      {repo.description}
-                    </span>
-                  )}
-                  <span class="flex shrink-0 items-center gap-3 font-mono text-2xs uppercase tracking-[0.1em] text-subtle">
-                    {repo.language && <span>{repo.language}</span>}
-                    <span class="tabular-nums">{ago(repo.pushedAt)}</span>
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-
-          <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+      <FeedSection title="Recently pushed" rule={false}>
+        <p slot="aside" class="font-mono text-2xs tracking-wide text-subtle" data-reveal>
+          {github.publicRepos} public repositories
+        </p>
+        {github.recent.map((repo, i) => (
+          <li data-reveal style={stagger(i)}>
             <a
-              href="https://github.com/samu-el?tab=repositories"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="btn btn-ghost"
+              href={repo.url}
+              {...outbound}
+              class="group flex flex-col gap-2 py-4 transition-colors sm:flex-row sm:items-baseline sm:gap-6"
             >
-              <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
-              All repositories
-            </a>
-            <div class="text-[0.9375rem] text-subtle">
-              {github.languages.length > 0 && (
-                <p>Languages across all public repositories: {github.languages.join(', ')}.</p>
+              <span class="flex min-w-0 flex-1 items-baseline gap-3">
+                <span class="truncate font-mono text-sm text-fg transition-colors group-hover:text-accent">
+                  {repo.name}
+                </span>
+                <Icon
+                  name="lucide:external-link"
+                  class="size-3 shrink-0 text-subtle transition-transform duration-300 group-hover:text-accent"
+                  aria-hidden="true"
+                />
+              </span>
+              {repo.description && (
+                <span class="min-w-0 flex-1 truncate text-[0.9375rem] text-muted sm:text-right">
+                  {repo.description}
+                </span>
               )}
-              <p class="mt-1">Private repositories are not listed.</p>
-            </div>
+              <span class:list={[meta, 'flex shrink-0 items-center gap-3']}>
+                {repo.language && <span>{repo.language}</span>}
+                <span class="tabular-nums">{ago(repo.pushedAt)}</span>
+              </span>
+            </a>
+          </li>
+        ))}
+        <div slot="after" class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+          <a href="https://github.com/samu-el?tab=repositories" {...outbound} class="btn btn-ghost">
+            <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
+            All repositories
+          </a>
+          <div class="text-[0.9375rem] text-subtle">
+            {github.languages.length > 0 && (
+              <p>Languages across all public repositories: {github.languages.join(', ')}.</p>
+            )}
+            <p class="mt-1">Private repositories are not listed.</p>
           </div>
         </div>
-      </section>
+      </FeedSection>
     )
   }
 
   {
     tracks && tracks.length > 0 && (
-      <section class="scroll-mt-24">
-        <div class="rule" />
-        <div class="wrap py-10 lg:py-20">
-          <div class="flex flex-wrap items-baseline justify-between gap-4">
-            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle" data-reveal>
-              Recently played
-            </h2>
-            <span class="flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-subtle">
-              <Icon name="simple-icons:spotify" class="size-3.5" aria-hidden="true" />
-              Spotify
-            </span>
-          </div>
-
-          <ul class="mt-6 divide-y divide-line border-y border-line">
-            {tracks.map((track, i) => (
-              <li data-reveal style={`--reveal-delay:${Math.min(i, 6) * 60}ms`}>
-                <a
-                  href={track.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group flex items-center gap-4 py-3"
-                >
-                  {track.art ? (
-                    <img
-                      src={track.art}
-                      alt=""
-                      width="80"
-                      height="80"
-                      loading="lazy"
-                      decoding="async"
-                      referrerpolicy="no-referrer"
-                      class="size-10 shrink-0 rounded border border-line object-cover"
-                    />
-                  ) : (
-                    <span
-                      class="size-10 shrink-0 rounded border border-line bg-surface-2"
-                      aria-hidden="true"
-                    />
-                  )}
-                  <span class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-6">
-                    <span class="min-w-0 flex-1 truncate text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
-                      {track.title}
-                    </span>
-                    <span class="min-w-0 flex-1 truncate text-[0.9375rem] text-muted sm:text-right">
-                      {track.artist}
-                    </span>
-                  </span>
-                  <span class="shrink-0 font-mono text-2xs uppercase tracking-[0.1em] tabular-nums text-subtle">
-                    {ago(track.playedAt)}
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+      <FeedSection title="Recently played">
+        <span slot="aside" class:list={[meta, 'flex items-center gap-1.5']}>
+          <Icon name="simple-icons:spotify" class="size-3.5" aria-hidden="true" />
+          Spotify
+        </span>
+        {tracks.map((track, i) => (
+          <li data-reveal style={stagger(i)}>
+            <a href={track.url} {...outbound} class="group flex items-center gap-4 py-3">
+              <Thumb src={track.art} width={80} height={80} class="size-10" />
+              <span class="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-6">
+                <span class="min-w-0 flex-1 truncate text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
+                  {track.title}
+                </span>
+                <span class="min-w-0 flex-1 truncate text-[0.9375rem] text-muted sm:text-right">{track.artist}</span>
+              </span>
+              <span class={stamp}>{ago(track.playedAt)}</span>
+            </a>
+          </li>
+        ))}
+      </FeedSection>
     )
   }
 
   {
     films && films.length > 0 && (
-      <section class="scroll-mt-24">
-        <div class="rule" />
-        <div class="wrap py-10 lg:py-20">
-          <div class="flex flex-wrap items-baseline justify-between gap-4">
-            <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle" data-reveal>
-              Recently watched
-            </h2>
-            <a
-              href="https://letterboxd.com/rocin4nte/"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="hit flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-accent"
-            >
-              <Icon name="simple-icons:letterboxd" class="size-3.5" aria-hidden="true" />
-              Letterboxd
-              <Icon name="lucide:external-link" class="size-3" aria-hidden="true" />
-            </a>
-          </div>
-
-          <ul class="mt-6 divide-y divide-line border-y border-line">
-            {films.map((film, i) => (
-              <li data-reveal style={`--reveal-delay:${Math.min(i, 6) * 60}ms`}>
-                <a
-                  href={film.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="group flex items-center gap-4 py-3"
-                >
-                  {film.poster ? (
-                    <img
-                      src={film.poster}
-                      alt=""
-                      width="60"
-                      height="90"
-                      loading="lazy"
-                      decoding="async"
-                      referrerpolicy="no-referrer"
-                      class="h-[3.375rem] w-9 shrink-0 rounded border border-line object-cover"
-                    />
-                  ) : (
-                    <span
-                      class="h-[3.375rem] w-9 shrink-0 rounded border border-line bg-surface-2"
-                      aria-hidden="true"
-                    />
+      <FeedSection title="Recently watched">
+        <a
+          slot="aside"
+          href="https://letterboxd.com/rocin4nte/"
+          {...outbound}
+          class:list={[meta, 'hit flex items-center gap-1.5 transition-colors hover:text-accent']}
+        >
+          <Icon name="simple-icons:letterboxd" class="size-3.5" aria-hidden="true" />
+          Letterboxd
+          <Icon name="lucide:external-link" class="size-3" aria-hidden="true" />
+        </a>
+        {films.map((film, i) => (
+          <li data-reveal style={stagger(i)}>
+            <a href={film.url} {...outbound} class="group flex items-center gap-4 py-3">
+              <Thumb src={film.poster} width={60} height={90} class="h-[3.375rem] w-9" />
+              <span class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-4 gap-y-1.5">
+                <span class="text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
+                  {film.title}
+                </span>
+                {film.year && <span class="font-mono text-2xs tracking-wide text-subtle">{film.year}</span>}
+                {film.rewatch && <span class="chip">Rewatch</span>}
+                <span class="ml-auto flex items-center gap-4">
+                  {film.rating !== null && (
+                    <span class="text-sm text-accent" aria-label={`${film.rating} out of 5`}>
+                      {stars(film.rating)}
+                    </span>
                   )}
-                  <span class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-4 gap-y-1.5">
-                    <span class="text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
-                      {film.title}
-                    </span>
-                    {film.year && (
-                      <span class="font-mono text-2xs tracking-wide text-subtle">{film.year}</span>
-                    )}
-                    {film.rewatch && <span class="chip">Rewatch</span>}
-                    <span class="ml-auto flex items-center gap-4">
-                      {film.rating !== null && (
-                        <span class="text-sm text-accent" aria-label={`${film.rating} out of 5`}>
-                          {stars(film.rating)}
-                        </span>
-                      )}
-                      <span class="font-mono text-2xs uppercase tracking-[0.1em] tabular-nums text-subtle">
-                        {ago(film.watchedAt)}
-                      </span>
-                    </span>
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+                  <span class={stamp}>{ago(film.watchedAt)}</span>
+                </span>
+              </span>
+            </a>
+          </li>
+        ))}
+      </FeedSection>
     )
   }
 
@@ -256,7 +166,7 @@ function stars(rating: number): string {
     !github && !films && !tracks && (
       <section class="scroll-mt-24">
         <div class="wrap py-10 lg:py-20">
-          <p class="text-[1.0625rem] text-muted">Neither feed could be reached at build time.</p>
+          <p class="text-[1.0625rem] text-muted">No feed could be reached at build time.</p>
         </div>
       </section>
     )

@@ -9,8 +9,7 @@ const items = await visibleNav();
 
 <Layout title="Not found" description="That page does not exist." path="/404" noindex>
   <section class="field-ink relative flex overflow-hidden lg:min-h-[70dvh] lg:items-center">
-    <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-50" aria-hidden="true">
-    </div>
+    <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-50" aria-hidden="true"></div>
     <div class="wrap relative py-10 lg:py-20">
       <p class="eyebrow">Error 404</p>
       <h1 class="display-hero mt-6 text-[clamp(3.5rem,14vw,9rem)]">
@@ -24,14 +23,9 @@ const items = await visibleNav();
         {
           items.map((item, i) => (
             <li class:list={[i % 2 === 0 ? 'sm:border-r sm:pr-6' : 'sm:pl-6']}>
-              <a
-                href={href(item.href)}
-                class="group flex items-baseline gap-3 py-4 transition-colors"
-              >
+              <a href={href(item.href)} class="group flex items-baseline gap-3 py-4 transition-colors">
                 <span class="font-mono text-2xs text-subtle">{item.index}</span>
-                <span class="text-[0.9375rem] transition-colors group-hover:text-accent">
-                  {item.label}
-                </span>
+                <span class="text-[0.9375rem] transition-colors group-hover:text-accent">{item.label}</span>
                 <Icon
                   name="lucide:arrow-right"
                   class="ml-auto size-3.5 self-center text-subtle transition-transform duration-300 group-hover:translate-x-1 group-hover:text-accent"

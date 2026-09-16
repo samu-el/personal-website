@@ -2,7 +2,10 @@
 import type { GetStaticPaths } from 'astro';
 import { render, type CollectionEntry } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import Chips from '@/components/Chips.astro';
 import PostCard from '@/components/PostCard.astro';
+import PrevNext from '@/components/PrevNext.astro';
 import { href } from '@/lib/paths';
 import { publishedPosts } from '@/lib/posts';
 import { formatDate, readingTime } from '@/lib/format';
@@ -11,12 +14,11 @@ import { Icon } from 'astro-icon/components';
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const sorted = await publishedPosts();
-
   return sorted.map((post, i) => ({
     params: { id: post.id },
     props: {
       post,
-      /** Newer and older neighbours, plus two more for the tail list. */
+      /** Newer and older neighbours, plus four more for the tail list. */
       newer: sorted[i - 1] ?? null,
       older: sorted[i + 1] ?? null,
       more: sorted.filter((p) => p.id !== post.id).slice(0, 4),
@@ -35,8 +37,7 @@ const { post, newer, older, more } = Astro.props as Props;
 const { Content, headings } = await render(post);
 const d = post.data;
 const minutes = d.readingTime ?? readingTime(post.body);
-
-const shareUrl = new URL(href(`/writing/${post.id}`), Astro.site ?? 'https://smr.et');
+const shareUrl = new URL(href(`/writing/${post.id}`), Astro.site ?? 'https://smr.et').toString();
 
 const articleSchema = {
   '@context': 'https://schema.org',
@@ -47,12 +48,28 @@ const articleSchema = {
   dateModified: (d.updatedDate ?? d.pubDate).toISOString(),
   author: { '@type': 'Person', name: site.name, url: 'https://www.linkedin.com/in/samu-el/' },
   publisher: { '@type': 'Person', name: site.name },
-  mainEntityOfPage: { '@type': 'WebPage', '@id': shareUrl.toString() },
+  mainEntityOfPage: { '@type': 'WebPage', '@id': shareUrl },
   keywords: d.tags.join(', '),
 };
 
 /** Only h2s make the contents list; deeper levels add noise, not navigation. */
 const toc = headings.filter((h) => h.depth === 2);
+
+const share = [
+  {
+    href: `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`,
+    icon: 'simple-icons:linkedin',
+    label: 'Share',
+    external: true,
+  },
+  {
+    href: `mailto:${site.email}?subject=${encodeURIComponent(`Re: ${d.title}`)}`,
+    icon: 'lucide:mail',
+    label: 'Reply',
+    external: false,
+  },
+];
+const eyebrow = 'meta';
 ---
 
 <Layout
@@ -65,31 +82,14 @@ const toc = headings.filter((h) => h.depth === 2);
   tags={d.tags}
 >
   <article>
-    <!-- ── Header ─────────────────────────────────────────────────── -->
     <header class="relative overflow-hidden border-b border-line">
-      <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
-      </div>
+      <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true"></div>
       <div class="wrap relative py-10 lg:py-20">
-        <nav aria-label="Breadcrumb" class="mb-6 lg:mb-10">
-          <a
-            href={href('/writing')}
-            class="group inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-subtle transition-colors hover:text-fg"
-          >
-            <Icon
-              name="lucide:arrow-left"
-              class="size-3 transition-transform duration-300 group-hover:-translate-x-0.5"
-              aria-hidden="true"
-            />
-            All writing
-          </a>
-        </nav>
+        <Breadcrumb to="/writing" label="All writing" />
 
         <div class="grid lg:grid-cols-12">
           <div class="lg:col-span-8">
-            <p
-              class="flex flex-wrap items-center gap-x-3 gap-y-1.5 font-mono text-2xs uppercase tracking-[0.12em] text-subtle"
-              data-reveal
-            >
+            <p class="flex flex-wrap items-center gap-x-3 gap-y-1.5 meta" data-reveal>
               <time datetime={d.pubDate.toISOString()}>{formatDate(d.pubDate)}</time>
               <span class="text-line-strong" aria-hidden="true">·</span>
               <span>{minutes} min read</span>
@@ -105,11 +105,7 @@ const toc = headings.filter((h) => h.depth === 2);
               }
             </p>
 
-            <h1
-              class="display mt-6 text-[clamp(2.2rem,5.6vw,3.9rem)]"
-              data-reveal
-              style="--reveal-delay:60ms"
-            >
+            <h1 class="display mt-6 text-[clamp(2.2rem,5.6vw,3.9rem)]" data-reveal style="--reveal-delay:60ms">
               {d.title}
             </h1>
 
@@ -121,26 +117,14 @@ const toc = headings.filter((h) => h.depth === 2);
               {d.description}
             </p>
 
-            {
-              d.tags.length > 0 && (
-                <ul
-                  class="mt-7 flex flex-wrap gap-1.5"
-                  aria-label="Tags"
-                  data-reveal
-                  style="--reveal-delay:160ms"
-                >
-                  {d.tags.map((t) => (
-                    <li class="chip">{t}</li>
-                  ))}
-                </ul>
-              )
-            }
+            <div data-reveal style="--reveal-delay:160ms">
+              <Chips items={d.tags} label="Tags" />
+            </div>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- ── Body ───────────────────────────────────────────────────── -->
     <div class="wrap py-10 lg:py-20">
       <div class="grid gap-10 lg:grid-cols-12 lg:gap-10">
         <div class="prose lg:col-span-7">
@@ -152,10 +136,7 @@ const toc = headings.filter((h) => h.depth === 2);
             {
               toc.length > 1 && (
                 <nav aria-labelledby="toc-heading">
-                  <h2
-                    id="toc-heading"
-                    class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle"
-                  >
+                  <h2 id="toc-heading" class={eyebrow}>
                     Contents
                   </h2>
                   <ol class="mt-4 space-y-2.5">
@@ -166,9 +147,7 @@ const toc = headings.filter((h) => h.depth === 2);
                           class="toc-link flex gap-3 text-[0.875rem] leading-snug text-muted transition-colors hover:text-fg"
                           data-toc={h.slug}
                         >
-                          <span class="font-mono text-2xs text-subtle">
-                            {String(i + 1).padStart(2, '0')}
-                          </span>
+                          <span class="font-mono text-2xs text-subtle">{String(i + 1).padStart(2, '0')}</span>
                           <span>{h.text}</span>
                         </a>
                       </li>
@@ -179,38 +158,33 @@ const toc = headings.filter((h) => h.depth === 2);
             }
 
             <div class="card rounded-lg p-6">
-              <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Written by</h2>
+              <h2 class={eyebrow}>Written by</h2>
               <p class="mt-4 text-[0.9375rem] font-medium tracking-tight">{site.name}</p>
               <p class="mt-1 text-[0.8125rem] leading-snug text-subtle">
                 {site.role}, {site.company} · {site.location}
               </p>
               <div class="rule my-5"></div>
               <div class="flex flex-wrap gap-2">
-                <a
-                  href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl.toString())}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-muted transition-colors hover:border-accent hover:text-accent"
-                >
-                  <Icon name="simple-icons:linkedin" class="size-3" aria-hidden="true" />
-                  Share
-                </a>
-                <a
-                  href={`mailto:${site.email}?subject=${encodeURIComponent(`Re: ${d.title}`)}`}
-                  class="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 font-mono text-2xs uppercase tracking-[0.1em] text-muted transition-colors hover:border-accent hover:text-accent"
-                >
-                  <Icon name="lucide:mail" class="size-3" aria-hidden="true" />
-                  Reply
-                </a>
+                {
+                  share.map((s) => (
+                    <a
+                      href={s.href}
+                      target={s.external ? '_blank' : undefined}
+                      rel={s.external ? 'noopener noreferrer' : undefined}
+                      class="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 meta text-muted transition-colors hover:border-accent hover:text-accent"
+                    >
+                      <Icon name={s.icon} class="size-3" aria-hidden="true" />
+                      {s.label}
+                    </a>
+                  ))
+                }
               </div>
             </div>
 
             {
               more.length > 0 && (
                 <div>
-                  <h2 class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">
-                    More reading
-                  </h2>
+                  <h2 class={eyebrow}>More reading</h2>
                   <div class="mt-3">
                     {more.map((p) => (
                       <PostCard post={p} compact />
@@ -224,91 +198,28 @@ const toc = headings.filter((h) => h.depth === 2);
       </div>
     </div>
 
-    <!-- ── Prev / next ────────────────────────────────────────────── -->
-    <nav aria-label="More posts" class="border-t border-line" hidden={!older && !newer}>
-      <div class="wrap grid gap-px sm:grid-cols-2">
-        {
-          older ? (
-            <a
-              href={href(`/writing/${older.id}`)}
-              class="group flex flex-col justify-between gap-4 border-b border-line py-8 sm:border-b-0 sm:border-r sm:pr-8"
-            >
-              <span class="inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-subtle">
-                <Icon
-                  name="lucide:arrow-left"
-                  class="size-3 transition-transform duration-300 group-hover:-translate-x-0.5"
-                  aria-hidden="true"
-                />
-                Older
-              </span>
-              <span class="text-lg font-medium leading-snug tracking-tight transition-colors group-hover:text-accent">
-                {older.data.title}
-              </span>
-            </a>
-          ) : (
-            <div class="hidden sm:block" />
-          )
-        }
-        {
-          newer && (
-            <a
-              href={href(`/writing/${newer.id}`)}
-              class="group flex flex-col items-start justify-between gap-4 py-8 sm:items-end sm:pl-8 sm:text-right"
-            >
-              <span class="inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-subtle">
-                Newer
-                <Icon
-                  name="lucide:arrow-right"
-                  class="size-3 transition-transform duration-300 group-hover:translate-x-0.5"
-                  aria-hidden="true"
-                />
-              </span>
-              <span class="text-lg font-medium leading-snug tracking-tight transition-colors group-hover:text-accent">
-                {newer.data.title}
-              </span>
-            </a>
-          )
-        }
-      </div>
-    </nav>
+    <PrevNext
+      base="/writing"
+      label="More posts"
+      back={older && { id: older.id, title: older.data.title }}
+      forward={newer && { id: newer.id, title: newer.data.title }}
+      backLabel="Older"
+      forwardLabel="Newer"
+      size="text-lg"
+    />
   </article>
 
   <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} is:inline />
 </Layout>
 
 <style>
-  .toc-link.is-current {
-    color: var(--color-accent);
-  }
+  .toc-link.is-current,
   .toc-link.is-current .font-mono {
     color: var(--color-accent);
   }
 </style>
 
-<script is:inline>
-  (() => {
-    function init() {
-      const links = document.querySelectorAll('.toc-link');
-      if (!links.length) return;
-      const headings = Array.from(links)
-        .map((l) => document.getElementById(l.dataset.toc))
-        .filter(Boolean);
-      if (!headings.length) return;
-
-      const io = new IntersectionObserver(
-        (entries) => {
-          for (const entry of entries) {
-            if (!entry.isIntersecting) continue;
-            links.forEach((l) =>
-              l.classList.toggle('is-current', l.dataset.toc === entry.target.id),
-            );
-          }
-        },
-        { rootMargin: '-15% 0px -70% 0px' },
-      );
-      headings.forEach((h) => io.observe(h));
-    }
-    init();
-    document.addEventListener('astro:page-load', init);
-  })();
+<script>
+  import { tableOfContents } from '@/lib/client/toc';
+  tableOfContents();
 </script>

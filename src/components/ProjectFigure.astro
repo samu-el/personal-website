@@ -1,0 +1,38 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { Icon } from 'astro-icon/components';
+import PreviewFrame from '@/components/PreviewFrame.astro';
+import { href } from '@/lib/paths';
+import { tone } from '@/lib/status';
+
+/** A framed screenshot with its title and status, as the home page shows it. */
+interface Props {
+  project: CollectionEntry<'projects'>;
+  delay?: number;
+  eager?: boolean;
+  captionClass?: string;
+}
+const { project, delay = 0, eager = false, captionClass = '' } = Astro.props as Props;
+const d = project.data;
+---
+
+<figure data-reveal style={`--reveal-delay:${delay}ms`}>
+  <PreviewFrame {project} {eager} />
+  <figcaption class:list={['mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1', captionClass]}>
+    <h3 class="display text-[1.5rem]" style={`view-transition-name:project-${project.id}`}>
+      <a href={href(`/work/${project.id}`)} class="group/link">
+        <span class="link">{d.title}</span>
+        <Icon
+          name="lucide:arrow-right"
+          class="ml-0.5 inline-block size-[0.7em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:text-accent"
+          aria-hidden="true"
+        />
+      </a>
+    </h3>
+    <p class="meta flex items-center gap-2">
+      {d.kind}
+      <span class="text-line-strong" aria-hidden="true">·</span>
+      <span class={tone(d.status)}>{d.status}</span>
+    </p>
+  </figcaption>
+</figure>

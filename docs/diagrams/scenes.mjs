@@ -140,14 +140,7 @@ const row = (n) => 150 + n * 110;
 /* ── 3. Motion ─────────────────────────────────────────────────────────── */
 {
   const els = [];
-  els.push(
-    ...heading(
-      60,
-      40,
-      'Motion',
-      'One duration scale, three gates, and two scripts that follow the pointer.',
-    ),
-  );
+  els.push(...heading(60, 40, 'Motion', 'One duration scale, three gates, and two scripts that follow the pointer.'));
 
   const css = box(col(0), row(0), W, H, 'tokens.css\n--t-1 … --t-5', {
     fill: p.GOLD_BG,
@@ -194,7 +187,10 @@ const row = (n) => 150 + n * 110;
       col(2) + 60,
       row(3) + 50,
       'tilt catches the cursor   530ms → 0ms\nbutton lean                250ms → 149ms\nheader compression shift     8px → 0px',
-      { size: 14, color: p.MUTED },
+      {
+        size: 14,
+        color: p.MUTED,
+      },
     ),
   );
   await write('03-motion', els);
@@ -203,14 +199,7 @@ const row = (n) => 150 + n * 110;
 /* ── 4. Content ────────────────────────────────────────────────────────── */
 {
   const els = [];
-  els.push(
-    ...heading(
-      60,
-      40,
-      'Content',
-      'Collections in, routes out. Two flags decide what is ever rendered.',
-    ),
-  );
+  els.push(...heading(60, 40, 'Content', 'Collections in, routes out. Two flags decide what is ever rendered.'));
 
   const projects = box(col(0), row(0), W, H, 'content/projects\n*.md + zod schema', {
     fill: p.PAPER,
@@ -263,14 +252,7 @@ const row = (n) => 150 + n * 110;
 /* ── 5. Testing ────────────────────────────────────────────────────────── */
 {
   const els = [];
-  els.push(
-    ...heading(
-      60,
-      40,
-      'Testing',
-      'Four suites, one shared harness, everything run in CI on every push.',
-    ),
-  );
+  els.push(...heading(60, 40, 'Testing', 'Four suites, one shared harness, everything run in CI on every push.'));
 
   const harness = box(col(1), row(0), W, H, 'tests/harness.mjs\nlaunch · proxy · report', {
     fill: p.JADE_BG,

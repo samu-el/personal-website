@@ -225,8 +225,7 @@
      selector outranks .card:hover, which otherwise wins the transform. */
   .card.frame-card,
   .card.frame-card:hover {
-    transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
-      translateY(var(--lift, 0px));
+    transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--lift, 0px));
     /* Duration and easing come from variables so the state below can shorten
        them without restating the whole list. */
     transition:

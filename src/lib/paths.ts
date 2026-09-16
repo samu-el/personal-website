@@ -37,8 +37,7 @@ export function absolute(path: string, site: URL | string | undefined): string {
 /** True when `current` is `path` or a descendant of it. */
 export function isActive(current: string, path: string): boolean {
   const norm = (p: string) => {
-    const withoutBase =
-      p.startsWith(href('/')) && href('/') !== '/' ? p.slice(href('/').length - 1) : p;
+    const withoutBase = p.startsWith(href('/')) && href('/') !== '/' ? p.slice(href('/').length - 1) : p;
     return withoutBase.replace(/\/+$/, '') || '/';
   };
   const a = norm(current);

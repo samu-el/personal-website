@@ -2,26 +2,22 @@
 import type { GetStaticPaths } from 'astro';
 import { getCollection, render, type CollectionEntry } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
-import { href } from '@/lib/paths';
-import { Icon } from 'astro-icon/components';
+import Breadcrumb from '@/components/Breadcrumb.astro';
+import Chips from '@/components/Chips.astro';
+import PrevNext from '@/components/PrevNext.astro';
 import PreviewFrame from '@/components/PreviewFrame.astro';
+import { Icon } from 'astro-icon/components';
+import { tone } from '@/lib/status';
 
 export const getStaticPaths: GetStaticPaths = async () => {
   // Hidden projects get no detail page, so nothing links into them and they
   // stay out of the sitemap.
-  const projects = await getCollection(
-    'projects',
-    ({ data }) => !data.hidden && (import.meta.env.DEV || !data.draft),
-  );
+  const projects = await getCollection('projects', ({ data }) => !data.hidden && (import.meta.env.DEV || !data.draft));
   const sorted = projects.sort((a, b) => b.data.weight - a.data.weight);
 
   return sorted.map((project, i) => ({
     params: { id: project.id },
-    props: {
-      project,
-      prev: sorted[i - 1] ?? null,
-      next: sorted[i + 1] ?? null,
-    },
+    props: { project, prev: sorted[i - 1] ?? null, next: sorted[i + 1] ?? null },
   }));
 };
 
@@ -35,59 +31,38 @@ const { project, prev, next } = Astro.props as Props;
 const { Content } = await render(project);
 const d = project.data;
 
-const statusTone: Record<string, string> = {
-  Live: 'text-jade',
-  Ongoing: 'text-jade',
-  Shipped: 'text-muted',
-  Experiment: 'text-accent',
-  Archived: 'text-subtle',
-};
+/** Only a project that is actually up gets the live dot. */
+const isLive = d.status === 'Live' || d.status === 'Ongoing';
+
+/* Built by spreading rather than filtering a cast: a generic type argument
+   anywhere in frontmatter stops Astro finding `interface Props`. */
+const links = [
+  ...(d.demo ? [{ href: d.demo, icon: 'lucide:external-link', label: 'View live', cls: 'btn-primary' }] : []),
+  ...(d.repo ? [{ href: d.repo, icon: 'simple-icons:github', label: 'Source', cls: 'btn-ghost' }] : []),
+];
+
+const eyebrow = 'meta';
 ---
 
-<Layout
-  title={d.title}
-  description={d.blurb}
-  path={`/work/${project.id}`}
-  type="article"
-  tags={d.tags}
->
+<Layout title={d.title} description={d.blurb} path={`/work/${project.id}`} type="article" tags={d.tags}>
   <article>
-    <!-- ── Header ─────────────────────────────────────────────────── -->
     <header class="relative overflow-hidden border-b border-line">
-      <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true">
-      </div>
+      <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true"></div>
       <div class="wrap relative py-10 lg:py-20">
-        <nav aria-label="Breadcrumb" class="mb-6 lg:mb-10">
-          <a
-            href={href('/work')}
-            class="group inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-subtle transition-colors hover:text-fg"
-          >
-            <Icon
-              name="lucide:arrow-left"
-              class="size-3 transition-transform duration-300 group-hover:-translate-x-0.5"
-              aria-hidden="true"
-            />
-            All work
-          </a>
-        </nav>
+        <Breadcrumb to="/work" label="All work" />
 
         <div class="grid gap-10 lg:grid-cols-12 lg:gap-8">
           <div class="lg:col-span-7">
             <p class="flex flex-wrap items-center gap-x-3 gap-y-1.5" data-reveal>
-              <span class="font-mono text-2xs uppercase tracking-[0.12em] text-subtle">
+              <span class="meta">
                 {d.kind}
               </span>
               <span class="text-line-strong" aria-hidden="true">·</span>
               <span class="font-mono text-2xs tracking-wide text-subtle">{d.period}</span>
               <span class="text-line-strong" aria-hidden="true">·</span>
-              <span
-                class:list={[
-                  'inline-flex items-center gap-1.5 font-mono text-2xs uppercase tracking-[0.1em]',
-                  statusTone[d.status] ?? 'text-muted',
-                ]}
-              >
+              <span class:list={['meta inline-flex items-center gap-1.5', tone(d.status)]}>
                 {
-                  (d.status === 'Live' || d.status === 'Ongoing') && (
+                  isLive && (
                     <span class="relative flex size-1.5">
                       <span class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-60" />
                       <span class="relative inline-flex size-1.5 rounded-full bg-jade" />
@@ -116,29 +91,16 @@ const statusTone: Record<string, string> = {
 
             <div class="mt-9 flex flex-wrap gap-3" data-reveal style="--reveal-delay:180ms">
               {
-                d.demo && (
-                  <a
-                    href={d.demo}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn btn-primary"
-                  >
-                    <Icon name="lucide:external-link" class="size-4" aria-hidden="true" />
-                    View live
+                links.map((l) => (
+                  <a href={l.href} target="_blank" rel="noopener noreferrer" class:list={['btn', l.cls]}>
+                    <Icon name={l.icon} class="size-4" aria-hidden="true" />
+                    {l.label}
                   </a>
-                )
-              }
-              {
-                d.repo && (
-                  <a href={d.repo} target="_blank" rel="noopener noreferrer" class="btn btn-ghost">
-                    <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
-                    Source
-                  </a>
-                )
+                ))
               }
               {
                 !d.repo && d.repoPrivate && (
-                  <span class="inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle">
+                  <span class="inline-flex items-center gap-2 meta">
                     <Icon name="lucide:lock" class="size-3.5" aria-hidden="true" />
                     Private source
                   </span>
@@ -147,12 +109,11 @@ const statusTone: Record<string, string> = {
             </div>
           </div>
 
-          <!-- Fact panel -->
           <aside class="lg:col-span-4 lg:col-start-9" data-reveal style="--reveal-delay:240ms">
             <div class="card rounded-lg p-6">
               <dl class="space-y-4 text-sm">
                 <div>
-                  <dt class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Role</dt>
+                  <dt class={eyebrow}>Role</dt>
                   <dd class="mt-1.5 leading-snug text-fg">{d.role}</dd>
                 </div>
                 {
@@ -169,41 +130,22 @@ const statusTone: Record<string, string> = {
                   )
                 }
                 {
-                  d.stack.length > 0 && (
-                    <>
-                      <div class="rule" />
-                      <div>
-                        <dt class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">
-                          Stack
-                        </dt>
-                        <dd class="mt-3">
-                          <ul class="flex flex-wrap gap-1.5">
-                            {d.stack.map((s) => (
-                              <li class="chip">{s}</li>
-                            ))}
-                          </ul>
-                        </dd>
-                      </div>
-                    </>
-                  )
-                }
-                {
-                  d.tags.length > 0 && (
-                    <>
-                      <div class="rule" />
-                      <div>
-                        <dt class="font-mono text-2xs uppercase tracking-[0.14em] text-subtle">
-                          Tags
-                        </dt>
-                        <dd class="mt-3">
-                          <ul class="flex flex-wrap gap-1.5">
-                            {d.tags.map((t) => (
-                              <li class="chip">{t}</li>
-                            ))}
-                          </ul>
-                        </dd>
-                      </div>
-                    </>
+                  [
+                    { title: 'Stack', items: d.stack },
+                    { title: 'Tags', items: d.tags },
+                  ].map(
+                    ({ title, items }) =>
+                      items.length > 0 && (
+                        <>
+                          <div class="rule" />
+                          <div>
+                            <dt class={eyebrow}>{title}</dt>
+                            <dd>
+                              <Chips items={items} class="mt-3" />
+                            </dd>
+                          </div>
+                        </>
+                      ),
                   )
                 }
               </dl>
@@ -213,17 +155,14 @@ const statusTone: Record<string, string> = {
       </div>
     </header>
 
-    <!-- ── Preview ────────────────────────────────────────────────── -->
     <!-- Between the facts and the write-up: by here the reader knows what the
-         thing is and has not yet been asked to read about it. Links to the
-         live site rather than back to this page. -->
+         thing is and has not yet been asked to read about it. -->
     <div class="wrap pt-10 lg:pt-16">
       <div data-reveal>
         <PreviewFrame {project} eager />
       </div>
     </div>
 
-    <!-- ── Body ───────────────────────────────────────────────────── -->
     <div class="wrap py-10 lg:py-20">
       <div class="grid lg:grid-cols-12">
         <div class="prose lg:col-span-7">
@@ -232,54 +171,13 @@ const statusTone: Record<string, string> = {
       </div>
     </div>
 
-    <!-- ── Prev / next ────────────────────────────────────────────── -->
-    <!-- Only render when there is somewhere to go; a lone project would
-         otherwise leave an empty bordered strip. -->
-    <nav aria-label="More work" class="border-t border-line" hidden={!prev && !next}>
-      <div class="wrap grid gap-px py-0 sm:grid-cols-2">
-        {
-          prev ? (
-            <a
-              href={href(`/work/${prev.id}`)}
-              class="group flex flex-col justify-between gap-4 border-b border-line py-8 sm:border-b-0 sm:border-r sm:pr-8"
-            >
-              <span class="inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-subtle">
-                <Icon
-                  name="lucide:arrow-left"
-                  class="size-3 transition-transform duration-300 group-hover:-translate-x-0.5"
-                  aria-hidden="true"
-                />
-                Previous
-              </span>
-              <span class="text-xl font-medium tracking-tight transition-colors group-hover:text-accent">
-                {prev.data.title}
-              </span>
-            </a>
-          ) : (
-            <div class="hidden sm:block" />
-          )
-        }
-        {
-          next && (
-            <a
-              href={href(`/work/${next.id}`)}
-              class="group flex flex-col items-start justify-between gap-4 py-8 sm:items-end sm:pl-8 sm:text-right"
-            >
-              <span class="inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-subtle">
-                Next
-                <Icon
-                  name="lucide:arrow-right"
-                  class="size-3 transition-transform duration-300 group-hover:translate-x-0.5"
-                  aria-hidden="true"
-                />
-              </span>
-              <span class="text-xl font-medium tracking-tight transition-colors group-hover:text-accent">
-                {next.data.title}
-              </span>
-            </a>
-          )
-        }
-      </div>
-    </nav>
+    <PrevNext
+      base="/work"
+      label="More work"
+      back={prev && { id: prev.id, title: prev.data.title }}
+      forward={next && { id: next.id, title: next.data.title }}
+      backLabel="Previous"
+      forwardLabel="Next"
+    />
   </article>
 </Layout>

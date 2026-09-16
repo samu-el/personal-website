@@ -16,10 +16,7 @@ import { Icon } from 'astro-icon/components';
 
 const items = await visibleNav();
 const projects = (
-  await getCollection(
-    'projects',
-    ({ data }) => !data.hidden && (import.meta.env.DEV || !data.draft),
-  )
+  await getCollection('projects', ({ data }) => !data.hidden && (import.meta.env.DEV || !data.draft))
 ).sort((a, b) => b.data.weight - a.data.weight);
 
 type Entry = {
@@ -107,21 +104,13 @@ const goto: Record<string, string> = {
     >
   </div>
 
-  <ul
-    id="cmdk-list"
-    role="listbox"
-    aria-label="Results"
-    class="max-h-[min(24rem,60dvh)] overflow-y-auto p-2"
-  >
-  </ul>
+  <ul id="cmdk-list" role="listbox" aria-label="Results" class="max-h-[min(24rem,60dvh)] overflow-y-auto p-2"></ul>
 
   <p id="cmdk-empty" hidden class="px-4 py-8 text-center text-sm text-subtle" aria-live="polite">
     Nothing matches that.
   </p>
 
-  <div
-    class="flex items-center gap-4 border-t border-line px-4 py-2.5 font-mono text-2xs uppercase tracking-[0.1em] text-subtle"
-  >
+  <div class="flex items-center gap-4 border-t border-line px-4 py-2.5 meta">
     <span class="flex items-center gap-1.5"><kbd class="cmdk-key">↑↓</kbd> Move</span>
     <span class="flex items-center gap-1.5"><kbd class="cmdk-key">↵</kbd> Open</span>
     <span class="ml-auto hidden items-center gap-1.5 sm:flex">
@@ -134,8 +123,7 @@ const goto: Record<string, string> = {
   <li role="option" aria-selected="false" class="cmdk-row">
     <a class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm">
       <span class="cmdk-label flex-1 truncate"></span>
-      <span class="cmdk-hint shrink-0 font-mono text-2xs uppercase tracking-[0.1em] text-subtle"
-      ></span>
+      <span class="cmdk-hint shrink-0 meta"></span>
     </a>
   </li>
 </template>
@@ -209,11 +197,7 @@ const goto: Record<string, string> = {
   }
 </style>
 
-<script
-  type="application/json"
-  id="cmdk-data"
-  set:html={JSON.stringify({ entries, goto, email: site.email })}
-/>
+<script type="application/json" id="cmdk-data" set:html={JSON.stringify({ entries, goto, email: site.email })} />
 
 <script>
   import { commandPalette } from '@/lib/client/palette';

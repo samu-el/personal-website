@@ -102,23 +102,14 @@ const personSchema = {
 <meta name="theme-color" content="#0c0c0d" media="(prefers-color-scheme: dark)" />
 <meta name="theme-color" content="#f7f5f1" media="(prefers-color-scheme: light)" />
 
-{
-  preloadFonts.map((src) => (
-    <link rel="preload" href={src} as="font" type="font/woff2" crossorigin="anonymous" />
-  ))
-}
+{preloadFonts.map((src) => <link rel="preload" href={src} as="font" type="font/woff2" crossorigin="anonymous" />)}
 
 <link rel="icon" href={href('/favicon.svg')} type="image/svg+xml" />
 <link rel="apple-touch-icon" href={href('/apple-touch-icon.png')} />
 <link rel="manifest" href={href('/manifest.webmanifest')} />
 {
   hasFeed && (
-    <link
-      rel="alternate"
-      type="application/rss+xml"
-      title={`${site.name} — Writing`}
-      href={href('/rss.xml')}
-    />
+    <link rel="alternate" type="application/rss+xml" title={`${site.name} — Writing`} href={href('/rss.xml')} />
   )
 }
 <link rel="sitemap" href={href('/sitemap-index.xml')} />

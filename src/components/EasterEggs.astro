@@ -27,7 +27,7 @@
 <div
   id="debug-badge"
   hidden
-  class="fixed bottom-4 left-1/2 z-[9998] -translate-x-1/2 rounded-full border border-accent bg-surface px-4 py-2 font-mono text-2xs uppercase tracking-[0.12em] text-accent shadow-lg"
+  class="fixed bottom-4 left-1/2 z-[9998] -translate-x-1/2 rounded-full border border-accent bg-surface px-4 py-2 meta text-accent shadow-lg"
   role="status"
 >
   Layout grid on · Konami again to hide
@@ -51,8 +51,7 @@ Try ⌘K for the command palette. Or the Konami code.`,
   );
 
   // ↑ ↑ ↓ ↓ ← → ← → B A
-  const SEQUENCE =
-    'arrowup arrowup arrowdown arrowdown arrowleft arrowright arrowleft arrowright b a'.split(' ');
+  const SEQUENCE = 'arrowup arrowup arrowdown arrowdown arrowleft arrowright arrowleft arrowright b a'.split(' ');
   let at = 0;
   let hideTimer = 0;
 

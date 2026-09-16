@@ -2,7 +2,7 @@
 import { getCollection } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
 import Section from '@/components/Section.astro';
-import PreviewFrame from '@/components/PreviewFrame.astro';
+import ProjectFigure from '@/components/ProjectFigure.astro';
 import PostCard from '@/components/PostCard.astro';
 import { site, socials } from '@/lib/site';
 import { publishedPosts } from '@/lib/posts';
@@ -34,9 +34,7 @@ const posts = (await publishedPosts()).slice(0, 3);
 // it comes from GitHub when reachable and falls back to the curated value.
 const github = await githubActivity();
 const liveMetrics = github
-  ? metrics.map((m) =>
-      m.label === 'Public repositories' ? { ...m, value: String(github.publicRepos) } : m,
-    )
+  ? metrics.map((m) => (m.label === 'Public repositories' ? { ...m, value: String(github.publicRepos) } : m))
   : metrics;
 
 /**
@@ -63,13 +61,13 @@ const marquee = [
   'Terraform',
 ];
 
-const statusTone: Record<string, string> = {
-  Live: 'text-jade',
-  Ongoing: 'text-jade',
-  Shipped: 'text-muted',
-  Experiment: 'text-accent',
-  Archived: 'text-subtle',
-};
+/** The Currently table: the same facts as the intro, as a ruled ledger. */
+const currently = [
+  ['Role', 'Software Engineer'],
+  ['Based in', 'Addis Ababa, Ethiopia'],
+  ['Focus', 'Full-stack web and mobile — TypeScript, Python, React, PostgreSQL.'],
+  ['Timezone', 'EAT / GMT+3'],
+];
 ---
 
 <Layout title={site.title} description={site.description} path="/" type="profile">
@@ -78,8 +76,7 @@ const statusTone: Record<string, string> = {
        the viewport, and a poster runs to the edge of the sheet. Everything
        below returns to the centred column. -->
   <section class="field-ink relative overflow-hidden" style="view-transition-name:field">
-    <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true">
-    </div>
+    <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true"></div>
 
     <div class="relative px-5 pb-14 pt-10 sm:px-8 lg:pb-24 lg:pt-20 xl:px-12 2xl:px-16">
       <p class="eyebrow hero-enter" style="--enter:0ms">
@@ -119,15 +116,12 @@ const statusTone: Record<string, string> = {
             class="hero-enter max-w-2xl text-[1.125rem] leading-[1.6] text-muted lg:text-[1.5rem] lg:leading-[1.45]"
             style="--enter:470ms"
           >
-            <strong class="font-medium text-fg">Samuel Mussie</strong> — software engineer based in Addis
-            Ababa, Ethiopia. Ten years building web and mobile products: Python and TypeScript services,
-            React and Next.js front ends, Flutter and native iOS, and retrieval-augmented AI features.
+            <strong class="font-medium text-fg">Samuel Mussie</strong> — software engineer based in Addis Ababa, Ethiopia.
+            Ten years building web and mobile products: Python and TypeScript services, React and Next.js front ends, Flutter
+            and native iOS, and retrieval-augmented AI features.
           </p>
 
-          <div
-            class="hero-enter mt-10 flex flex-wrap items-center gap-x-8 gap-y-5"
-            style="--enter:570ms"
-          >
+          <div class="hero-enter mt-10 flex flex-wrap items-center gap-x-8 gap-y-5" style="--enter:570ms">
             <div class="flex flex-wrap gap-3">
               <a href={href('/work')} class="btn btn-primary">
                 Work
@@ -139,7 +133,7 @@ const statusTone: Record<string, string> = {
             <SocialLinks
               variant="compact"
               class="flex flex-wrap gap-x-6 gap-y-3"
-              rowClass="hit inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-fg"
+              rowClass="hit inline-flex items-center gap-2 meta transition-colors hover:text-fg"
             />
           </div>
         </div>
@@ -148,24 +142,14 @@ const statusTone: Record<string, string> = {
         <aside class="hero-enter lg:col-span-4 lg:col-start-9" style="--enter:670ms">
           <h2 class="meta">Currently</h2>
           <dl class="ledger mt-4 text-sm">
-            <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
-              <dt class="text-subtle">Role</dt>
-              <dd class="leading-snug text-fg">Software Engineer</dd>
-            </div>
-            <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
-              <dt class="text-subtle">Based in</dt>
-              <dd class="leading-snug text-fg">Addis Ababa, Ethiopia</dd>
-            </div>
-            <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
-              <dt class="text-subtle">Focus</dt>
-              <dd class="leading-snug text-fg">
-                Full-stack web and mobile — TypeScript, Python, React, PostgreSQL.
-              </dd>
-            </div>
-            <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
-              <dt class="text-subtle">Timezone</dt>
-              <dd class="leading-snug text-fg">EAT / GMT+3</dd>
-            </div>
+            {
+              currently.map(([term, value]) => (
+                <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
+                  <dt class="text-subtle">{term}</dt>
+                  <dd class="leading-snug text-fg">{value}</dd>
+                </div>
+              ))
+            }
           </dl>
           <a
             href={href('/contact')}
@@ -232,13 +216,7 @@ const statusTone: Record<string, string> = {
   </div>
 
   <!-- ── Services ─────────────────────────────────────────────────── -->
-  <Section
-    index="01"
-    eyebrow="Work"
-    title="Types of work."
-    lede="Full-stack, across web and mobile."
-    id="services"
-  >
+  <Section index="01" eyebrow="Work" title="Types of work." lede="Full-stack, across web and mobile." id="services">
     <ol class="ledger">
       {
         services.map((s, i) => (
@@ -250,12 +228,8 @@ const statusTone: Record<string, string> = {
             <span class="row-index numeral text-[1.5rem] text-subtle sm:col-span-1">
               {String(i + 1).padStart(2, '0')}
             </span>
-            <h3 class="row-title display text-[clamp(1.75rem,3.8vw,2.9rem)] sm:col-span-6 lg:col-span-5">
-              {s.title}
-            </h3>
-            <p class="text-[0.9375rem] leading-relaxed text-muted sm:col-span-4 lg:col-span-5 lg:text-base">
-              {s.body}
-            </p>
+            <h3 class="row-title display text-[clamp(1.75rem,3.8vw,2.9rem)] sm:col-span-6 lg:col-span-5">{s.title}</h3>
+            <p class="text-[0.9375rem] leading-relaxed text-muted sm:col-span-4 lg:col-span-5 lg:text-base">{s.body}</p>
             <Icon
               name={s.icon}
               class="hidden size-5 justify-self-end text-subtle transition-colors duration-300 group-hover:text-accent sm:col-span-1 sm:block"
@@ -277,60 +251,14 @@ const statusTone: Record<string, string> = {
   >
     <div class="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-8">
       <div class="grid gap-10 lg:col-span-7 lg:gap-14">
-        {
-          wide.map((p, i) => (
-            <figure data-reveal style={`--reveal-delay:${i * 80}ms`}>
-              <PreviewFrame project={p} eager={i === 0} />
-              <figcaption class="mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-                <h3 class="display text-[1.5rem]" style={`view-transition-name:project-${p.id}`}>
-                  <a href={href(`/work/${p.id}`)} class="group/link">
-                    <span class="link">{p.data.title}</span>
-                    <Icon
-                      name="lucide:arrow-right"
-                      class="ml-0.5 inline-block size-[0.7em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:text-accent"
-                      aria-hidden="true"
-                    />
-                  </a>
-                </h3>
-                <p class="meta flex items-center gap-2">
-                  {p.data.kind}
-                  <span class="text-line-strong" aria-hidden="true">
-                    ·
-                  </span>
-                  <span class={statusTone[p.data.status] ?? 'text-muted'}>{p.data.status}</span>
-                </p>
-              </figcaption>
-            </figure>
-          ))
-        }
+        {wide.map((p, i) => <ProjectFigure project={p} delay={i * 80} eager={i === 0} />)}
       </div>
 
       {
         tall.length > 0 && (
           <div class="grid gap-10 lg:col-span-4 lg:col-start-9 lg:gap-14">
             {tall.map((p, i) => (
-              <figure data-reveal style={`--reveal-delay:${(wide.length + i) * 80}ms`}>
-                <PreviewFrame project={p} />
-                <figcaption class="mx-auto mt-4 flex max-w-[19rem] flex-wrap items-baseline justify-between gap-x-6 gap-y-1">
-                  <h3 class="display text-[1.5rem]" style={`view-transition-name:project-${p.id}`}>
-                    <a href={href(`/work/${p.id}`)} class="group/link">
-                      <span class="link">{p.data.title}</span>
-                      <Icon
-                        name="lucide:arrow-right"
-                        class="ml-0.5 inline-block size-[0.7em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:text-accent"
-                        aria-hidden="true"
-                      />
-                    </a>
-                  </h3>
-                  <p class="meta flex items-center gap-2">
-                    {p.data.kind}
-                    <span class="text-line-strong" aria-hidden="true">
-                      ·
-                    </span>
-                    <span class={statusTone[p.data.status] ?? 'text-muted'}>{p.data.status}</span>
-                  </p>
-                </figcaption>
-              </figure>
+              <ProjectFigure project={p} delay={(wide.length + i) * 80} captionClass="mx-auto max-w-[19rem]" />
             ))}
           </div>
         )
@@ -369,44 +297,7 @@ const statusTone: Record<string, string> = {
   }
 </Layout>
 
-<script is:inline>
-  // Figures count up from zero when they scroll into view. The markup holds
-  // the final value, so with no script, reduced motion, or an old browser the
-  // number is simply there. The suffix — " yrs", "+" — rides along untouched.
-  (() => {
-    if (
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches ||
-      !('IntersectionObserver' in window)
-    ) {
-      return;
-    }
-    const ease = (t) => 1 - Math.pow(1 - t, 5);
-    const DURATION = 1400;
-
-    function run(el) {
-      const match = el.textContent.trim().match(/^(\d+)(.*)$/);
-      if (!match) return;
-      const target = Number(match[1]);
-      const suffix = match[2];
-      const start = performance.now();
-      const tick = (now) => {
-        const p = Math.min(1, (now - start) / DURATION);
-        el.textContent = Math.round(target * ease(p)) + suffix;
-        if (p < 1) requestAnimationFrame(tick);
-      };
-      requestAnimationFrame(tick);
-    }
-
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (!entry.isIntersecting) continue;
-          run(entry.target);
-          io.unobserve(entry.target);
-        }
-      },
-      { threshold: 0.4 },
-    );
-    document.querySelectorAll('[data-count]').forEach((el) => io.observe(el));
-  })();
+<script>
+  import { countUp } from '@/lib/client/count';
+  countUp();
 </script>

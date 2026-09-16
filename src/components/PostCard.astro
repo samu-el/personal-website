@@ -1,4 +1,5 @@
 ---
+import Chips from '@/components/Chips.astro';
 import type { CollectionEntry } from 'astro:content';
 import { href } from '@/lib/paths';
 import { formatDate, readingTime } from '@/lib/format';
@@ -36,7 +37,7 @@ const minutes = post.data.readingTime ?? readingTime(post.body);
     >
       <a href={href(`/writing/${post.id}`)} class="grid gap-4 lg:grid-cols-12 lg:gap-8">
         <div class="lg:col-span-3">
-          <p class="flex items-center gap-2.5 font-mono text-2xs uppercase tracking-[0.12em] text-subtle">
+          <p class="flex items-center gap-2.5 meta">
             <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
           </p>
           <p class="mt-1.5 font-mono text-2xs tracking-wide text-subtle">{minutes} min read</p>
@@ -50,16 +51,8 @@ const minutes = post.data.readingTime ?? readingTime(post.body);
               aria-hidden="true"
             />
           </h3>
-          <p class="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-muted">
-            {post.data.description}
-          </p>
-          {post.data.tags.length > 0 && (
-            <ul class="mt-4 flex flex-wrap gap-1.5" aria-label="Tags">
-              {post.data.tags.map((t) => (
-                <li class="chip">{t}</li>
-              ))}
-            </ul>
-          )}
+          <p class="mt-3 max-w-2xl text-[0.9375rem] leading-relaxed text-muted">{post.data.description}</p>
+          <Chips items={post.data.tags} label="Tags" class="mt-4" />
         </div>
       </a>
     </article>

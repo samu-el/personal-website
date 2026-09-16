@@ -12,6 +12,7 @@
     "preview": "astro preview",
     "check": "astro check",
     "astro": "astro",
+    "diagrams": "node docs/diagrams/scenes.mjs",
     "images": "node scripts/gen-images.mjs",
     "shots": "node scripts/shots.mjs",
     "verify": "node tests/verify.mjs",

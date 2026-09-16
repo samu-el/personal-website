@@ -59,43 +59,50 @@ export type Film = {
   url: string;
 };
 
-/** One fetch, bounded, with the API version pinned and the token used when present. */
-async function get(url: string, headers: Record<string, string> = {}): Promise<Response | null> {
+const why = (error: unknown) => (error instanceof Error ? error.message : String(error));
+
+/** One fetch, bounded, with the user agent set. Failure is a warning, not a throw. */
+async function get(url: string, headers: Record<string, string> = {}, body?: BodyInit): Promise<Response | null> {
   try {
     const res = await fetch(url, {
+      method: body === undefined ? 'GET' : 'POST',
       headers: { 'User-Agent': `${GITHUB_USER}.smr.et build`, ...headers },
+      body,
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
-    if (!res.ok) {
-      console.warn(`[feeds] ${url} → HTTP ${res.status}`);
-      return null;
-    }
-    return res;
+    if (res.ok) return res;
+    console.warn(`[feeds] ${url} → HTTP ${res.status}`);
   } catch (error) {
-    console.warn(`[feeds] ${url} → ${error instanceof Error ? error.message : error}`);
+    console.warn(`[feeds] ${url} → ${why(error)}`);
+  }
+  return null;
+}
+
+/**
+ * Reads a response body and hands it to `shape`, which returns null when the
+ * payload is not what it claims to be. Every feed below fails the same way.
+ */
+async function read<T>(res: Response | null, what: string, shape: (body: any) => T | null): Promise<T | null> {
+  if (!res) return null;
+  try {
+    const out = shape(await res.json());
+    if (out === null) console.warn(`[feeds] unexpected ${what} payload`);
+    return out;
+  } catch (error) {
+    console.warn(`[feeds] ${what} payload unreadable: ${why(error)}`);
     return null;
   }
 }
 
-let githubOnce: Promise<GitHubActivity | null> | undefined;
-let filmsOnce: Promise<Film[] | null> | undefined;
-let tracksOnce: Promise<Track[] | null> | undefined;
-
 /** Memoised per build, so two pages reading the same feed cost one request. */
-export function githubActivity(): Promise<GitHubActivity | null> {
-  githubOnce ??= fetchGitHub();
-  return githubOnce;
+function once<T>(load: () => Promise<T | null>): () => Promise<T | null> {
+  let pending: Promise<T | null> | undefined;
+  return () => (pending ??= load());
 }
 
-export function recentFilms(): Promise<Film[] | null> {
-  filmsOnce ??= fetchFilms();
-  return filmsOnce;
-}
-
-export function recentTracks(): Promise<Track[] | null> {
-  tracksOnce ??= fetchTracks();
-  return tracksOnce;
-}
+export const githubActivity = once(fetchGitHub);
+export const recentFilms = once(fetchFilms);
+export const recentTracks = once(fetchTracks);
 
 async function fetchGitHub(): Promise<GitHubActivity | null> {
   // Unauthenticated works but is capped at 60 requests an hour per IP, which
@@ -109,39 +116,21 @@ async function fetchGitHub(): Promise<GitHubActivity | null> {
 
   const [userRes, reposRes] = await Promise.all([
     get(`https://api.github.com/users/${GITHUB_USER}`, headers),
-    get(
-      `https://api.github.com/users/${GITHUB_USER}/repos?sort=pushed&per_page=100&type=owner`,
-      headers,
-    ),
+    get(`https://api.github.com/users/${GITHUB_USER}/repos?sort=pushed&per_page=100&type=owner`, headers),
   ]);
   if (!userRes || !reposRes) return null;
-
-  try {
-    const user = await userRes.json();
-    const repos = await reposRes.json();
-    if (typeof user?.public_repos !== 'number' || !Array.isArray(repos)) {
-      console.warn('[feeds] unexpected GitHub payload');
-      return null;
-    }
-    return normalizeGitHub(user, repos);
-  } catch (error) {
-    console.warn(`[feeds] GitHub payload unreadable: ${error}`);
-    return null;
-  }
+  const user = await read(userRes, 'GitHub', (b) => (typeof b?.public_repos === 'number' ? b : null));
+  const repos = await read(reposRes, 'GitHub', (b) => (Array.isArray(b) ? b : null));
+  return user && repos ? normalizeGitHub(user, repos) : null;
 }
 
 /**
  * Split out from the fetch so it can be tested against a fixture — the
  * sandbox this is developed in cannot reach the user-level endpoints.
  */
-export function normalizeGitHub(
-  user: { public_repos: number },
-  repos: Array<Record<string, unknown>>,
-): GitHubActivity {
+export function normalizeGitHub(user: { public_repos: number }, repos: Array<Record<string, unknown>>): GitHubActivity {
   // Archived repositories are not activity, and private ones are not public.
-  const own = repos.filter(
-    (r) => !r.fork && !r.archived && !r.private && !HIDDEN_REPOS.has(String(r.name)),
-  );
+  const own = repos.filter((r) => !r.fork && !r.archived && !r.private && !HIDDEN_REPOS.has(String(r.name)));
 
   const cutoff = Date.now() - MAX_REPO_AGE_DAYS * 86_400_000;
 
@@ -170,7 +159,7 @@ async function fetchFilms(): Promise<Film[] | null> {
   try {
     return parseLetterboxd(await res.text());
   } catch (error) {
-    console.warn(`[feeds] Letterboxd feed unreadable: ${error}`);
+    console.warn(`[feeds] Letterboxd feed unreadable: ${why(error)}`);
     return null;
   }
 }
@@ -234,54 +223,27 @@ async function fetchTracks(): Promise<Track[] | null> {
     return null;
   }
 
-  // The refresh token is long-lived; the access token it mints lasts an hour,
-  // which is far longer than a build.
-  let accessToken: string;
-  try {
-    const res = await fetch('https://accounts.spotify.com/api/token', {
-      method: 'POST',
-      headers: {
-        // Client credentials go in the Basic header, never the body.
-        Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`,
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-      body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refresh! }),
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-    if (!res.ok) {
-      // 400 here almost always means the refresh token has expired or been revoked.
-      console.warn(`[feeds] Spotify token exchange → HTTP ${res.status}`);
-      return null;
-    }
-    const json = await res.json();
-    if (typeof json?.access_token !== 'string') {
-      console.warn('[feeds] Spotify token response had no access_token');
-      return null;
-    }
-    accessToken = json.access_token;
-  } catch (error) {
-    console.warn(
-      `[feeds] Spotify token exchange → ${error instanceof Error ? error.message : error}`,
-    );
-    return null;
-  }
+  /* The refresh token is long-lived; the access token it mints lasts an hour,
+     which is far longer than a build. A 400 here almost always means the
+     refresh token has expired or been revoked. */
+  const tokenRes = await get(
+    'https://accounts.spotify.com/api/token',
+    {
+      // Client credentials go in the Basic header, never the body.
+      Authorization: `Basic ${Buffer.from(`${id}:${secret}`).toString('base64')}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refresh! }),
+  );
+  const token = await read(tokenRes, 'Spotify token', (b) =>
+    typeof b?.access_token === 'string' ? (b.access_token as string) : null,
+  );
+  if (!token) return null;
 
   const res = await get('https://api.spotify.com/v1/me/player/recently-played?limit=12', {
-    Authorization: `Bearer ${accessToken}`,
+    Authorization: `Bearer ${token}`,
   });
-  if (!res) return null;
-
-  try {
-    const json = await res.json();
-    if (!Array.isArray(json?.items)) {
-      console.warn('[feeds] unexpected Spotify payload');
-      return null;
-    }
-    return normalizeSpotify(json.items);
-  } catch (error) {
-    console.warn(`[feeds] Spotify payload unreadable: ${error}`);
-    return null;
-  }
+  return read(res, 'Spotify', (b) => (Array.isArray(b?.items) ? normalizeSpotify(b.items) : null));
 }
 
 /**
@@ -305,8 +267,7 @@ export function normalizeSpotify(items: Array<Record<string, unknown>>): Track[]
     const artists = Array.isArray(track.artists)
       ? track.artists.map((a: { name?: string }) => a?.name).filter(Boolean)
       : [];
-    const album = track.album as
-      { name?: string; images?: Array<Record<string, unknown>> } | undefined;
+    const album = track.album as { name?: string; images?: Array<Record<string, unknown>> } | undefined;
     const images = Array.isArray(album?.images) ? album.images : [];
     // Spotify returns 640/300/64. The smallest at or above 200px is plenty for
     // a list thumbnail and a fraction of the bytes of the original.
@@ -321,9 +282,7 @@ export function normalizeSpotify(items: Array<Record<string, unknown>>): Track[]
       artist: artists.join(', '),
       album: album?.name ?? null,
       art: typeof art?.url === 'string' ? art.url : null,
-      url:
-        (track.external_urls as { spotify?: string } | undefined)?.spotify ??
-        'https://open.spotify.com/',
+      url: (track.external_urls as { spotify?: string } | undefined)?.spotify ?? 'https://open.spotify.com/',
       playedAt,
     });
     if (out.length === 6) break;

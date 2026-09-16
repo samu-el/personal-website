@@ -19,12 +19,7 @@ interface Props {
   iconClass?: string;
 }
 
-const {
-  variant = 'split',
-  class: className = '',
-  rowClass = '',
-  iconClass = 'size-3.5',
-} = Astro.props;
+const { variant = 'split', class: className = '', rowClass = '', iconClass = 'size-3.5' } = Astro.props;
 
 /** A mailto: is not a visit to another site, so it keeps the current tab. */
 const away = (href: string) => href.startsWith('http');
@@ -55,9 +50,7 @@ const away = (href: string) => href.startsWith('http');
                 />
                 {s.label}
               </span>
-              <span class="font-mono text-2xs text-subtle transition-colors group-hover:text-accent">
-                {s.handle}
-              </span>
+              <span class="font-mono text-2xs text-subtle transition-colors group-hover:text-accent">{s.handle}</span>
             </>
           )}
         </a>

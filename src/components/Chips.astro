@@ -1,0 +1,19 @@
+---
+/** A row of tag pills. Used for tags, stacks and anything else enumerable. */
+interface Props {
+  items: readonly string[];
+  label?: string;
+  class?: string;
+}
+const { items, label, class: cls = 'mt-7' } = Astro.props as Props;
+---
+
+{
+  items.length > 0 && (
+    <ul class:list={['flex flex-wrap gap-1.5', cls]} aria-label={label}>
+      {items.map((item) => (
+        <li class="chip">{item}</li>
+      ))}
+    </ul>
+  )
+}

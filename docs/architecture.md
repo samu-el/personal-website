@@ -136,6 +136,42 @@ it is being followed. The tilt trailed the pointer by 530ms and the lean by
 250ms. Both now shorten their transition to ~100ms while tracking and hand the
 long ease back on release. Measured after: 0ms and 149ms.
 
+### Shared components
+
+Markup that appeared more than once is one component now. The rule applied was
+three call sites, not two — extracting a component costs roughly as many lines
+as it saves at two, and pays only past that.
+
+| Component             | Replaces                                                                            |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| `Chips.astro`         | Seven hand-rolled `<ul>` of `.chip` for tags, stacks and focus areas                |
+| `Breadcrumb.astro`    | The way back out of both detail templates                                           |
+| `PrevNext.astro`      | The prev/next pair at the foot of both detail templates                             |
+| `ProjectFigure.astro` | The home page's wide and tall project figures, which differed only in caption width |
+| `FeedSection.astro`   | The three bands of `/now` — heading, aside, ruled list                              |
+| `Thumb.astro`         | Album art and film poster, each with its placeholder                                |
+| `SocialLinks.astro`   | Three near-identical socials lists                                                  |
+
+`src/lib/status.ts` holds the one status→colour map that the home page and the
+project template had each declared.
+
+### A trap in Astro frontmatter
+
+A generic type argument anywhere in a page's frontmatter — `as Array<{…}>` was
+the case here — stops Astro finding the file's `interface Props`, and
+`Astro.props` silently degrades to `{ [x: string]: unknown }`. The error lands
+on the cast, not on the generic, so it reads as a problem with `Props`. Build
+the array by spreading conditionals instead:
+
+```ts
+const links = [
+  ...(d.demo ? [{ href: d.demo, label: 'View live' }] : []),
+  ...(d.repo ? [{ href: d.repo, label: 'Source' }] : []),
+];
+```
+
+The same tokenizer is why `src/lib/assets.ts` is written without a regex.
+
 ---
 
 ## 4. The design system
@@ -177,6 +213,14 @@ one scale and everything picks from it:
 | `--t-3` | 420ms | Movement and panels                              |
 | `--t-4` | 700ms | Scroll reveals                                   |
 | `--t-5` | 900ms | The heavy rule drawing itself in                 |
+
+### One label style
+
+`font-mono text-2xs uppercase tracking-[0.1…0.14em] text-subtle` was spelled
+out at 28 call sites in three tracking values that differ by a fifth of a
+pixel at 11px. They are all `.meta` now, with a colour utility where the
+colour differs — utilities beat the components layer, so `meta text-accent`
+does what it reads as.
 
 ### Layer precedence, twice learned
 
@@ -323,8 +367,22 @@ image needs no Chromium installed at all.
 
 ## 9. Testing
 
-Four suites, one shared harness (`tests/harness.mjs`: launch, egress proxy,
-viewport presets, reporting), all run in CI on every push.
+Four suites, one shared harness (`tests/harness.mjs`), all run in CI on every
+push. The harness owns the launcher, the egress proxy, the viewport presets and
+the reporting, plus the three things every block used to repeat:
+
+- `visit(browser, path, opts)` — a context and a page on it, error collection,
+  an optional init script and an optional route stub, and `close()`.
+- `scroll(page, y)` / `scrollBy(page, y)` — instant, because smooth scrolling
+  races every assertion after it.
+- `check(name, ok, info)` takes an object for `info` and stringifies it, so a
+  probe can be passed whole instead of restated in a template literal.
+
+`verify.mjs` adds `flag(bad, msg)`, which records a problem when its condition
+is true — most of that suite is that shape — and `collection(name)`, which
+reads a content directory's front matter once. The list of published projects,
+the expected card count, the palette's expected entries and the reachability
+checks are all now derived from that one read rather than three.
 
 | Suite             | Runs               | Covers                                                                                                                                                   |
 | ----------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |

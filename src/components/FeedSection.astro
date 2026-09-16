@@ -1,0 +1,26 @@
+---
+/**
+ * One band of /now: a heading, something small on the right, and a ruled list.
+ * Each is conditional at the call site — an unreachable feed leaves no section
+ * rather than an empty one.
+ */
+interface Props {
+  title: string;
+  rule?: boolean;
+}
+const { title, rule = true } = Astro.props as Props;
+---
+
+<section class="scroll-mt-24">
+  {rule && <div class="rule" />}
+  <div class="wrap py-10 lg:py-20">
+    <div class="flex flex-wrap items-baseline justify-between gap-4">
+      <h2 class="meta" data-reveal>{title}</h2>
+      <slot name="aside" />
+    </div>
+    <ul class="mt-6 divide-y divide-line border-y border-line">
+      <slot />
+    </ul>
+    <slot name="after" />
+  </div>
+</section>

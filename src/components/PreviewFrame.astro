@@ -21,10 +21,9 @@ interface Props {
   class?: string;
 }
 
-const previews = import.meta.glob<{ default: ImageMetadata }>(
-  '/src/assets/previews/*.{png,jpg,jpeg,webp,avif}',
-  { eager: true },
-);
+const previews = import.meta.glob<{ default: ImageMetadata }>('/src/assets/previews/*.{png,jpg,jpeg,webp,avif}', {
+  eager: true,
+});
 
 const { project, eager = false, class: className } = Astro.props;
 const { title, demo, device } = project.data;
@@ -105,11 +104,7 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
 
     <!-- Fixed ratio so nothing reflows as the image decodes. -->
     <div
-      class:list={[
-        'relative overflow-hidden bg-surface-2',
-        aspect,
-        phone && 'rounded-[1.25rem] border border-line',
-      ]}
+      class:list={['relative overflow-hidden bg-surface-2', aspect, phone && 'rounded-[1.25rem] border border-line']}
     >
       {
         preview ? (
@@ -128,9 +123,7 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
              pretends to be a picture of the product. */
           <div class="absolute inset-0 grid place-items-center">
             <div class="absolute inset-0 grid-lines opacity-60" aria-hidden="true" />
-            <p class="display relative px-6 text-center text-[clamp(1.5rem,4vw,2.5rem)] text-subtle">
-              {title}
-            </p>
+            <p class="display relative px-6 text-center text-[clamp(1.5rem,4vw,2.5rem)] text-subtle">{title}</p>
           </div>
         )
       }
@@ -140,9 +133,7 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
   {
     /* A phone frame has no address bar, so the host goes underneath — still
        stated, just not pretending to be chrome. */
-    phone && host && (
-      <p class="mt-3 text-center font-mono text-2xs tracking-wide text-subtle">{host}</p>
-    )
+    phone && host && <p class="mt-3 text-center font-mono text-2xs tracking-wide text-subtle">{host}</p>
   }
 </div>
 

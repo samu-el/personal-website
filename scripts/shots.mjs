@@ -74,9 +74,7 @@ const only = process.argv.slice(2);
 
 const wanted = (await projects()).filter((p) => only.length === 0 || only.includes(p.id));
 if (wanted.length === 0) {
-  console.error(
-    only.length ? `No project matched: ${only.join(', ')}` : 'No projects with a demo.',
-  );
+  console.error(only.length ? `No project matched: ${only.join(', ')}` : 'No projects with a demo.');
   process.exit(1);
 }
 
@@ -188,9 +186,7 @@ for (const project of wanted) {
     console.log(`ok    ${project.id.padEnd(22)} ${from}  ->  ${target} (${kb} kB, ${how})`);
   } catch (error) {
     failed += 1;
-    console.error(
-      `FAIL  ${project.id.padEnd(22)} ${project.demo}  ${error.message.split('\n')[0]}`,
-    );
+    console.error(`FAIL  ${project.id.padEnd(22)} ${project.demo}  ${error.message.split('\n')[0]}`);
   }
 }
 
