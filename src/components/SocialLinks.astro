@@ -1,0 +1,67 @@
+---
+/**
+ * The same three links — GitHub, LinkedIn, email — wherever they appear.
+ *
+ * Written out three times before this, each copy repeating the external-link
+ * logic and drifting slightly in its classes. Two shapes cover every use:
+ * `compact` shows the handle alone in a row, `split` puts the label and the
+ * handle at either end.
+ */
+import { Icon } from 'astro-icon/components';
+import { socials } from '@/lib/site';
+
+interface Props {
+  variant?: 'compact' | 'split';
+  /** Classes on the list itself, for the layout it sits in. */
+  class?: string;
+  /** Classes on each row, which differ only by type size. */
+  rowClass?: string;
+  iconClass?: string;
+}
+
+const {
+  variant = 'split',
+  class: className = '',
+  rowClass = '',
+  iconClass = 'size-3.5',
+} = Astro.props;
+
+/** A mailto: is not a visit to another site, so it keeps the current tab. */
+const away = (href: string) => href.startsWith('http');
+---
+
+<ul class={className}>
+  {
+    socials.map((s) => (
+      <li>
+        <a
+          href={s.href}
+          target={away(s.href) ? '_blank' : undefined}
+          rel={away(s.href) ? 'noopener noreferrer me' : undefined}
+          class:list={['group', rowClass]}
+        >
+          {variant === 'compact' ? (
+            <>
+              <Icon name={s.icon} class={iconClass} aria-hidden="true" />
+              {s.handle}
+            </>
+          ) : (
+            <>
+              <span class="inline-flex items-center gap-2.5">
+                <Icon
+                  name={s.icon}
+                  class:list={[iconClass, 'text-subtle transition-colors group-hover:text-accent']}
+                  aria-hidden="true"
+                />
+                {s.label}
+              </span>
+              <span class="font-mono text-2xs text-subtle transition-colors group-hover:text-accent">
+                {s.handle}
+              </span>
+            </>
+          )}
+        </a>
+      </li>
+    ))
+  }
+</ul>

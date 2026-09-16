@@ -20,9 +20,8 @@ const projects = defineCollection({
       tags: z.array(z.string()).default([]),
       repo: z.url().optional(),
       /**
-       * The source exists but is not public. Renders as a plain "Private source"
-       * label where the link would be, so an absent Source button reads as a
-       * deliberate fact rather than an omission.
+       * The source exists but is not public. Renders as a plain label, so an
+       * absent Source button reads as deliberate rather than an omission.
        */
       repoPrivate: z.boolean().default(false),
       demo: z.url().optional(),
@@ -34,9 +33,8 @@ const projects = defineCollection({
       /** Shown on the home page when true. */
       featured: z.boolean().default(false),
       /**
-       * Kept out of the showcase: no detail page, no card, no sitemap entry.
-       * A hidden project with a `repo` still appears as one line in the
-       * "Also public" list on /work; one without disappears entirely.
+       * Kept out of the showcase entirely. A hidden project with a `repo`
+       * still appears as one line in "Also public" on /work.
        */
       hidden: z.boolean().default(false),
       /** Numeric facts rendered as a small stat row on the detail page. */
@@ -65,10 +63,8 @@ const posts = defineCollection({
     featured: z.boolean().default(false),
     draft: z.boolean().default(false),
     /**
-     * Written or drafted by an AI rather than by Samuel. Treated exactly like
-     * `draft` in production: never rendered, never in the feed or sitemap.
-     * The flag exists so the policy is enforced by the build rather than
-     * remembered — flip it to false only for something you actually wrote.
+     * Written or drafted by an AI. Treated exactly like `draft` in production,
+     * so the policy is enforced by the build rather than remembered.
      */
     aiWritten: z.boolean().default(false),
   }),

@@ -2,33 +2,22 @@
  * Build-time feeds: public GitHub activity and recent Letterboxd diary
  * entries.
  *
- * Both are fetched once per build and both are allowed to fail. A network
- * error, a rate limit or a changed payload returns null, the section that
- * would have used it is not rendered, and the build still succeeds — a
- * personal site is not worth a red deploy. Nothing is cached to disk on
- * purpose: a stale "recently pushed" list is worse than no list, and showing
- * each item's own date means the page never has to claim its own freshness.
- *
- * A daily scheduled run in the deploy workflow keeps both current.
+ * Both are fetched once per build and both are allowed to fail — a personal
+ * site is not worth a red deploy. Nothing is cached to disk: a stale
+ * "recently pushed" list is worse than none. See docs/architecture.md.
  */
 
 const GITHUB_USER = 'samu-el';
 const LETTERBOXD_USER = 'rocin4nte';
 const TIMEOUT_MS = 8000;
 
-/**
- * Repositories kept out of "recently pushed" regardless of when they were
- * touched. Old coursework and throwaways are still activity by the API's
- * reckoning, but they are not a signal worth showing. Add or remove a name
- * here; nothing else needs to change.
- */
+/** Old coursework and throwaways: activity by the API's reckoning, not a signal. */
 const HIDDEN_REPOS = new Set(['CRM', 'Expense-Tracking', 'Simple-Blog']);
 
 /**
- * A fixed-length list backfills from further down the history every time
- * something is excluded, which is how a five-year-old repository ends up
- * presented as recent activity. Cap the age instead and let the section run
- * short: four current repositories say more than six reaching back years.
+ * Cap the age rather than the count. A fixed-length list backfills from
+ * further down the history every time something is excluded, which is how a
+ * five-year-old repository ends up presented as recent activity.
  */
 const MAX_REPO_AGE_DAYS = 730;
 
@@ -187,13 +176,10 @@ async function fetchFilms(): Promise<Film[] | null> {
 }
 
 /**
- * Letterboxd's RSS carries its own namespaced fields alongside the standard
- * ones, which is lucky: the <title> bakes the rating in as star glyphs, while
- * `letterboxd:memberRating` is a plain number. Read the namespaced fields and
- * ignore the title entirely.
- *
- * The feed mixes diary entries with list and review items; only entries with
- * a watched date are diary entries, so everything else is dropped.
+ * Letterboxd's RSS carries namespaced fields alongside the standard ones:
+ * the <title> bakes the rating in as star glyphs, while
+ * `letterboxd:memberRating` is a plain number, so read those and ignore the
+ * title. Only items with a watched date are diary entries.
  */
 export function parseLetterboxd(xml: string): Film[] {
   const field = (item: string, tag: string) =>
@@ -230,20 +216,11 @@ function decodeEntities(s: string): string {
 }
 
 /**
- * Spotify needs three values, all of them secrets, none of which may ever
- * reach the browser: the client id and secret from the app dashboard, and a
- * refresh token minted once by `scripts/spotify-token.mjs`. They are read from
- * the environment at build time only — Astro inlines nothing into client
- * JavaScript except `PUBLIC_*` variables, so a value read here through
- * `process.env` cannot leak into the output.
- *
- * With none of them set the feed is simply absent, which is the expected state
- * of a fresh clone. With some of them set it warns, because that is a
- * misconfiguration rather than a choice.
- *
- * Note that this app's refresh token expires after 180 days. When it does, the
- * fetch starts failing, the section disappears, and the token has to be minted
- * again — the site keeps building either way.
+ * Three secrets, none of which may reach the browser, read from the
+ * environment at build time only — Astro inlines nothing into client JS
+ * except `PUBLIC_*`. Absent on a fresh clone, which is expected; partially
+ * set is a misconfiguration, so that warns. The refresh token expires after
+ * 180 days, after which the section disappears until it is minted again.
  */
 async function fetchTracks(): Promise<Track[] | null> {
   const id = process.env.SPOTIFY_CLIENT_ID;
@@ -308,11 +285,9 @@ async function fetchTracks(): Promise<Track[] | null> {
 }
 
 /**
- * Split out from the fetch so it can be tested without credentials.
- *
- * The history returns one entry per play, so the same track appears repeatedly
- * on a repeat listen. Collapse by track, keeping the most recent play of each,
- * or the list becomes one song six times over.
+ * Split out from the fetch so it can be tested without credentials. The
+ * history returns one entry per play, so collapse by track and keep the most
+ * recent, or a repeat listen becomes one song six times over.
  */
 export function normalizeSpotify(items: Array<Record<string, unknown>>): Track[] {
   const seen = new Set<string>();

@@ -1,0 +1,336 @@
+/* ------------------------------------------------------------------
+   Components
+   ------------------------------------------------------------------ */
+@layer components {
+  .wrap {
+    width: 100%;
+    max-width: 76rem;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+  }
+  @media (min-width: 40rem) {
+    .wrap {
+      padding-inline: 2rem;
+    }
+  }
+  @media (min-width: 80rem) {
+    .wrap {
+      padding-inline: 3rem;
+    }
+  }
+
+  /* Small uppercase monospace label used to index sections. */
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-subtle);
+  }
+  .eyebrow::before {
+    content: '';
+    width: 1.25rem;
+    height: 1px;
+    background-color: var(--color-line-strong);
+  }
+
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 0.98;
+  }
+
+  /* The headline cut: tighter still, so a two-line hero reads as one shape
+     rather than two stacked lines. Only for the largest sizes. */
+  .display-hero {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.035em;
+    line-height: 0.9;
+  }
+
+  /* Big figures. Lining, tabular numerals so a row of them aligns, and the
+     serif's natural swing kept for everything that is not a digit. */
+  .numeral {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-variant-numeric: lining-nums tabular-nums;
+    letter-spacing: -0.03em;
+    line-height: 0.9;
+  }
+
+  /* Watermark numeral behind a section header — the index the eyebrow
+     already carries, set at a size where it becomes texture. Faint enough
+     never to compete with text laid over it; it is there for the rhythm of
+     the page when scrolling, not to be read. */
+  .rail-index {
+    position: absolute;
+    right: -0.04em;
+    top: -0.32em;
+    font-family: var(--font-display);
+    font-size: clamp(7rem, 22vw, 16rem);
+    line-height: 1;
+    letter-spacing: -0.05em;
+    color: rgb(var(--c-fg) / 0.045);
+    pointer-events: none;
+    user-select: none;
+    z-index: 0;
+  }
+  .dark .rail-index {
+    color: rgb(var(--c-fg) / 0.06);
+  }
+  /* For rows whose right side is the busy one — the stack's item columns —
+     the numeral sits behind the title instead, low, where there is room. */
+  .rail-index--gold {
+    color: rgb(233 162 59 / 0.22);
+  }
+  .rail-index--left {
+    right: auto;
+    left: -0.06em;
+    top: auto;
+    bottom: -0.18em;
+  }
+
+  /* Ledger: rows separated by hairlines. Replaces the boxed grids — the
+     divider carries the structure, and nothing paints a background that
+     shows through while its content is still revealing. */
+  .ledger {
+    border-top: 1px solid var(--color-line);
+  }
+  .ledger > * {
+    border-bottom: 1px solid var(--color-line);
+  }
+
+  /* ── Colour as a field ─────────────────────────────────────────────
+     Redefining the --c-* channels on a subtree recolours every token-based
+     utility inside it — bg-bg, text-fg, border-line, the lot — so a whole
+     section can go to ink or gold without any child knowing. The
+     --color-* aliases are re-declared here too: they are computed where
+     they are declared, so the :root copies would otherwise carry the page's
+     channels into the field. */
+  .field-ink,
+  .field-gold {
+    --color-bg: rgb(var(--c-bg));
+    --color-sunken: rgb(var(--c-bg-sunken));
+    --color-surface: rgb(var(--c-surface));
+    --color-surface-2: rgb(var(--c-surface-2));
+    --color-line: rgb(var(--c-border) / var(--c-border-alpha));
+    --color-line-strong: rgb(var(--c-border) / calc(var(--c-border-alpha) * 2.4));
+    --color-fg: rgb(var(--c-fg));
+    --color-muted: rgb(var(--c-fg-muted));
+    --color-subtle: rgb(var(--c-fg-subtle));
+    --color-accent: rgb(var(--c-accent));
+    --color-accent-fg: rgb(var(--c-accent-fg));
+    --color-jade: rgb(var(--c-jade));
+    background-color: var(--color-bg);
+    color: var(--color-fg);
+  }
+
+  /* Ink: the page's own foreground as ground. Gold stays gold on it. */
+  .field-ink {
+    --c-bg: 22 23 26;
+    --c-bg-sunken: 16 17 19;
+    --c-surface: 30 31 35;
+    --c-surface-2: 36 37 42;
+    --c-border: 255 255 255;
+    --c-border-alpha: 0.14;
+    --c-fg: 247 245 241;
+    --c-fg-muted: 196 194 189;
+    --c-fg-subtle: 148 149 154;
+    --c-accent: 233 162 59;
+    --c-accent-fg: 18 14 6;
+    --c-jade: 74 190 138;
+    --c-shadow: 0 0 0;
+    color-scheme: dark;
+  }
+  .dark .field-ink {
+    --c-bg: 5 5 6;
+    --c-bg-sunken: 3 3 4;
+    --c-surface: 14 14 16;
+    --c-surface-2: 20 20 23;
+  }
+
+  /* Gold: the bright accent as ground, ink on it. The brighter of the two
+     golds in both themes, because ink on it clears 8:1 where ink on the
+     light theme's darker gold would not clear 4.5. */
+  .field-gold {
+    --c-bg: 233 162 59;
+    --c-bg-sunken: 222 150 48;
+    --c-surface: 240 176 82;
+    --c-surface-2: 236 170 70;
+    --c-border: 18 14 6;
+    --c-border-alpha: 0.22;
+    --c-fg: 18 14 6;
+    --c-fg-muted: 60 44 16;
+    --c-fg-subtle: 84 60 20;
+    --c-accent: 18 14 6;
+    --c-accent-fg: 233 162 59;
+    --c-jade: 18 14 6;
+    --c-shadow: 0 0 0;
+    color-scheme: light;
+  }
+
+  /* Heavy rule: two pixels of ink, for the boundaries between sections.
+     Hairlines stay inside; the heavy rule says a new thing begins. */
+  .rule-heavy {
+    height: 2px;
+    width: 100%;
+    background-color: var(--color-fg);
+  }
+
+  /* Word-by-word entrance for the hero headline. Gated on .js so a page
+     without script shows the words, and defeated wholesale by the global
+     reduced-motion rule, whose 0.01ms duration lands on the final frame. */
+  .w {
+    display: inline-block;
+  }
+  .js .hero-words .w {
+    opacity: 0;
+    transform: translate3d(0, 0.45em, 0) rotate(0.6deg);
+    animation: word-up 0.62s var(--ease-out-quint) forwards;
+    animation-delay: calc(110ms + var(--i, 0) * 40ms);
+  }
+  @keyframes word-up {
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  /* The vertical rail: page name and author, set on their side in the right
+     gutter. Fixed, so it is the one thing that does not move as you scroll —
+     a running head, as a printed book has. */
+  .rail-vertical {
+    position: fixed;
+    right: 1rem;
+    top: 50%;
+    z-index: 40;
+    transform: translateY(-50%) rotate(180deg);
+    writing-mode: vertical-rl;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--color-subtle);
+    pointer-events: none;
+    user-select: none;
+    view-transition-name: rail;
+  }
+
+  /* Mono metadata label, the one used everywhere for dates, indices, kinds. */
+  .meta {
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-subtle);
+  }
+
+  /* Underline that wipes in on hover — used for all inline prose links. */
+  .link {
+    position: relative;
+    color: var(--color-fg);
+    text-decoration: none;
+    background-image: linear-gradient(var(--color-accent), var(--color-accent));
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: background-size var(--t-3) var(--ease-out-quint);
+    padding-bottom: 1px;
+    box-decoration-break: clone;
+  }
+  .link:hover,
+  .link:focus-visible {
+    background-size: 100% 1px;
+  }
+
+  .link-accent {
+    color: var(--color-accent);
+    background-size: 100% 1px;
+    background-image: linear-gradient(rgb(var(--c-accent) / 0.35), rgb(var(--c-accent) / 0.35));
+  }
+  .link-accent:hover {
+    background-image: linear-gradient(var(--color-accent), var(--color-accent));
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    border: 1px solid var(--color-line);
+    border-radius: 999px;
+    padding: 0.2rem 0.6rem;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    letter-spacing: 0.04em;
+    color: var(--color-muted);
+    white-space: nowrap;
+    background-color: rgb(var(--c-surface) / 0.4);
+  }
+
+  .card {
+    position: relative;
+    border: 1px solid var(--color-line);
+    background-color: var(--color-surface);
+    transition:
+      border-color var(--t-2) var(--ease-out-quint),
+      transform var(--t-2) var(--ease-out-quint),
+      box-shadow var(--t-2) var(--ease-out-quint);
+  }
+  .card:hover {
+    border-color: var(--color-line-strong);
+    box-shadow:
+      0 1px 2px rgb(var(--c-shadow) / 0.05),
+      0 12px 32px -12px rgb(var(--c-shadow) / 0.14);
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    padding: 0.7rem 1.25rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    letter-spacing: -0.005em;
+    transition:
+      background-color var(--t-2) var(--ease-out-quint),
+      color var(--t-2) var(--ease-out-quint),
+      border-color var(--t-2) var(--ease-out-quint),
+      transform var(--t-2) var(--ease-out-quint);
+    will-change: transform;
+  }
+  .btn:active {
+    transform: translateY(1px);
+  }
+  .btn-primary {
+    background-color: var(--color-fg);
+    color: var(--color-bg);
+  }
+  .btn-primary:hover {
+    background-color: var(--color-accent);
+    color: var(--color-accent-fg);
+  }
+  .btn-ghost {
+    border-color: var(--color-line-strong);
+    color: var(--color-fg);
+  }
+  .btn-ghost:hover {
+    background-color: var(--color-surface-2);
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+
+  /* Hairline grid used behind hero + section dividers. */
+  .rule {
+    height: 1px;
+    width: 100%;
+    background-color: var(--color-line);
+  }
+}

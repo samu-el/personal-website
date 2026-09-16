@@ -1,18 +1,13 @@
 /**
- * Screenshots each project's live site into src/assets/previews/<id>.webp,
- * which is where ProjectShowcase.astro looks for them.
+ * Screenshots each project's live site into src/assets/previews/<id>.webp.
  *
  *   npm run shots            # every project with a demo URL
  *   npm run shots jeopardy   # just these ids
  *
- * Needs a Chromium and network access to the sites themselves. Neither is
- * available everywhere — a sandbox that reaches the Spotify and GitHub APIs
- * over its proxy may still refuse a browser connection to an arbitrary host,
- * which is why this is a script you run deliberately rather than a build step.
- * .github/workflows/previews.yml runs it on a GitHub runner for that reason.
- *
- * Writes nothing unless a capture succeeds, so a failure leaves the previous
- * screenshot in place rather than replacing it with a blank page.
+ * Run deliberately rather than at build time: it needs a Chromium and reach
+ * to the sites themselves, which a sandbox may refuse. previews.yml runs it
+ * on a GitHub runner. Writes nothing unless a capture succeeds, so a failure
+ * leaves the previous screenshot in place.
  */
 import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -33,11 +28,8 @@ const OUT = 'src/assets/previews';
 
 /**
  * Per device, matching the frame the showcase draws around the result.
- *
- * `phone` exists because not every project is a website. Monee's own
- * app.config.ts calls its web build "a phone-shaped preview, not a responsive
- * target", and a 1440-wide capture of it is a narrow column of app in a field
- * of empty background.
+ * `phone` exists because not every project is a website: a 1440-wide capture
+ * of a phone-shaped app is a narrow column in a field of background.
  */
 const DEVICES = {
   desktop: { viewport: { width: 1440, height: 900 }, outWidth: 1600 },
@@ -53,9 +45,8 @@ const SCALE = 2;
 const SETTLE_MS = 2500;
 
 /**
- * Frontmatter is read with a narrow line matcher rather than a YAML parser.
- * The two fields needed here are plain scalars, and this keeps the script free
- * of the Astro runtime — it has to work without a build.
+ * Frontmatter read with a line matcher rather than a YAML parser: the two
+ * fields needed here are plain scalars, and this has to work without a build.
  */
 function field(source, name) {
   const line = source.match(new RegExp(`^${name}:\\s*(.+)$`, 'm'));
@@ -92,9 +83,8 @@ if (wanted.length === 0) {
 await mkdir(OUT, { recursive: true });
 
 /**
- * Launched on first use, not up front: a project that publishes its own
- * screenshot needs no browser at all, and `npm run shots monee` should not
- * require one to be installed.
+ * Launched on first use: a project that publishes its own screenshot needs no
+ * browser, and `npm run shots monee` should not require one installed.
  */
 let browser;
 async function browserFor() {
@@ -128,14 +118,9 @@ async function contextFor(device) {
 
 /**
  * A project may ship scripts/seeds/<id>.mjs to change how it is captured:
- *
- *   image        a published screenshot to use instead of photographing a
- *                page — for an app that ships its own, or one this script
- *                cannot reach
- *   prepare(page)  runs before navigation, to put the app in a state worth
- *                  photographing — an empty first-run screen is a true
- *                  picture of nothing
- *   path         where to land, if not the site root
+ * `image` (a published screenshot to use instead of photographing a page),
+ * `prepare(page)` (runs before navigation, to reach a state worth
+ * photographing) and `path` (where to land, if not the site root).
  */
 async function seedFor(id) {
   const file = new URL(`./seeds/${id}.mjs`, import.meta.url);

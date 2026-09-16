@@ -6,6 +6,7 @@ import { site, socials } from '@/lib/site';
 import { href } from '@/lib/paths';
 import { services } from '@/data/stack';
 import { Icon } from 'astro-icon/components';
+import SocialLinks from '@/components/SocialLinks.astro';
 
 const title = 'Contact';
 const description =
@@ -107,32 +108,11 @@ const routes = [
     <div class="mt-14 grid gap-12 lg:mt-24 lg:grid-cols-12 lg:gap-8">
       <div class="lg:col-span-6">
         <h2 class="meta">Where to find me</h2>
-        <ul class="ledger mt-4">
-          {
-            socials.map((s) => (
-              <li>
-                <a
-                  href={s.href}
-                  target={s.href.startsWith('http') ? '_blank' : undefined}
-                  rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
-                  class="group flex items-center justify-between gap-4 py-3.5 text-[0.9375rem] text-fg transition-colors"
-                >
-                  <span class="inline-flex items-center gap-2.5">
-                    <Icon
-                      name={s.icon}
-                      class="size-4 text-subtle transition-colors group-hover:text-accent"
-                      aria-hidden="true"
-                    />
-                    {s.label}
-                  </span>
-                  <span class="font-mono text-2xs text-subtle transition-colors group-hover:text-accent">
-                    {s.handle}
-                  </span>
-                </a>
-              </li>
-            ))
-          }
-        </ul>
+        <SocialLinks
+          class="ledger mt-4"
+          rowClass="hit flex items-center justify-between gap-4 py-3.5 text-[0.9375rem] text-fg transition-colors"
+          iconClass="size-4"
+        />
       </div>
 
       <div class="lg:col-span-5 lg:col-start-8">

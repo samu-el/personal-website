@@ -2,23 +2,18 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 import { nav, type NavItem } from '@/lib/site';
 
 /**
- * Astro warns on every read of an empty collection, and with the Writing
- * section gated behind these helpers that is six warnings a build — enough
- * noise to train someone to ignore build output. Counting the files through
- * Vite's glob lets us skip the read entirely when there is nothing to read.
+ * Astro warns on every read of an empty collection — six warnings a build
+ * here, enough to train someone to ignore build output. Counting the files
+ * through Vite's glob skips the read when there is nothing to read.
  */
 const postFiles = import.meta.glob('/src/content/posts/*.{md,mdx}');
 const hasAnyPostFile = Object.keys(postFiles).length > 0;
 
 /**
- * Posts that may appear in production.
- *
- * `draft` hides work in progress. `aiWritten` hides anything an AI wrote —
- * this site publishes only Samuel's own words, and enforcing that here rather
- * than by convention means it cannot be forgotten.
- *
- * Drafts show while developing so they can be previewed; AI-written posts
- * never do, in any environment.
+ * Posts that may appear in production. `draft` hides work in progress;
+ * `aiWritten` hides anything an AI wrote, because this site publishes only
+ * Samuel's own words and the build should enforce that rather than trust
+ * anyone to remember. Drafts show while developing, AI-written posts never.
  */
 export async function publishedPosts(): Promise<CollectionEntry<'posts'>[]> {
   if (!hasAnyPostFile) return [];
@@ -35,9 +30,8 @@ export async function hasWriting(): Promise<boolean> {
 }
 
 /**
- * The navigation as it should actually render: Writing drops out when there is
- * nothing published, and the numbering is recomputed so there is no gap where
- * it used to be. Pages take their eyebrow index from here for the same reason.
+ * The navigation as it should render: Writing drops out when nothing is
+ * published, and the numbering is recomputed so there is no gap where it was.
  */
 export async function visibleNav(): Promise<NavItem[]> {
   const writing = await hasWriting();

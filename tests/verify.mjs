@@ -17,23 +17,10 @@
  *
  * Set BASE_URL to point at a deployed site instead of the local preview.
  */
-import { chromium } from 'playwright';
 import fs from 'node:fs';
 import { mkdir } from 'node:fs/promises';
-import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
+import { BASE, BASE_PATH, ORIGIN, issues as makeIssues, launch } from './harness.mjs';
 
-const ORIGIN = process.env.BASE_URL ?? 'http://localhost:4321';
-const BASE_PATH = process.env.BASE_PATH ?? '';
-const BASE = `${ORIGIN}${BASE_PATH}`;
-
-// Node's global fetch ignores HTTPS_PROXY, so checking a deployed site from
-// behind an egress proxy fails with a 403 from the proxy rather than a real
-// response. Route fetch through it, and hand the same proxy to the browser.
-const PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || '';
-if (PROXY) setGlobalDispatcher(new EnvHttpProxyAgent());
-const proxyOption = PROXY
-  ? { server: PROXY, bypass: (process.env.NO_PROXY || 'localhost,127.0.0.1').split(',').join(',') }
-  : undefined;
 const OUT = process.env.SHOT_DIR ?? '.screenshots';
 await mkdir(OUT, { recursive: true });
 
@@ -70,12 +57,8 @@ const projectTitles = fs
   .map((src) => (src.match(/^title:\s*'(.+)'\s*$/m) ?? [])[1])
   .filter(Boolean);
 
-const browser = await chromium.launch({
-  // Honour a preinstalled browser when one is provided (CI images, sandboxes).
-  executablePath: process.env.CHROMIUM_PATH || undefined,
-  proxy: proxyOption,
-});
-const issues = [];
+const browser = await launch();
+const issues = makeIssues();
 
 // 1. Every route renders, no console errors, no broken internal links, no overflow.
 for (const [w, h, tag] of [
@@ -479,10 +462,4 @@ const hasPosts = await (async () => {
 }
 
 await browser.close();
-console.log(
-  issues.length
-    ? `${issues.length} ISSUE(S):\n` + [...new Set(issues)].join('\n')
-    : '✓ All checks passed.',
-);
-
-if (issues.length) process.exitCode = 1;
+issues.report();
