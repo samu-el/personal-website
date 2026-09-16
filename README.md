@@ -10,6 +10,10 @@ a page is a theme toggle, a mobile menu, a scroll observer and a clock.
 > This repository replaces a 2019 fork of `github/personal-website` (Jekyll). None of that code
 > remains; the history does.
 
+**[docs/architecture.md](docs/architecture.md)** covers how it all fits together, and
+[docs/diagrams/](docs/diagrams) holds the same thing as Excalidraw scenes — open any
+`.excalidraw` file at [excalidraw.com](https://excalidraw.com) with File → Open.
+
 ---
 
 ## Quick start

@@ -11,6 +11,7 @@ import { metrics } from '@/data/experience';
 import { githubActivity } from '@/lib/feeds';
 import { services } from '@/data/stack';
 import { Icon } from 'astro-icon/components';
+import SocialLinks from '@/components/SocialLinks.astro';
 
 const isPublished = (d: { draft?: boolean }) => import.meta.env.DEV || !d.draft;
 
@@ -135,23 +136,11 @@ const statusTone: Record<string, string> = {
               <a href={href('/about')} class="btn btn-ghost">About</a>
             </div>
 
-            <ul class="flex flex-wrap gap-x-6 gap-y-3">
-              {
-                socials.map((s) => (
-                  <li>
-                    <a
-                      href={s.href}
-                      target={s.href.startsWith('http') ? '_blank' : undefined}
-                      rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
-                      class="hit group inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-fg"
-                    >
-                      <Icon name={s.icon} class="size-3.5" aria-hidden="true" />
-                      {s.handle}
-                    </a>
-                  </li>
-                ))
-              }
-            </ul>
+            <SocialLinks
+              variant="compact"
+              class="flex flex-wrap gap-x-6 gap-y-3"
+              rowClass="hit inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle transition-colors hover:text-fg"
+            />
           </div>
         </div>
 

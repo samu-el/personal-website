@@ -1,25 +1,16 @@
 /**
  * Exercises the Worker's fetch handler against stubbed Spotify responses.
  *
- * The point of these is the debug reasons. "Nothing is playing", "the refresh
- * token expired" and "the token lacks user-read-currently-playing" all produce
- * an identical `{ playing: false }` in normal operation, and telling them apart
- * by hand cost two rounds of guessing. Each one is pinned here.
- *
  * Run with: npm test  (from worker/)
  */
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
 /**
- * A fresh copy of the module per test.
- *
- * The Worker deliberately holds two things in module scope — the access token
- * and the last payload that had a title — because an isolate is reused across
- * requests and that is exactly where they should live. In a test file that
- * same persistence leaks one case into the next, so each test gets its own
- * instance rather than the Worker growing a reset hook it does not need in
- * production.
+ * A fresh copy of the module per test. The Worker holds the access token and
+ * the last good payload in module scope on purpose — an isolate is reused
+ * across requests — and that persistence leaks between tests the way it is
+ * meant to persist between them in production.
  *
  * @type {typeof import('../src/index.js').default}
  */
@@ -145,29 +136,29 @@ test('debug reports missing secrets without revealing values', async () => {
   for (const v of Object.values(body.secrets)) assert.equal(typeof v, 'boolean');
 });
 
-test('an expired refresh token is distinguishable', async () => {
-  assert.equal(await reasonOf({ tokenStatus: 400 }), 'token_exchange_failed_400');
-});
-
-test('nothing playing is a 204, and proves token and scope are good', async () => {
-  assert.equal(await reasonOf({ playStatus: 204 }), 'spotify_204_nothing_playing');
-});
-
-test('a token without user-read-currently-playing surfaces as 403', async () => {
-  assert.equal(await reasonOf({ playStatus: 403 }), 'spotify_403');
-});
-
-test('an invalid access token surfaces as 401', async () => {
-  assert.equal(await reasonOf({ playStatus: 401 }), 'spotify_401');
-});
-
-test('a rate limit surfaces as 429', async () => {
-  assert.equal(await reasonOf({ playStatus: 429 }), 'spotify_429');
-});
-
-test('paused playback is not "nothing playing"', async () => {
-  assert.equal(await reasonOf({ playBody: { is_playing: false, item: { name: 'x' } } }), 'paused');
-});
+/* Each of these answers an identical `{ playing: false }` in normal
+   operation. The debug reason is the only thing that tells them apart, and
+   telling them apart by hand cost two rounds of guessing — so each is pinned. */
+for (const [what, opts, reason] of [
+  ['an expired refresh token', { tokenStatus: 400 }, 'token_exchange_failed_400'],
+  [
+    'nothing playing, which proves token and scope are good',
+    { playStatus: 204 },
+    'spotify_204_nothing_playing',
+  ],
+  ['a token without user-read-currently-playing', { playStatus: 403 }, 'spotify_403'],
+  ['an invalid access token', { playStatus: 401 }, 'spotify_401'],
+  ['a rate limit', { playStatus: 429 }, 'spotify_429'],
+  [
+    'paused playback, which is not "nothing playing"',
+    { playBody: { is_playing: false, item: { name: 'x' } } },
+    'paused',
+  ],
+]) {
+  test(`debug distinguishes ${what}`, async () => {
+    assert.equal(await reasonOf(opts), reason);
+  });
+}
 
 test('a playing track is reported in full', async () => {
   stub(PLAYING);

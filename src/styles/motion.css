@@ -1,0 +1,294 @@
+/* ------------------------------------------------------------------
+   Scroll-reveal (progressive; content is visible without JS)
+   ------------------------------------------------------------------ */
+@layer utilities {
+  /* Elements are visible by default. JS adds `.reveal-pending` only to the
+     ones it is actively observing, so a failed script can never hide content. */
+  [data-reveal].reveal-pending {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+    transition:
+      opacity var(--t-4) var(--ease-out-quint),
+      transform var(--t-4) var(--ease-out-quint);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  [data-reveal].reveal-pending.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal].reveal-pending {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .grid-lines {
+    background-image: linear-gradient(to right, var(--color-line) 1px, transparent 1px);
+    background-size: 25% 100%;
+  }
+  /* Twelve columns, for the pages built on them — the debug overlay's grid,
+     made visible on purpose behind a header. */
+  .grid-lines-12 {
+    background-image: linear-gradient(to right, var(--color-line) 1px, transparent 1px);
+    background-size: calc(100% / 12) 100%;
+  }
+
+  .mask-fade-r {
+    mask-image: linear-gradient(to right, transparent, black 8%, black 92%, transparent);
+  }
+}
+
+/* Native cross-document transitions where supported. */
+@view-transition {
+  navigation: auto;
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
+
+/* ── View transitions ──────────────────────────────────────────────
+   Cross-document, declared above. Elements sharing a
+   `view-transition-name` morph between documents; only the page-level
+   cross-fade is tuned, so there is nothing per-project to maintain. */
+@media (prefers-reduced-motion: no-preference) {
+  ::view-transition-old(root) {
+    animation: vt-leave 0.24s var(--ease-out-quint) both;
+  }
+  ::view-transition-new(root) {
+    animation: vt-enter 0.34s var(--ease-out-quint) both;
+  }
+
+  @keyframes vt-leave {
+    to {
+      opacity: 0;
+      transform: translate3d(0, -6px, 0);
+    }
+  }
+  @keyframes vt-enter {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 10px, 0);
+    }
+  }
+}
+
+/* The chrome is identical on every page, so naming it holds it still
+   while the content underneath cross-fades. */
+#site-header {
+  view-transition-name: site-header;
+}
+#site-footer {
+  view-transition-name: site-footer;
+}
+
+/* ------------------------------------------------------------------
+   Micro-interactions
+   ------------------------------------------------------------------ */
+@layer components {
+  /* Cards settle upward rather than only gaining a shadow. */
+  .card:hover {
+    transform: translateY(-2px);
+  }
+
+  /* Arrows lead the eye out of the button they sit in. */
+  .btn [data-icon],
+  .btn svg {
+    transition: transform var(--t-2) var(--ease-out-quint);
+  }
+  .btn:hover [data-icon],
+  .btn:hover svg {
+    transform: translateX(2px);
+  }
+
+  /* Primary nav: the active page keeps its hairline, and hovering an
+     inactive one draws the same line in from the centre. */
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    inset-inline: 0.875rem;
+    bottom: -1px;
+    height: 1px;
+    background-color: var(--color-accent);
+    transform: scaleX(0);
+    transition: transform var(--t-3) var(--ease-out-quint);
+  }
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    transform: scaleX(1);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Layout debug overlay — toggled by the Konami code. Outlines every
+   box so the underlying grid is visible. Costs nothing until used.
+   ------------------------------------------------------------------ */
+@layer utilities {
+  html[data-debug] * {
+    outline: 1px solid rgb(var(--c-accent) / 0.35);
+    outline-offset: -1px;
+  }
+  html[data-debug] .wrap {
+    background-image: linear-gradient(to right, rgb(var(--c-accent) / 0.07) 1px, transparent 1px);
+    background-size: 8.333% 100%;
+  }
+}
+
+/* ── Motion ────────────────────────────────────────────────────────
+   Last in the layer on purpose, so these win their ties with the base
+   rules. Gated three ways: the reveal script opts elements in,
+   `(pointer: fine)` guards anything cursor-driven, and the global
+   reduced-motion rule flattens every duration and delay. */
+@layer components {
+  /* Heavy rules draw in from the left as they arrive. Same contract as the
+     reveal: JS adds .draw-pending to a rule it is watching, so without
+     script the rule is simply there. */
+  .rule-heavy {
+    transform-origin: left center;
+  }
+  .rule-heavy.draw-pending {
+    transform: scaleX(0);
+    transition: transform var(--t-5) var(--ease-out-quint);
+  }
+  .rule-heavy.draw-pending.is-visible {
+    transform: scaleX(1);
+  }
+
+  /* A ledger row answers the pointer: an accent hairline draws along its
+     foot, the index lights, the title nudges right. Nothing moves that
+     would push the text under the cursor away from it. */
+  .ledger-row {
+    position: relative;
+  }
+  .ledger-row::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background-color: var(--color-accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform var(--t-3) var(--ease-out-quint);
+  }
+  .ledger-row:hover::after,
+  .ledger-row:focus-within::after {
+    transform: scaleX(1);
+  }
+  .ledger-row .row-index {
+    transition: color var(--t-1) var(--ease-out-quint);
+  }
+  .ledger-row .row-title {
+    transition: transform var(--t-3) var(--ease-out-quint);
+  }
+  .ledger-row:hover .row-title,
+  .ledger-row:focus-within .row-title {
+    transform: translateX(0.5rem);
+  }
+
+  /* Entrance for the text around the hero headline, timed to follow the
+     last word in. Gated on .js like the words. */
+  .js .hero-enter {
+    opacity: 0;
+    animation: fade-up 0.62s var(--ease-out-quint) forwards;
+    animation-delay: var(--enter, 560ms);
+  }
+
+  /* Watermark numerals drift against the scroll — slower than the page, so
+     they read as a layer behind it. Scroll-driven and declarative; a
+     browser without the timeline simply leaves them still. */
+  @supports (animation-timeline: view()) {
+    .rail-index {
+      /* Longhands on purpose: the minifier folds animation-timeline into the
+         animation shorthand when it can, and Chromium rejects that form. */
+      animation-name: drift;
+      animation-duration: auto;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+    }
+  }
+  @keyframes drift {
+    from {
+      translate: 0 5rem;
+    }
+    to {
+      translate: 0 -5rem;
+    }
+  }
+
+  /* The frame card lifts and tilts from variables the pointer script sets.
+     Lift and tilt live in one transform so they cannot fight, and the
+     selector outranks .card:hover, which otherwise wins the transform. */
+  .card.frame-card,
+  .card.frame-card:hover {
+    transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg))
+      translateY(var(--lift, 0px));
+    /* Duration and easing come from variables so the state below can shorten
+       them without restating the whole list. */
+    transition:
+      transform var(--tilt-t, var(--t-3)) var(--tilt-e, var(--ease-out-quint)),
+      border-color var(--t-2) var(--ease-out-quint),
+      box-shadow var(--t-2) var(--ease-out-quint);
+    will-change: transform;
+  }
+  /* Under the cursor the tilt is a direct reading of where the pointer is,
+     not a destination to ease toward: at 420ms it lagged half a second
+     behind the hand and read as rubber. Linear and short is what makes it
+     feel attached. The long ease returns for the settle. */
+  .card.frame-card[data-tracking] {
+    --tilt-t: 90ms;
+    --tilt-e: linear;
+  }
+  .group\/frame:hover .frame-card,
+  .group\/row:hover .frame-card {
+    --lift: -4px;
+  }
+
+  /* Buttons lean a few pixels toward the cursor. Uses the translate
+     property rather than transform so the :active press still lands. */
+  .btn {
+    transition:
+      background-color var(--t-2) var(--ease-out-quint),
+      color var(--t-2) var(--ease-out-quint),
+      border-color var(--t-2) var(--ease-out-quint),
+      transform var(--t-2) var(--ease-out-quint),
+      translate var(--lean-t, var(--t-3)) var(--lean-e, var(--ease-out-quint));
+  }
+  /* Same as the tilt: while the pointer is on the button the lean is a
+     reading, and 420ms of easing put it 250ms behind the cursor. */
+  .btn[data-lean] {
+    --lean-t: 110ms;
+    --lean-e: linear;
+  }
+
+  /* A theme change eases rather than snapping. The toggle adds this class
+     for one transition's length and removes it, so nothing else slows. */
+  html.theme-transition,
+  html.theme-transition *,
+  html.theme-transition *::before,
+  html.theme-transition *::after {
+    transition:
+      background-color var(--t-3) ease,
+      color var(--t-3) ease,
+      border-color var(--t-3) ease,
+      fill var(--t-3) ease !important;
+  }
+}
+
+/* Hover states that have to beat a utility on the same element. Utilities are
+   the last layer, so a components-layer rule loses to text-subtle or to the
+   animate-marquee shorthand however specific it is. These live here. */
+@layer utilities {
+  .ledger-row:hover .row-index,
+  .ledger-row:focus-within .row-index {
+    color: var(--color-accent);
+  }
+  /* The ticker pauses under the pointer, so a word can actually be read. */
+  .marquee-band:hover .animate-marquee {
+    animation-play-state: paused;
+  }
+}

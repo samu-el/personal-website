@@ -3,22 +3,12 @@
  *
  *   SPOTIFY_CLIENT_ID=... SPOTIFY_CLIENT_SECRET=... node scripts/spotify-token.mjs
  *
- * It opens the Spotify consent screen, catches the redirect on
- * http://127.0.0.1:8888/callback, exchanges the code, and prints the refresh
- * token. Nothing is written to disk and nothing is sent anywhere except
- * Spotify — put the printed token straight into a GitHub Actions secret.
+ * Opens the consent screen, catches the redirect, exchanges the code and
+ * prints the token. Nothing is written to disk or sent anywhere but Spotify.
  *
- * Before running, add this exact redirect URI to the app in the Spotify
- * dashboard, alongside whatever else is there:
- *
- *   http://127.0.0.1:8888/callback
- *
- * It has to be the IP literal. Spotify requires HTTPS for redirect URIs
- * except for loopback addresses, and `localhost` is explicitly not accepted.
- *
- * The resulting token is long-lived but not permanent: this app's refresh
- * token lifetime is 180 days, after which the feed goes quiet and you run
- * this again.
+ * Add `http://127.0.0.1:8888/callback` to the app in the Spotify dashboard
+ * first — the IP literal, since Spotify requires HTTPS for redirect URIs
+ * except loopback and does not accept `localhost`. The token lasts 180 days.
  */
 import { createServer } from 'node:http';
 import { randomBytes } from 'node:crypto';

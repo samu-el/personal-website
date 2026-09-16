@@ -1,49 +1,24 @@
 /**
- * Interaction suite. The smoke suite in verify.mjs proves every page renders;
- * this one drives the things that only exist once a pointer, a key or a
- * scroll is involved, and that no static check can see:
- *
- *   1. The mobile menu opens to its own height, over an opaque background,
- *      with the page it covers veiled — and closes on a tap outside, on
- *      Escape, and on a deliberate scroll.
- *   2. The hero headline enters word by word and the text around it follows.
- *   3. The header compresses on scroll and the reading hairline tracks it.
- *   4. Heavy rules draw in, metric numerals count up.
- *   5. Ledger rows answer hover: underline, index colour, title nudge.
- *   6. Preview frames tilt and lift under the cursor and settle when it goes.
- *   7. Buttons lean toward the cursor; the nav indicator follows the links.
- *   8. Under prefers-reduced-motion none of it moves and nothing is hidden.
- *   9. The now-playing card holds its shape as a skeleton until the first
- *      answer, and swapping in the real content costs no layout shift.
+ * Interaction suite. verify.mjs proves every page renders; this drives what
+ * only exists once a pointer, a key or a scroll is involved — the mobile
+ * panel, the hero entrance, the header, hover and press states, the tilt and
+ * the lean, the now-playing skeleton and poll cadence, and that under
+ * prefers-reduced-motion none of it moves and nothing is left hidden.
  *
  * Usage:
  *   npm run build && npm run preview & npm run verify:interact
  */
-import { chromium } from 'playwright';
+import { BASE, DESKTOP, MOBILE, launch, results, sleep } from './harness.mjs';
 
-const BASE = process.env.BASE_URL ?? 'http://localhost:4321';
-const EXEC = process.env.CHROMIUM_PATH || undefined;
-// Same as the smoke suite: checking a deployed site from behind an egress
-// proxy needs the browser pointed at it, or every request is a 403.
-const PROXY = process.env.HTTPS_PROXY || process.env.https_proxy || '';
-const proxy = PROXY
-  ? { server: PROXY, bypass: (process.env.NO_PROXY || 'localhost,127.0.0.1').split(',').join(',') }
-  : undefined;
-const results = [];
-const check = (name, ok, info = '') => results.push({ name, ok: Boolean(ok), info });
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const { check, report } = results();
 /** The word-by-word hero runs for about 1.4s; wait it out before measuring. */
 const ENTRANCE = 2200;
 
-const browser = await chromium.launch({ executablePath: EXEC, proxy });
+const browser = await launch();
 
 // ── 1. Mobile menu ──────────────────────────────────────────────────────
 {
-  const ctx = await browser.newContext({
-    viewport: { width: 390, height: 780 },
-    hasTouch: true,
-    isMobile: true,
-  });
+  const ctx = await browser.newContext(MOBILE);
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push(String(e)));
@@ -185,7 +160,7 @@ const browser = await chromium.launch({ executablePath: EXEC, proxy });
 }
 
 // ── 2. Desktop motion ───────────────────────────────────────────────────
-const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+const ctx = await browser.newContext(DESKTOP);
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', (e) => errors.push(String(e)));
@@ -314,7 +289,7 @@ check(
    sits 40% into view at the scroll position the header check uses, which
    is exactly the observer's threshold. */
 const count = await (async () => {
-  const own = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const own = await browser.newContext(DESKTOP);
   const fresh = await own.newPage();
   await fresh.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   await sleep(ENTRANCE);
@@ -506,10 +481,7 @@ await ctx.close();
 
 // ── 3. Reduced motion ───────────────────────────────────────────────────
 {
-  const calm = await browser.newContext({
-    viewport: { width: 1440, height: 900 },
-    reducedMotion: 'reduce',
-  });
+  const calm = await browser.newContext({ ...DESKTOP, reducedMotion: 'reduce' });
   const page = await calm.newPage();
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   await sleep(150);
@@ -545,12 +517,7 @@ await ctx.close();
 
 // ── 4. Mobile menu, reduced motion ──────────────────────────────────────
 {
-  const calm = await browser.newContext({
-    viewport: { width: 390, height: 780 },
-    hasTouch: true,
-    isMobile: true,
-    reducedMotion: 'reduce',
-  });
+  const calm = await browser.newContext({ ...MOBILE, reducedMotion: 'reduce' });
   const page = await calm.newPage();
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   await sleep(200);
@@ -577,7 +544,7 @@ await ctx.close();
    instead of a fixed interval, backs off when it cannot reach it, and does
    not poll a tab nobody is looking at. */
 {
-  const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const ctx = await browser.newContext(DESKTOP);
   const hits = [];
   let mode = 'playing';
   await ctx.route('**/api/now-playing.json*', async (route) => {
@@ -694,8 +661,8 @@ await ctx.close();
    * Loads /now with the endpoint held open, so the loading state can be
    * measured before it resolves. `answer` is fulfilled on release.
    */
-  const withGate = async (answer, viewport = { width: 1440, height: 900 }) => {
-    const ctx = await browser.newContext({ viewport });
+  const withGate = async (answer, context = DESKTOP) => {
+    const ctx = await browser.newContext(context);
     let release;
     const gate = new Promise((r) => (release = r));
     await ctx.route('**/api/now-playing.json*', async (route) => {
@@ -777,7 +744,7 @@ await ctx.close();
 
   // Mobile, where the column is narrow enough for the title to be the risk.
   {
-    const { ctx, page, release } = await withGate(ok(track), { width: 390, height: 800 });
+    const { ctx, page, release } = await withGate(ok(track), MOBILE);
     const loading = await read(page);
     release();
     await sleep(1200);
@@ -808,7 +775,7 @@ await ctx.close();
 
   // A failing endpoint must not leave a skeleton standing either.
   {
-    const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+    const ctx = await browser.newContext(DESKTOP);
     await ctx.route('**/api/now-playing.json*', (route) =>
       route.fulfill({ status: 503, body: 'no' }),
     );
@@ -827,10 +794,7 @@ await ctx.close();
 
   // Without script there is no answer coming, so there is nothing to promise.
   {
-    const ctx = await browser.newContext({
-      viewport: { width: 1440, height: 900 },
-      javaScriptEnabled: false,
-    });
+    const ctx = await browser.newContext({ ...DESKTOP, javaScriptEnabled: false });
     const page = await ctx.newPage();
     await page.goto(`${BASE}/now/`, { waitUntil: 'load' });
     check(
@@ -843,10 +807,7 @@ await ctx.close();
   // Reduced motion: a placeholder that cannot pulse must still be a plain
   // bar, not one frozen half-faded.
   {
-    const ctx = await browser.newContext({
-      viewport: { width: 1440, height: 900 },
-      reducedMotion: 'reduce',
-    });
+    const ctx = await browser.newContext({ ...DESKTOP, reducedMotion: 'reduce' });
     let release;
     const gate = new Promise((r) => (release = r));
     await ctx.route('**/api/now-playing.json*', async (route) => {
@@ -872,11 +833,4 @@ await ctx.close();
 }
 
 await browser.close();
-
-let failed = 0;
-for (const r of results) {
-  if (!r.ok) failed++;
-  console.log(`${r.ok ? '✓' : '✗'}  ${r.name}${r.info ? `  — ${r.info}` : ''}`);
-}
-console.log(`\n${results.length - failed}/${results.length} checks passed`);
-if (failed) process.exit(1);
+report();

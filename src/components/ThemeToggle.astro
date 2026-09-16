@@ -70,54 +70,42 @@
   }
 </style>
 
-<script is:inline>
-  (() => {
-    const order = ['system', 'light', 'dark'];
-    const labels = {
-      system: 'System theme',
-      light: 'Light theme',
-      dark: 'Dark theme',
-    };
+<script>
+  import { byId } from '@/lib/client/dom';
+  import { dark } from '@/lib/client/env';
 
-    let easing = 0;
-    function apply(pref) {
-      const root = document.documentElement;
-      const isDark =
-        pref === 'dark' ||
-        (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-      // Let colours cross-fade for one transition, then stop slowing things.
-      root.classList.add('theme-transition');
-      window.clearTimeout(easing);
-      easing = window.setTimeout(() => root.classList.remove('theme-transition'), 450);
-      root.classList.toggle('dark', isDark);
-      root.dataset.theme = pref;
-      const state = document.getElementById('theme-state');
-      if (state) state.textContent = labels[pref];
+  const ORDER = ['system', 'light', 'dark'] as const;
+  const LABELS = { system: 'System theme', light: 'Light theme', dark: 'Dark theme' };
+  type Pref = (typeof ORDER)[number];
+
+  const root = document.documentElement;
+  const current = () => (root.dataset.theme || 'system') as Pref;
+
+  let easing = 0;
+  function apply(pref: Pref) {
+    // Let colours cross-fade for one transition, then stop slowing things.
+    root.classList.add('theme-transition');
+    clearTimeout(easing);
+    easing = window.setTimeout(() => root.classList.remove('theme-transition'), 450);
+    root.classList.toggle('dark', pref === 'dark' || (pref === 'system' && dark.matches));
+    root.dataset.theme = pref;
+    const state = byId('theme-state');
+    if (state) state.textContent = LABELS[pref];
+  }
+
+  byId('theme-toggle')?.addEventListener('click', () => {
+    const next = ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length];
+    try {
+      if (next === 'system') localStorage.removeItem('theme');
+      else localStorage.setItem('theme', next);
+    } catch {
+      /* private mode — the choice just won't persist */
     }
+    apply(next);
+  });
 
-    function bind() {
-      const btn = document.getElementById('theme-toggle');
-      if (!btn || btn.dataset.bound === '1') return;
-      btn.dataset.bound = '1';
-      btn.addEventListener('click', () => {
-        const current = document.documentElement.dataset.theme || 'system';
-        const next = order[(order.indexOf(current) + 1) % order.length];
-        try {
-          if (next === 'system') localStorage.removeItem('theme');
-          else localStorage.setItem('theme', next);
-        } catch {
-          /* private mode — the choice just won't persist */
-        }
-        apply(next);
-      });
-    }
-
-    // Keep `system` honest when the OS preference changes mid-session.
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if ((document.documentElement.dataset.theme || 'system') === 'system') apply('system');
-    });
-
-    bind();
-    document.addEventListener('astro:page-load', bind);
-  })();
+  // Keep `system` honest when the OS preference changes mid-session.
+  dark.addEventListener('change', () => {
+    if (current() === 'system') apply('system');
+  });
 </script>
