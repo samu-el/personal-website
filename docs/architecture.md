@@ -430,6 +430,14 @@ Each worker test gets a fresh module instance: the access token and the
 last-good payload live in module scope on purpose, and that persistence leaks
 between tests the way it is meant to persist between requests.
 
+The poll cadence moved out of the browser. It was five interaction checks
+asserting that some gaps fell inside some windows, and it cost about seventy
+seconds of wall clock to do it loosely. The rules are one pure function in
+`client/schedule.ts` now, so `schedule.test.mjs` asserts the exact
+milliseconds and `interact.mjs` only has to prove the page is wired to them
+and handles a hidden tab. Fourteen precise assertions replaced three vague
+ones, and the suite runs about fifty seconds faster.
+
 Where two suites asserted the same thing, the weaker one goes. `verify.mjs` no
 longer opens the mobile menu: `interact.mjs` drives it far harder — thirteen
 checks against one — and both suites run in the same CI job, so the second

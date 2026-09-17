@@ -423,42 +423,33 @@ await close();
 }
 
 // ── 5. Now-playing poll cadence ─────────────────────────────────────────
-/* Stubbed so the headers can be controlled exactly: the page must follow the
-   freshness advertised, back off on failure, and not poll a hidden tab. */
+/* The intervals themselves are asserted exactly in tests/schedule.test.mjs,
+   which needs no browser. What is left for one is that the page is actually
+   wired to them, and the two things a pure function cannot know about: a tab
+   nobody is looking at, and coming back to one. */
 {
   const hits = [];
-  let mode = 'playing';
-  const stub = async (route) => {
+  const stub = (route) => {
     hits.push(Date.now());
-    if (mode === 'down') return route.fulfill({ status: 503, body: 'no' });
-    const playing = mode === 'playing';
-    // 5s while playing, 10s idle — what the Worker actually sends — with 1s
-    // already spent at the edge.
-    const ttl = playing ? 5 : 10;
-    await route.fulfill({
+    return route.fulfill({
       status: 200,
       contentType: 'application/json; charset=utf-8',
-      headers: { 'Cache-Control': `public, max-age=${ttl}, s-maxage=${ttl}`, Age: '1' },
+      // 5s while playing, 1s of it already spent at the edge.
+      headers: { 'Cache-Control': 'public, max-age=5, s-maxage=5', Age: '1' },
       body: JSON.stringify({
-        playing,
-        state: playing ? 'playing' : 'paused',
-        ...(mode === 'stale' ? { stale: true } : {}),
+        playing: true,
+        state: 'playing',
         title: 'Yèkèrmo Sèw',
         artist: 'Mulatu Astatke',
         progressMs: 30000,
         durationMs: 300000,
-        ...(playing ? { fetchedAt: Date.now() } : {}),
+        fetchedAt: Date.now(),
       }),
     });
   };
   // The card, and so the poll, lives on /now.
   const { page, close } = await visit(browser, '/now/', { ...DESKTOP, route: stub });
 
-  const gapsFor = async (ms) => {
-    hits.length = 0;
-    await sleep(ms);
-    return { count: hits.length, gaps: hits.slice(1).map((t, i) => t - hits[i]) };
-  };
   const visibility = (hidden) =>
     page.evaluate((h) => {
       for (const [prop, value] of [
@@ -470,35 +461,16 @@ await close();
       document.dispatchEvent(new Event('visibilitychange'));
     }, hidden);
 
-  // 5s advertised, 1s spent, so about 4s of freshness left each time.
-  const playing = await gapsFor(13000);
+  hits.length = 0;
+  await sleep(13000);
+  const gaps = hits.slice(1).map((t, i) => t - hits[i]);
   check(
-    'poll: playing follows the freshness the response advertises',
-    playing.gaps.length >= 2 && playing.gaps.every((g) => g > 3600 && g < 6200),
-    playing,
-  );
-
-  mode = 'paused';
-  await sleep(6500);
-  const paused = await gapsFor(22000);
-  check(
-    'poll: a paused answer is checked less often',
-    paused.gaps.length >= 1 && paused.gaps.every((g) => g > 8000),
-    paused,
-  );
-
-  /* Reloaded so the backoff is measured from its first step. */
-  mode = 'down';
-  await page.reload({ waitUntil: 'commit' });
-  const down = await gapsFor(20000);
-  check(
-    'poll: a failing endpoint is backed off, not hammered',
-    down.gaps.length >= 2 && down.gaps[0] > 4000 && down.gaps[1] > down.gaps[0] * 1.6 && down.count < 6,
-    down,
+    'poll: the page follows the freshness the response advertises',
+    gaps.length >= 2 && gaps.every((g) => g > 3600 && g < 6200),
+    { count: hits.length, gaps },
   );
 
   // A tab nobody is looking at makes no requests at all.
-  mode = 'playing';
   await visibility(true);
   hits.length = 0;
   await sleep(9000);
@@ -608,60 +580,54 @@ await close();
     await close();
   }
 
-  // Mobile, where the column is narrow enough for the title to be the risk.
-  {
-    const { page, release, close } = await withGate(ok(track), MOBILE);
+  /* The rest differ only in what the endpoint says and what the card should
+     look like once it has: a phone (where the title is the shift risk), an
+     answer with no track, and reduced motion. */
+  for (const [what, answer, opts, expect] of [
+    [
+      'no shift on a phone either',
+      ok(track),
+      MOBILE,
+      (loading, ready) => [ready.state === 'ready' && Math.abs(ready.height - loading.height) <= 1, ready],
+    ],
+    [
+      'an answer with no track hides the card',
+      ok({ playing: false }),
+      DESKTOP,
+      (loading, ready) => [
+        loading.state === 'loading' && ready.state === 'empty' && ready.hidden === true && ready.busy === null,
+        ready,
+      ],
+    ],
+  ]) {
+    const { page, release, close } = await withGate(answer, opts);
     const loading = await read(page);
     release();
     await sleep(1200);
-    const ready = await read(page);
-    check(
-      'skeleton: no shift on a phone either',
-      ready.state === 'ready' && Math.abs(ready.height - loading.height) <= 1,
-      `height ${loading.height} -> ${ready.height}`,
-    );
+    const [ok_, detail] = expect(loading, await read(page));
+    check(`skeleton: ${what}`, ok_, detail);
     await close();
   }
 
-  // Nothing to show: the card must leave, not sit there pulsing for ever.
-  {
-    const { page, release, close } = await withGate(ok({ playing: false }));
-    check('skeleton: shown while the answer is pending', (await read(page)).state === 'loading');
-    release();
+  /* Nothing is coming: neither a rejected request nor a page without script
+     may leave a skeleton pulsing at a promise it cannot keep. They differ in
+     how the card ends up hidden — one is the script giving up, the other is
+     the markup never having promised anything. */
+  for (const [what, opts, wants] of [
+    [
+      'a failing endpoint hides the card rather than pulsing at it',
+      { route: (r) => r.fulfill({ status: 503, body: 'no' }) },
+      (card) => card.hidden && card.state === 'empty',
+    ],
+    ['no script means no skeleton', { javaScriptEnabled: false, wait: 'load' }, (card) => card.hidden],
+  ]) {
+    const { page, close } = await visit(browser, '/now/', { ...DESKTOP, ...opts });
     await sleep(1200);
-    const empty = await read(page);
-    check(
-      'skeleton: an answer with no track hides the card',
-      empty.state === 'empty' && empty.hidden === true && empty.busy === null,
-      empty,
-    );
-    await close();
-  }
-
-  // A failing endpoint must not leave a skeleton standing either.
-  {
-    const { page, close } = await visit(browser, '/now/', {
-      ...DESKTOP,
-      route: (route) => route.fulfill({ status: 503, body: 'no' }),
+    const card = await page.evaluate(() => {
+      const el = document.getElementById('now-playing');
+      return { hidden: el.hidden, state: el.dataset.state };
     });
-    await sleep(1200);
-    check(
-      'skeleton: a failing endpoint hides the card rather than pulsing at it',
-      await page.evaluate(() => {
-        const card = document.getElementById('now-playing');
-        return card.dataset.state === 'empty' && card.hidden === true;
-      }),
-    );
-    await close();
-  }
-
-  // Without script there is no answer coming, so there is nothing to promise.
-  {
-    const { page, close } = await visit(browser, '/now/', { ...DESKTOP, javaScriptEnabled: false, wait: 'load' });
-    check(
-      'skeleton: no script means no skeleton',
-      await page.evaluate(() => document.getElementById('now-playing').hidden === true),
-    );
+    check(`skeleton: ${what}`, wants(card), card);
     await close();
   }
 

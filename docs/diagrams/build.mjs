@@ -251,8 +251,12 @@ export function svg(elements) {
 }
 
 export async function write(name, elements) {
+  /* Minified on purpose. Nobody reads a scene as text — the .svg beside it is
+     what the doc shows and what a reviewer looks at — and pretty-printing six
+     scenes cost 7,667 lines of committed whitespace and turned every
+     regeneration into a thousand-line diff. excalidraw.com does not care. */
   const json = new URL(`./${name}.excalidraw`, import.meta.url);
-  await writeFile(json, JSON.stringify(scene(elements), null, 2) + '\n');
+  await writeFile(json, JSON.stringify(scene(elements)) + '\n');
   await writeFile(new URL(`./${name}.svg`, import.meta.url), svg(elements) + '\n');
   console.log(`${name}  ${flat(elements).length} elements  (.excalidraw + .svg)`);
 }
