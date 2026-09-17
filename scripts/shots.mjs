@@ -8,9 +8,10 @@
  * runner. Nothing is written unless a capture succeeds, so a failure leaves
  * the previous screenshot alone. docs/architecture.md, "Screenshots".
  */
-import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
+import { collection } from './frontmatter.mjs';
 import sharp from 'sharp';
 import { chromium } from 'playwright';
 import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
@@ -20,7 +21,6 @@ if (process.env.HTTPS_PROXY || process.env.https_proxy) {
   setGlobalDispatcher(new EnvHttpProxyAgent());
 }
 
-const CONTENT = 'src/content/projects';
 const OUT = 'src/assets/previews';
 
 /** Per device, matching the frame the showcase draws around the result. */
@@ -34,32 +34,20 @@ const SCALE = 2;
 /** These are client-rendered apps; `networkidle` fires before React paints. */
 const SETTLE_MS = 2500;
 
-/** A line matcher, not a YAML parser: plain scalars, and no build to rely on. */
-function field(source, name) {
-  const line = source.match(new RegExp(`^${name}:\\s*(.+)$`, 'm'));
-  if (!line) return undefined;
-  return line[1].trim().replace(/^['"]|['"]$/g, '');
-}
-
-async function projects() {
-  const files = (await readdir(CONTENT)).filter((f) => f.endsWith('.md'));
-  const out = [];
-  for (const file of files) {
-    const source = await readFile(path.join(CONTENT, file), 'utf8');
-    const demo = field(source, 'demo');
-    // Hidden projects have no card to put a screenshot on, and a project
-    // without a demo URL has nothing to photograph.
-    if (!demo || field(source, 'hidden') === 'true') continue;
-    const device = field(source, 'device') ?? 'desktop';
-    if (!DEVICES[device]) throw new Error(`${file}: unknown device "${device}"`);
-    out.push({ id: file.replace(/\.md$/, ''), demo, device, title: field(source, 'title') });
-  }
-  return out;
+/** Hidden projects have no card to put a screenshot on, and a project with no
+ *  demo URL has nothing to photograph. */
+function projects() {
+  return collection('projects')
+    .filter((p) => p.demo && !p.hidden)
+    .map(({ slug, demo, device, title }) => {
+      if (!DEVICES[device]) throw new Error(`${slug}: unknown device "${device}"`);
+      return { id: slug, demo, device, title };
+    });
 }
 
 const only = process.argv.slice(2);
 
-const wanted = (await projects()).filter((p) => only.length === 0 || only.includes(p.id));
+const wanted = projects().filter((p) => only.length === 0 || only.includes(p.id));
 if (wanted.length === 0) {
   console.error(only.length ? `No project matched: ${only.join(', ')}` : 'No projects with a demo.');
   process.exit(1);

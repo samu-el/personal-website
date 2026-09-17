@@ -379,8 +379,10 @@ the reporting, plus the three things every block used to repeat:
   probe can be passed whole instead of restated in a template literal.
 
 `verify.mjs` adds `flag(bad, msg)`, which records a problem when its condition
-is true — most of that suite is that shape — and `collection(name)`, which
-reads a content directory's front matter once. The list of published projects,
+is true — most of that suite is that shape. `collection(name)` reads a content
+directory's front matter and lives in `scripts/frontmatter.mjs`, shared with
+`shots.mjs`: both run outside Astro and both had written their own line
+matcher for the same six fields. The list of published projects,
 the expected card count, the palette's expected entries and the reachability
 checks are all now derived from that one read rather than three.
 

@@ -5,35 +5,12 @@
  *
  *   npm run build && npm run preview & npm run verify
  */
-import fs from 'node:fs';
 import { BASE, BASE_PATH, ORIGIN, issues as makeIssues, launch, visit } from './harness.mjs';
+import { collection } from '../scripts/frontmatter.mjs';
 
 const issues = makeIssues();
 /** Records `msg` when `bad` is true. Most of this suite is that shape. */
 const flag = (bad, msg) => bad && issues.push(msg);
-
-/** Front matter of a content collection, read from disk so nothing goes stale. */
-function collection(name) {
-  const dir = new URL(`../src/content/${name}/`, import.meta.url);
-  return fs
-    .readdirSync(dir)
-    .filter((f) => /\.mdx?$/.test(f))
-    .map((file) => {
-      const raw = fs.readFileSync(new URL(file, dir), 'utf8');
-      const field = (key) => (raw.match(new RegExp(`^${key}:\\s*'?(.+?)'?\\s*$`, 'm')) ?? [])[1];
-      const flagged = (key) => new RegExp(`^${key}:\\s*true\\s*$`, 'm').test(raw);
-      return {
-        file,
-        raw,
-        slug: file.replace(/\.mdx?$/, ''),
-        title: field('title'),
-        kind: field('kind'),
-        hidden: flagged('hidden'),
-        draft: flagged('draft'),
-        aiWritten: flagged('aiWritten'),
-      };
-    });
-}
 
 const projects = collection('projects');
 // Published: what the site is expected to show, and the list every check below
