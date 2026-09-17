@@ -86,7 +86,6 @@ const server = createServer(async (req, res) => {
     res.writeHead(404).end('Not found');
     return;
   }
-
   const error = url.searchParams.get('error');
   if (error) {
     res.writeHead(400, { 'Content-Type': 'text/html' });
@@ -96,32 +95,27 @@ const server = createServer(async (req, res) => {
     process.exitCode = 1;
     return;
   }
-
   if (url.searchParams.get('state') !== state) {
     res.writeHead(400, { 'Content-Type': 'text/html' });
     res.end(page('State mismatch', '<p>That request did not come from this run. Ignored.</p>'));
     return;
   }
-
   const code = url.searchParams.get('code');
   if (!code) {
     res.writeHead(400).end('Missing code');
     return;
   }
-
   try {
     const { refreshToken, scope } = await exchange(code);
     const granted = scope.split(' ').filter(Boolean);
     const hasRequired = granted.includes(REQUIRED_SCOPE);
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(page('Done', '<p>Refresh token printed in your terminal. You can close this tab.</p>'));
-
     console.log('\n─────────────────────────────────────────────────────────');
     console.log('SPOTIFY_REFRESH_TOKEN');
     console.log(refreshToken);
     console.log('─────────────────────────────────────────────────────────');
     console.log(`\nGranted scopes: ${granted.join(', ') || '(none reported)'}`);
-
     if (!hasRequired) {
       // Worth stopping on: scopes are bound at approval time, so this token
       // can never acquire the missing one by being refreshed.

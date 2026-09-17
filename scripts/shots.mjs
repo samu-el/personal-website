@@ -108,17 +108,14 @@ async function capture(project, seed) {
       how: `${project.device}, published`,
     };
   }
-
   const context = await contextFor(project.device);
   const page = await context.newPage();
   try {
     if (seed?.prepare) await seed.prepare(page);
-
     const url = new URL(seed?.path ?? '/', project.demo).toString();
     const response = await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
     const status = response?.status() ?? 0;
     if (status >= 400) throw new Error(`HTTP ${status}`);
-
     await page.waitForTimeout(SETTLE_MS);
     return {
       bytes: await page.screenshot({ type: 'png' }),
@@ -137,7 +134,6 @@ for (const project of wanted) {
   try {
     const seed = await seedFor(project.id);
     const { bytes, from, how } = await capture(project, seed);
-
     const out = await sharp(bytes)
       .resize({ width: DEVICES[project.device].outWidth, withoutEnlargement: true })
       .webp({ quality: 82 })

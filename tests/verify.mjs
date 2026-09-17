@@ -53,14 +53,12 @@ for (const [width, height, tag] of [
   const page = await ctx.newPage();
   page.on('pageerror', (e) => issues.push(`[${tag}] pageerror: ${e.message}`));
   page.on('console', (m) => m.type() === 'error' && issues.push(`[${tag}] console: ${m.text()}`));
-
   for (const route of routes) {
     const res = await page.goto(BASE + route, { waitUntil: 'load', timeout: 20000 });
     if (!res || res.status() >= 400) {
       issues.push(`[${tag}] ${route} -> HTTP ${res?.status()}`);
       continue;
     }
-
     const found = await page.evaluate(() => ({
       overflow:
         document.documentElement.scrollWidth > window.innerWidth + 1
@@ -73,12 +71,10 @@ for (const [width, height, tag] of [
         .map((a) => a.getAttribute('href')),
       internal: [...document.querySelectorAll('a[href^="/"]')].map((a) => a.getAttribute('href')),
     }));
-
     flag(found.overflow, `[${tag}] ${route} horizontal overflow: ${found.overflow}`);
     flag(found.h1 !== 1, `[${tag}] ${route} has ${found.h1} <h1>`);
     flag(found.imgNoAlt, `[${tag}] ${route} ${found.imgNoAlt} img without alt`);
     flag(found.emptyLinks.length, `[${tag}] ${route} link with no accessible name: ${found.emptyLinks.join(', ')}`);
-
     if (tag === 'desktop') {
       for (const link of new Set(found.internal)) {
         const r = await page.request.get(`${ORIGIN}${link}`);
@@ -107,7 +103,6 @@ for (const [width, height, tag] of [
     await page.waitForTimeout(120);
   }
   flag(seq.join(',') !== 'system,light,dark,system', `theme cycle wrong: ${seq.join(',')}`);
-
   // The loop above left the toggle one step past 'system', i.e. on 'light'.
   await page.goto(`${BASE}/about${SLASH}`, { waitUntil: 'load' });
   const kept = await page.evaluate(() => ({
@@ -142,7 +137,6 @@ for (const [width, height, tag] of [
 //    projects, nothing hidden is reachable, client work links nowhere out.
 {
   const { page, close } = await visit(browser, `/work${SLASH}`, { ...DESKTOP, wait: 'load' });
-
   for (const p of projects) {
     const status = (await page.request.get(`${BASE}/work/${p.slug}${SLASH}`)).status();
     flag(p.hidden && status !== 404, `hidden project /work/${p.slug} is reachable (HTTP ${status})`);
@@ -150,7 +144,6 @@ for (const [width, height, tag] of [
     // Client work is anonymised — an outbound repo or demo link would identify it.
     flag(p.kind === 'Client work' && /^(repo|demo):/m.test(p.raw), `${p.file} is client work but links out`);
   }
-
   const workPage = await page.evaluate(() => ({
     cards: document.querySelectorAll('article').length,
     // Hidden projects are not re-listed here; the page points at GitHub instead.
@@ -200,7 +193,6 @@ for (const [width, height, tag] of [
     const body = await r.text();
     for (const m of must) flag(!body.includes(m), `${path} missing: ${m}`);
   }
-
   const meta = await page.evaluate(() => ({
     title: document.title,
     desc: document.querySelector('meta[name="description"]')?.content,
@@ -226,7 +218,6 @@ for (const [width, height, tag] of [
   };
   absolute(meta.canonical, 'canonical', `${BASE_PATH}/`.replace(/\/+/g, '/'));
   absolute(meta.og, 'og:image');
-
   try {
     const ld = JSON.parse(meta.ld);
     flag(ld['@type'] !== 'Person' || ld.name !== 'Samuel Mussie', 'Person schema wrong');
@@ -241,7 +232,6 @@ for (const [width, height, tag] of [
 // 7. Keyboard layer: the command palette and the shortcuts around it.
 {
   const { page, close } = await visit(browser, '/', { ...DESKTOP, wait: 'load' });
-
   await page.keyboard.press('Control+k');
   await page.waitForTimeout(300);
   flag(!(await page.isVisible('#cmdk')), 'command palette did not open on Ctrl+K');
@@ -249,21 +239,17 @@ for (const [width, height, tag] of [
     !(await page.evaluate(() => document.activeElement?.id === 'cmdk-input')),
     'command palette did not focus its input',
   );
-
   // Unfiltered, the list is grouped and each heading appears once.
   const groups = await page.$$eval('.cmdk-group', (n) => n.map((e) => e.textContent));
   flag(new Set(groups).size !== groups.length, `command palette repeats section headings: ${groups.join(', ')}`);
   const rowCount = await page.$$eval('.cmdk-row', (n) => n.length);
   flag(rowCount < 8, `command palette listed only ${rowCount} entries`);
-
   // Every project must be reachable from it.
   const labels = await page.$$eval('.cmdk-label', (n) => n.map((e) => e.textContent));
   for (const title of projectTitles) flag(!labels.includes(title), `command palette is missing project "${title}"`);
-
   await page.keyboard.press('Escape');
   await page.waitForTimeout(250);
   flag(await page.isVisible('#cmdk'), 'command palette did not close on Escape');
-
   // Typing must never be swallowed by the single-key shortcuts.
   await page.keyboard.press('/');
   await page.waitForTimeout(250);
@@ -277,7 +263,6 @@ for (const [width, height, tag] of [
   );
   await page.keyboard.press('Escape');
   await page.waitForTimeout(250);
-
   // The Konami code reveals the layout grid, and entering it again hides it.
   const konami = 'ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight b a'.split(' ');
   const gridShown = () => page.evaluate(() => document.documentElement.hasAttribute('data-debug'));
@@ -289,7 +274,6 @@ for (const [width, height, tag] of [
     await page.waitForTimeout(200);
     flag((await gridShown()) !== expected, `the Konami code did not toggle the layout grid ${when}`);
   }
-
   // The now-playing endpoint must always answer, so the browser never logs a
   // failed request for it. In production a Worker route shadows this file.
   const np = await page.request.get(`${BASE}/api/now-playing.json`);
@@ -299,7 +283,6 @@ for (const [width, height, tag] of [
     const body = await np.json().catch(() => null);
     flag(!body || typeof body.playing !== 'boolean', '/api/now-playing.json did not return a boolean "playing"');
   }
-
   const humans = await page.request.get(`${BASE}/humans.txt`);
   flag(humans.status() !== 200, `humans.txt -> HTTP ${humans.status()}`);
   await close();

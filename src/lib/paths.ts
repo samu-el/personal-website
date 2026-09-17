@@ -15,7 +15,6 @@ export function href(path: string): string {
   }
   const base = BASE.endsWith('/') ? BASE.slice(0, -1) : BASE;
   let rest = path.startsWith('/') ? path : `/${path}`;
-
   // Page URLs get a trailing slash to match what GitHub Pages serves, so a
   // link never costs a 301. Files (anything with an extension) are left
   // alone, as are query strings and fragments.
@@ -24,7 +23,6 @@ export function href(path: string): string {
   if (!isFile && !hasSuffix && !rest.endsWith('/')) {
     rest = `${rest}/`;
   }
-
   return `${base}${rest}` || '/';
 }
 

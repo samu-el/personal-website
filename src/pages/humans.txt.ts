@@ -7,7 +7,6 @@ import { site } from '@/lib/site';
  */
 export const GET: APIRoute = () => {
   const body = `/* TEAM */
-
   Engineer:  ${site.name}
   Site:      https://smr.et
   Contact:   ${site.email}
@@ -16,7 +15,6 @@ export const GET: APIRoute = () => {
 
 
 /* SITE */
-
   Standards:  HTML5, CSS, JavaScript
   Components: Astro, Tailwind CSS, TypeScript
   Hosting:    GitHub Pages, behind Cloudflare
@@ -24,10 +22,8 @@ export const GET: APIRoute = () => {
   Analytics:  None. No cookies either.
 
 /* THANKS */
-
   Every maintainer of the above, none of whom were paid for it.
 `;
-
   return new Response(body, {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
   });

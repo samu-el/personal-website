@@ -132,7 +132,6 @@ export function arrow(from, to, { label, dashed = false, color = MUTED, gap = 6,
   const tx = to.x + to.width / 2;
   const ty = to.y + to.height / 2;
   const horizontal = Math.abs(tx - fx) > Math.abs(ty - fy);
-
   // `offset` shifts the run sideways, so two arrows between the same pair do
   // not land on top of each other.
   const [sx, sy] = horizontal
@@ -141,7 +140,6 @@ export function arrow(from, to, { label, dashed = false, color = MUTED, gap = 6,
   const [ex, ey] = horizontal
     ? [tx > fx ? to.x - gap : to.x + to.width + gap, ty + offset]
     : [tx + offset, ty > fy ? to.y - gap : to.y + to.height + gap];
-
   const el = base({
     id: id(),
     type: 'arrow',
@@ -162,10 +160,8 @@ export function arrow(from, to, { label, dashed = false, color = MUTED, gap = 6,
     endArrowhead: 'arrow',
     elbowed: false,
   });
-
   from.boundElements = [...(from.boundElements ?? []), { id: el.id, type: 'arrow' }];
   to.boundElements = [...(to.boundElements ?? []), { id: el.id, type: 'arrow' }];
-
   const out = [el];
   if (label) {
     out.push(
@@ -233,14 +229,12 @@ export function svg(elements) {
     }
     return '';
   };
-
   const heads = [...new Set(els.filter((e) => e.type === 'arrow').map((e) => e.strokeColor))]
     .map(
       (c) =>
         `<marker id="head-${c.slice(1)}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="${c}"/></marker>`,
     )
     .join('');
-
   return [
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${w} ${h}" width="${w}" height="${h}" role="img">`,
     `<defs>${heads}</defs>`,

@@ -104,7 +104,6 @@ async function fetchGitHub(): Promise<GitHubActivity | null> {
     'X-GitHub-Api-Version': '2022-11-28',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
   };
-
   const [userRes, reposRes] = await Promise.all([
     get(`https://api.github.com/users/${GITHUB_USER}`, headers),
     get(`https://api.github.com/users/${GITHUB_USER}/repos?sort=pushed&per_page=100&type=owner`, headers),
@@ -119,9 +118,7 @@ async function fetchGitHub(): Promise<GitHubActivity | null> {
 export function normalizeGitHub(user: { public_repos: number }, repos: Array<Record<string, unknown>>): GitHubActivity {
   // Archived repositories are not activity, and private ones are not public.
   const own = repos.filter((r) => !r.fork && !r.archived && !r.private && !HIDDEN_REPOS.has(String(r.name)));
-
   const cutoff = Date.now() - MAX_REPO_AGE_DAYS * 86_400_000;
-
   return {
     publicRepos: user.public_repos,
     languages: [...new Set(own.map((r) => r.language).filter((l): l is string => !!l))].sort(),
@@ -160,7 +157,6 @@ async function fetchFilms(): Promise<Film[] | null> {
 export function parseLetterboxd(xml: string): Film[] {
   const field = (item: string, tag: string) =>
     item.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`))?.[1]?.trim() ?? null;
-
   return [...xml.matchAll(/<item>([\s\S]*?)<\/item>/g)]
     .map(([, item]) => {
       const watchedAt = field(item, 'letterboxd:watchedDate');
@@ -200,7 +196,6 @@ async function fetchTracks(): Promise<Track[] | null> {
   const id = process.env.SPOTIFY_CLIENT_ID;
   const secret = process.env.SPOTIFY_CLIENT_SECRET;
   const refresh = process.env.SPOTIFY_REFRESH_TOKEN;
-
   const present = [id, secret, refresh].filter(Boolean).length;
   if (present === 0) return null;
   if (present < 3) {
@@ -223,7 +218,6 @@ async function fetchTracks(): Promise<Track[] | null> {
     typeof b?.access_token === 'string' ? (b.access_token as string) : null,
   );
   if (!token) return null;
-
   const res = await get('https://api.spotify.com/v1/me/player/recently-played?limit=12', {
     Authorization: `Bearer ${token}`,
   });
@@ -237,16 +231,13 @@ async function fetchTracks(): Promise<Track[] | null> {
 export function normalizeSpotify(items: Array<Record<string, unknown>>): Track[] {
   const seen = new Set<string>();
   const out: Track[] = [];
-
   for (const item of items) {
     const track = item?.track as Record<string, unknown> | undefined;
     const playedAt = item?.played_at;
     if (!track?.name || typeof playedAt !== 'string') continue;
-
     const id = String(track.id ?? track.name);
     if (seen.has(id)) continue;
     seen.add(id);
-
     const artists = Array.isArray(track.artists)
       ? track.artists.map((a: { name?: string }) => a?.name).filter(Boolean)
       : [];
@@ -259,7 +250,6 @@ export function normalizeSpotify(items: Array<Record<string, unknown>>): Track[]
         .filter((i) => typeof i.url === 'string')
         .sort((a, b) => Number(a.width ?? 0) - Number(b.width ?? 0))
         .find((i) => Number(i.width ?? 0) >= 200) ?? images[0];
-
     out.push({
       title: String(track.name),
       artist: artists.join(', '),
@@ -270,6 +260,5 @@ export function normalizeSpotify(items: Array<Record<string, unknown>>): Track[]
     });
     if (out.length === 6) break;
   }
-
   return out.sort((a, b) => b.playedAt.localeCompare(a.playedAt));
 }

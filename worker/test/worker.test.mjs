@@ -132,17 +132,46 @@ for (const [what, opts, reason] of [
   test(`debug distinguishes ${what}`, async () => assert.equal((await debug(opts)).reason, reason));
 }
 
-test('a playing track is reported in full', async () => {
-  const out = await body(PLAYING);
-  assert.partialDeepStrictEqual(out, {
-    playing: true,
-    title: 'Yèkèrmo Sèw',
-    artist: 'Mulatu Astatke',
-    album: 'Mulatu of Ethiopia',
-    art: 'https://i.scdn.co/x',
-    progressMs: 1000,
-    durationMs: 200000,
-  });
+/** What each source puts in the payload. One table, five shapes. */
+for (const [what, opts, expected] of [
+  [
+    'a playing track is reported in full',
+    PLAYING,
+    {
+      playing: true,
+      title: 'Yèkèrmo Sèw',
+      artist: 'Mulatu Astatke',
+      album: 'Mulatu of Ethiopia',
+      art: 'https://i.scdn.co/x',
+      progressMs: 1000,
+      durationMs: 200000,
+    },
+  ],
+  [
+    // The position is what makes paused worth showing over the history endpoint.
+    'a paused track is reported with its position, not hidden',
+    { playBody: { is_playing: false, progress_ms: 61234, item: TRACK } },
+    { state: 'paused', playing: false, title: 'Yèkèrmo Sèw', progressMs: 61234, durationMs: 200000 },
+  ],
+  [
+    'an empty player falls back to the last track played',
+    { playStatus: 204, recentStatus: 200 },
+    {
+      state: 'recent',
+      playing: false,
+      title: 'Tezeta',
+      artist: 'Mulatu Astatke',
+      art: 'https://i.scdn.co/t',
+      url: 'https://open.spotify.com/t',
+      playedAt: '2026-09-07T10:00:00.000Z',
+    },
+  ],
+]) {
+  test(what, async () => assert.partialDeepStrictEqual(await body(opts), expected));
+}
+
+test('a finished track carries no position, so the page draws no bar', async () => {
+  assert.equal((await body({ playStatus: 204, recentStatus: 200 })).progressMs, undefined);
 });
 
 test('a playing track is stamped so the page can correct for cache age', async () => {
@@ -161,33 +190,6 @@ test('a payload that is not advancing carries no stamp to correct against', asyn
   const paused = { playBody: { is_playing: false, progress_ms: 5000, item: { name: 'x', duration_ms: 9 } } };
   assert.equal((await body(paused)).fetchedAt, undefined);
   assert.equal((await body({ playStatus: 204, recentStatus: 200 })).fetchedAt, undefined);
-});
-
-test('a paused track is reported with its position, not hidden', async () => {
-  const out = await body({ playBody: { is_playing: false, progress_ms: 61234, item: TRACK } });
-  // The position is what makes paused worth showing over the history endpoint.
-  assert.partialDeepStrictEqual(out, {
-    state: 'paused',
-    playing: false,
-    title: 'Yèkèrmo Sèw',
-    progressMs: 61234,
-    durationMs: 200000,
-  });
-});
-
-test('an empty player falls back to the last track played', async () => {
-  const out = await body({ playStatus: 204, recentStatus: 200 });
-  assert.partialDeepStrictEqual(out, {
-    state: 'recent',
-    playing: false,
-    title: 'Tezeta',
-    artist: 'Mulatu Astatke',
-    art: 'https://i.scdn.co/t',
-    url: 'https://open.spotify.com/t',
-    playedAt: '2026-09-07T10:00:00.000Z',
-  });
-  // A finished track has no position, so the page must not draw a bar for it.
-  assert.equal(out.progressMs, undefined);
 });
 
 test('a token holding only the history scope still fills the card', async () => {
@@ -244,7 +246,6 @@ test('debug reports the scopes the refresh token actually carries', async () => 
   // being refreshed. This makes that visible without waiting for a 401.
   const bad = await debug({ tokenScope: 'user-read-recently-played', playStatus: 401 });
   assert.partialDeepStrictEqual(bad, { grantedScopes: 'user-read-recently-played', scopeOk: false });
-
   const good = await debug({ playStatus: 204 });
   assert.match(good.grantedScopes, /user-read-currently-playing/);
   assert.equal(good.scopeOk, true);
@@ -259,7 +260,6 @@ test('a debug response is never cached, a normal one is', async () => {
   stub({ playStatus: 204 });
   assert.equal((await get('/?debug=1')).headers.get('cache-control'), 'no-store');
   assert.match((await get('/now-playing.json')).headers.get('cache-control'), /max-age=10/);
-
   stub(PLAYING);
   const playing = (await get('/now-playing.json')).headers.get('cache-control');
   assert.match(playing, /max-age=5/);
@@ -360,7 +360,6 @@ test('a rate limit serves the last good answer rather than blanking the card', a
   const good = await body(PLAYING, '/');
   assert.equal(good.title, 'Yèkèrmo Sèw');
   assert.equal(good.stale, undefined, 'a live answer is not marked stale');
-
   const under = await body({ playStatus: 429 }, '/');
   assert.equal(under.title, 'Yèkèrmo Sèw', 'the card keeps its title');
   assert.equal(under.stale, true, 'and says the answer is remembered');

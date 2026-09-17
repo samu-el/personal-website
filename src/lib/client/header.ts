@@ -6,11 +6,9 @@ export function mobileMenu() {
   const btn = byId('menu-toggle');
   const menu = byId('mobile-menu');
   if (!btn || !menu) return;
-
   const scrim = byId('menu-scrim');
   const header = byId('site-header');
   const isOpen = () => btn.getAttribute('aria-expanded') === 'true';
-
   let closing = 0;
   /* The page stays scrollable: overflow:hidden stops sticky resolving and
      takes the header off screen. A deliberate scroll closes the panel. */
@@ -22,7 +20,6 @@ export function mobileMenu() {
     scrim?.classList.toggle('is-open', open);
     clearTimeout(closing);
     openedAt = open ? window.scrollY : null;
-
     if (open) {
       menu!.hidden = false;
       // One frame between display and the class, or the row never animates
@@ -35,10 +32,8 @@ export function mobileMenu() {
       closing = window.setTimeout(() => (menu!.hidden = true), calm.matches ? 0 : 450);
     }
   }
-
   btn.addEventListener('click', () => setOpen(!isOpen()));
   scrim?.addEventListener('click', () => setOpen(false));
-
   document.addEventListener('keydown', (event) => {
     if (!isOpen()) return;
     if (event.key === 'Escape') {
@@ -55,12 +50,10 @@ export function mobileMenu() {
     event.preventDefault();
     (event.shiftKey ? stops[stops.length - 1] : stops[0]).focus();
   });
-
   // Close when the viewport grows past the mobile breakpoint.
   matchMedia('(min-width: 48rem)').addEventListener('change', (event) => {
     if (event.matches && isOpen()) setOpen(false);
   });
-
   if (!header) return;
   const onScroll = () => {
     header.toggleAttribute('data-scrolled', window.scrollY > 8);
@@ -75,7 +68,6 @@ export function navIndicator() {
   const rail = byId('primary-nav');
   const bar = rail && $('.nav-indicator', rail);
   if (!rail || !bar) return;
-
   const links = $$<HTMLAnchorElement>('.nav-link', rail);
   const here = links.find((a) => a.getAttribute('aria-current') === 'page');
 
@@ -89,12 +81,10 @@ export function navIndicator() {
     bar.style.setProperty('--w', box.width.toFixed(1));
     rail.setAttribute('data-indicator', '');
   };
-
   // Only takes over once a measurement succeeded, so the CSS fallback stays
   // in charge if the nav is not laid out yet.
   const settle = () => moveTo(here);
   if (here) settle();
-
   for (const link of links) {
     link.addEventListener('pointerenter', () => moveTo(link));
     link.addEventListener('focus', () => moveTo(link));

@@ -14,7 +14,6 @@ export const getStaticPaths: GetStaticPaths = async () => {
   // stay out of the sitemap.
   const projects = await getCollection('projects', ({ data }) => !data.hidden && (import.meta.env.DEV || !data.draft));
   const sorted = projects.sort((a, b) => b.data.weight - a.data.weight);
-
   return sorted.map((project, i) => ({
     params: { id: project.id },
     props: { project, prev: sorted[i - 1] ?? null, next: sorted[i + 1] ?? null },
