@@ -432,7 +432,18 @@ Each worker test gets a fresh module instance: the access token and the
 last-good payload live in module scope on purpose, and that persistence leaks
 between tests the way it is meant to persist between requests.
 
-The poll cadence moved out of the browser. It was five interaction checks
+Two layers, not one. `static.mjs` reads `dist/` directly and asserts what is a
+property of the HTML — heading structure, alt text, accessible link names,
+internal links resolving, the SEO block, the feeds, the showcase invariants,
+the paired view-transition names. None of that needs layout, a script or a
+pointer, and it used to cost a Chromium launch and a walk over every route to
+read text sitting in a file. It runs in about a second now and it runs _before_
+CI installs a browser, so the cheap failures fail cheaply. `verify.mjs` keeps
+only what a browser is actually for: overflow at real viewports, an error-free
+console, the theme surviving a navigation, the reveal firing, the keyboard
+layer, and a 404 that is a 404.
+
+The poll cadence moved out of the browser the same way. It was five interaction checks
 asserting that some gaps fell inside some windows, and it cost about seventy
 seconds of wall clock to do it loosely. The rules are one pure function in
 `client/schedule.ts` now, so `schedule.test.mjs` asserts the exact
