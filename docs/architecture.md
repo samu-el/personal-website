@@ -463,7 +463,51 @@ Two things that are configuration, not code:
 
 ---
 
-## 11. Decisions, in brief
+## 11. Why this is 8,995 lines
+
+The simplification work that produced most of this document had a target of a
+20% cut, from 10,389 lines to 8,311. It came in at 8,995 — 13.4%. This section
+records what was tried, because "we looked and there was no more" is worth
+nothing without the measurements behind it.
+
+What was found and taken, in seven pull requests: the dead `astro:page-load`
+machinery for a router this site does not ship; `global.css` split six ways
+with byte-identical output; the Worker restructured and its typedefs moved to
+a `.d.ts`; ten components extracted wherever markup repeated three times or
+more; `follow()`, `byId()`, `nextPoll()`, one front-matter reader and one
+label class shared instead of copied; if-chains replaced by lookup tables;
+long-form rationale moved into this file with a pointer left behind; three
+inline scripts turned into modules; the generated Excalidraw scenes minified
+from 7,667 lines of committed whitespace to six; two dead exports.
+
+What was measured and rejected:
+
+| Lever                                   |   Lines | Why not                                                                                                                                                  |
+| --------------------------------------- | ------: | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Blank-line density                      |     207 | Sibling functions inside `nowPlaying()` ran together with no separation. Worse to read, which is the opposite of the point.                              |
+| Cosmetic interaction checks             |     150 | Sixteen assertions — the tilt, the lean, the ticker, row hover, count-up. Green at 44/44 without them, but they are the regression net.                  |
+| `prose.css` → `@tailwindcss/typography` |     ~80 | The overrides needed to keep this site's display face, link treatment and rules run 60–80 lines, and the article typography becomes a plugin's defaults. |
+| **All three, together**                 | **437** | **247 short of the target.**                                                                                                                             |
+
+That last row is the finding. Every remaining lever, summed — including the two
+that were tried and reverted and the one that was declined — does not reach
+20%. The only source left is deleting whole test files, and there are 1,625
+lines of them against a 247-line shortfall, so it would mean removing about a
+third of everything that catches a regression.
+
+What was checked and found empty, so nobody repeats it: dead CSS (a checker
+against the built HTML found 50 classes defined, 9 unmatched, and all 9 are
+added at runtime or are false positives); unused exports (a scan of every
+export against every other file — two, both removed); duplicated markup at
+three or more call sites (all extracted); if-chains in the two logic-dense
+client modules (none left).
+
+The honest summary is that this repository had 13.4% of removable weight in it,
+not 20%.
+
+---
+
+## 12. Decisions, in brief
 
 | Decision                                        | Why                                                                                            |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
