@@ -10,14 +10,6 @@ export function formatDate(date: Date, opts: Intl.DateTimeFormatOptions = {}): s
   }).format(date);
 }
 
-export function formatDateShort(date: Date): string {
-  return new Intl.DateTimeFormat('en-GB', {
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  }).format(date);
-}
-
 /** ~200 wpm, rounded up, floored at one minute. */
 export function readingTime(body: string | undefined): number {
   if (!body) return 1;

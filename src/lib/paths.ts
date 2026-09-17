@@ -28,12 +28,6 @@ export function href(path: string): string {
   return `${base}${rest}` || '/';
 }
 
-/** Absolute URL, for OG tags, canonicals and feeds. */
-export function absolute(path: string, site: URL | string | undefined): string {
-  const origin = site ? new URL(site).origin : '';
-  return `${origin}${href(path)}`;
-}
-
 /** True when `current` is `path` or a descendant of it. */
 export function isActive(current: string, path: string): boolean {
   const norm = (p: string) => {
