@@ -235,30 +235,32 @@ const row = (n) => 150 + n * 110;
 /* ── 5. Testing ────────────────────────────────────────────────────────── */
 {
   const els = [];
-  els.push(...heading(60, 40, 'Testing', 'Four suites, one shared harness, everything run in CI on every push.'));
+  els.push(...heading(60, 40, 'Testing', 'Five suites, one shared harness, everything run in CI on every push.'));
   const harness = box(col(1), row(0), W, H, 'tests/harness.mjs\nlaunch · proxy · report', {
     fill: p.JADE_BG,
     color: p.JADE,
   });
-  const verify = box(col(0), row(1), W, H, 'verify.mjs\n10 routes, a11y, links', { fill: p.PAPER });
-  const interact = box(col(2), row(1), W, H, 'interact.mjs\n63 interaction checks', {
+  // Row 1 is the two suites that need the harness; row 2 is the three that
+  // never open a browser at all.
+  const verify = box(col(0), row(1), W, H, 'verify.mjs\n9 routes in a browser', { fill: p.PAPER });
+  const interact = box(col(2), row(1), W, H, 'interact.mjs\n26 interaction checks', {
     fill: p.PAPER,
   });
-  const feedsT = box(col(0), row(2), W, H, 'feeds.test.mjs\n28 parser cases', {
-    fill: p.PAPER,
-  });
-  const workerT = box(col(2), row(2), W, H, 'worker.test.mjs\n38 stubbed cases', { fill: p.PAPER });
+  const staticT = box(col(0), row(2), W, H, 'static.mjs\n11 pages, read from dist/', { fill: p.PAPER });
+  const scheduleT = box(col(1), row(2), W, H, 'schedule.test.mjs\n14 cadence cases', { fill: p.PAPER });
+  const workerT = box(col(2), row(2), W, H, 'worker.test.mjs\n39 stubbed cases', { fill: p.PAPER });
   const ci = box(col(1), row(3), W, H, 'ci.yml\ntypecheck · build · all', {
     fill: p.BLUE_BG,
     color: p.BLUE,
   });
-  els.push(harness, verify, interact, feedsT, workerT, ci);
+  els.push(harness, verify, interact, staticT, scheduleT, workerT, ci);
   els.push(
     ...arrow(harness, verify),
     ...arrow(harness, interact),
     ...arrow(verify, ci),
     ...arrow(interact, ci),
-    ...arrow(feedsT, ci),
+    ...arrow(staticT, ci),
+    ...arrow(scheduleT, ci),
     ...arrow(workerT, ci),
   );
   els.push(
@@ -266,7 +268,7 @@ const row = (n) => 150 + n * 110;
     text(
       col(0),
       row(4) + 50,
-      'verify      every route renders: one h1, no overflow, no broken internal link,\n            no image without alt, no link without a name, theme persists\ninteract    what only exists under a pointer, a key or a scroll — the mobile\n            panel, the entrance, tilt and lean, the poll cadence, reduced motion\nfeeds       the parsers, against recorded payloads, so no network is needed\nworker      every debug reason string, token reuse, 429 handling, last-good',
+      'static      read out of dist/, no browser: one h1, no broken internal link, no\n            image without alt, no link without a name, the SEO block, the feeds\ninteract    what only exists under a pointer, a key or a scroll — the entrance,\n            the header, the now-playing skeleton, a hidden tab, reduced motion\nverify      what a browser is actually for: overflow at three viewports, an\n            error-free console, the theme surviving a navigation, the reveal\nschedule    the poll cadence, to the millisecond, as a pure function\nworker      every debug reason string, token reuse, 429 handling, last-good',
       { size: 14, color: p.MUTED },
     ),
   );

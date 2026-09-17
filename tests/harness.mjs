@@ -39,7 +39,6 @@ export async function visit(browser, at, { wait = 'networkidle', watch = false, 
 
 /** Jump the page without smooth scrolling, which would race every assertion. */
 export const scroll = (page, top) => page.evaluate((y) => window.scrollTo({ top: y, behavior: 'instant' }), top);
-export const scrollBy = (page, top) => page.evaluate((y) => window.scrollBy({ top: y, behavior: 'instant' }), top);
 
 /** The two shapes every check is run at, plus the options each implies. */
 export const DESKTOP = { viewport: { width: 1440, height: 900 } };

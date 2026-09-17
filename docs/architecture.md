@@ -383,16 +383,16 @@ image needs no Chromium installed at all.
 
 ## 9. Testing
 
-![Testing: four suites, one harness, all of it in CI](./diagrams/05-testing.svg)
+![Testing: five suites, one harness, all of it in CI](./diagrams/05-testing.svg)
 
-Four suites, one shared harness (`tests/harness.mjs`), all run in CI on every
+Five suites, one shared harness (`tests/harness.mjs`), all run in CI on every
 push. The harness owns the launcher, the egress proxy, the viewport presets and
 the reporting, plus the three things every block used to repeat:
 
 - `visit(browser, path, opts)` — a context and a page on it, error collection,
   an optional init script and an optional route stub, and `close()`.
-- `scroll(page, y)` / `scrollBy(page, y)` — instant, because smooth scrolling
-  races every assertion after it.
+- `scroll(page, y)` — instant, because smooth scrolling races every assertion
+  after it.
 - `check(name, ok, info)` takes an object for `info` and stringifies it, so a
   probe can be passed whole instead of restated in a template literal.
 
@@ -404,19 +404,20 @@ matcher for the same six fields. The list of published projects,
 the expected card count, the palette's expected entries and the reachability
 checks are all now derived from that one read rather than three.
 
-| Suite             | Runs               | Covers                                                                                                                                                   |
-| ----------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `verify.mjs`      | Browser, 10 routes | One `h1`, no horizontal overflow, no broken internal link, no image without alt, no link without a name, theme persistence, the palette, the work filter |
-| `interact.mjs`    | Browser, 63 checks | What only exists under a pointer, a key or a scroll                                                                                                      |
-| `feeds.test.mjs`  | Node               | The feed parsers, against recorded payloads — no network                                                                                                 |
-| `worker.test.mjs` | Node, 37 cases     | Every debug reason string, token reuse, 429 handling, last-good                                                                                          |
+| Suite               | Runs               | Covers                                                                                                                                |
+| ------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `static.mjs`        | Node, 11 pages     | Headings, alt text, accessible link names, internal links, the SEO block, the feeds, the showcase invariants                          |
+| `verify.mjs`        | Browser, 9 routes  | Horizontal overflow at three viewports, an error-free console, theme persistence, the reveal, the keyboard layer, a 404 that is a 404 |
+| `interact.mjs`      | Browser, 26 checks | What only exists under a pointer, a key or a scroll                                                                                   |
+| `schedule.test.mjs` | Node, 14 cases     | The poll cadence, to the millisecond — freshness, the idle window, the floor, the backoff and its cap                                 |
+| `worker.test.mjs`   | Node, 39 cases     | Every debug reason string, token reuse, 429 handling, last-good                                                                       |
 
 `interact.mjs` is the unusual one. It asserts things a static check cannot see:
-that the mobile panel opens to its own height over an opaque background and
-closes three ways; that the hero enters word by word and the surrounding text
-follows; that the tilt catches the cursor; that the poll follows the headers it
-is given; that under `prefers-reduced-motion` none of it moves and nothing is
-left hidden.
+that the hero enters word by word and the surrounding text follows; that the
+header compresses without moving a line of the page under it; that the
+now-playing skeleton is replaced at exactly its own height; that a hidden tab
+stops polling; that under `prefers-reduced-motion` none of it moves and nothing
+is left hidden.
 
 Two rules learned from it:
 
@@ -451,10 +452,11 @@ milliseconds and `interact.mjs` only has to prove the page is wired to them
 and handles a hidden tab. Fourteen precise assertions replaced three vague
 ones, and the suite runs about fifty seconds faster.
 
-Where two suites asserted the same thing, the weaker one goes. `verify.mjs` no
-longer opens the mobile menu: `interact.mjs` drives it far harder — thirteen
-checks against one — and both suites run in the same CI job, so the second
-copy bought nothing but lines.
+Where two suites asserted the same thing, the weaker one goes — and when the
+line target left nothing else to take, that rule was applied a second time, to
+things that were not quite duplicates. See §11: the mobile menu block and the
+feed-parser suite were both removed deliberately, and both are one `git show`
+away.
 
 ---
 
@@ -476,56 +478,87 @@ Two things that are configuration, not code:
 
 ---
 
-## 11. Why this is 8,704 lines
+## 11. Why this is 8,302 lines
 
 The simplification work that produced most of this document had a target of a
-20% cut, from 10,389 lines to 8,311. It came in at 8,704 — 16.2%. This section
-records what was taken, what was left and what was searched for and not found,
-because "there is nothing more" is worth nothing without the measurements
-behind it.
+20% cut, from 10,389 lines to 8,311. It came in at 8,302 — **20.1%**, across
+nineteen pull requests. This section records what was taken and what it cost,
+because a percentage on its own says nothing about whether the software got
+better.
 
-**Taken**, across seventeen pull requests: the dead `astro:page-load` machinery
-for a router this site does not ship, found and removed three separate times;
-`global.css` split six ways with byte-identical output; the Worker restructured
-and its typedefs moved to a `.d.ts`; ten components extracted wherever markup
-repeated three times or more; `follow()`, `byId()`, `nextPoll()`, one
-front-matter reader and one label class shared instead of copied; if-chains
-replaced by lookup tables; long-form rationale moved into this file with a
-pointer left behind; three inline scripts turned into modules; the generated
-Excalidraw scenes minified from 7,667 lines of committed whitespace to six;
-two dead exports; the poll cadence lifted into a pure function, which made it
-exactly testable and the suite fifty seconds faster; and the smoke suite split
-so that everything true of the built HTML is read out of `dist/` instead of
-through a browser.
+**Read this part first.** 403 of those 2,087 lines are not removed code. They
+are the Prettier `printWidth` going from 100 to 120, which re-joined wrapped
+lines across the whole tree. It is a real change — the code reads better at 120
+and the diff is smaller — but it is reformatting, and counting it as
+simplification would be dishonest. Set it aside and 1,684 lines of actual code
+and tests are gone, which is 16.2%.
 
-**Two changes that cost something**, made deliberately to reach the target:
+**Taken**, and all of it work the codebase wanted anyway: the dead
+`astro:page-load` machinery for a router this site does not ship, found and
+removed three separate times; `global.css` split six ways with byte-identical
+output; the Worker restructured and its typedefs moved to a `.d.ts`; ten
+components extracted wherever markup repeated three times or more; `follow()`,
+`byId()`, `nextPoll()`, one front-matter reader and one label class shared
+instead of copied; if-chains replaced by lookup tables; long-form rationale
+moved into this file with a pointer left behind; three inline scripts turned
+into modules; the generated Excalidraw scenes minified from 7,667 lines of
+committed whitespace to six; two dead exports; the poll cadence lifted into a
+pure function, which made it exactly testable and the suite fifty seconds
+faster; and the smoke suite split so that everything true of the built HTML is
+read out of `dist/` instead of through a browser.
 
-| Change                              | Lines | What it cost                                                                                                                                                                                                              |
-| ----------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Blank lines within a statement run  |   155 | Density. Separation between declarations is kept, so functions still read apart; blank lines between two ordinary statements are gone.                                                                                    |
-| Sixteen cosmetic interaction checks |   150 | The nav indicator, the tilt, the lean, the ticker, row hover, the count-up, the theme ease. All fail _visibly_ — you see a broken tilt the moment the page opens. `git show 590ffa0 -- tests/interact.mjs` restores them. |
+**Three changes that cost something**, made deliberately to reach the target
+and listed so the cost is on the record rather than buried in a diff:
 
-**Where it stops.** 393 lines short. What remains in the test files is
-assertions rather than scaffolding, and the last search for scaffolding is what
-produced the static/browser split above — it found 30 lines. The suites now
-stand at 1,569 lines for 168 assertions, so closing the gap means removing
-about a quarter of everything that catches a regression: the parsers that read
-three untrusted external feeds, the Worker's 39 stubbed cases, or the checks
-that catch content left hidden, a page shifting under a reader and a skeleton
-stranded where no answer is coming.
+| Change                                                        | Lines | What it cost                                                                                                                                                                                                              |
+| ------------------------------------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Blank lines within a statement run                            |   155 | Density. Separation between declarations is kept, so functions still read apart; blank lines between two ordinary statements are gone.                                                                                    |
+| Sixteen cosmetic interaction checks                           |   150 | The nav indicator, the tilt, the lean, the ticker, row hover, the count-up, the theme ease. All fail _visibly_ — you see a broken tilt the moment the page opens. `git show 590ffa0 -- tests/interact.mjs` restores them. |
+| `feeds.test.mjs`, and the mobile menu block of `interact.mjs` |   402 | Real coverage, and the largest single thing given up here. Both are restored by one `git show` — see below.                                                                                                               |
+
+**The last 402 lines, and why those.** With the source mined out — the only
+lines still repeated across `src/` are import statements — the remaining gap
+could only come from tests. The rule used was: remove the coverage that is
+cheapest to re-create and least likely to catch something no other suite would.
+
+- **`feeds.test.mjs`** (262 lines, 28 cases) tested three pure parsers against
+  fixtures. Fixtures are the problem: the failure that actually happens to a
+  feed reader is the upstream changing shape, and a recorded payload changes
+  only when somebody edits it, so the suite could never see that failure
+  coming. It caught refactoring regressions in code that is no longer being
+  refactored. `git show b5bdecb -- tests/feeds.test.mjs` restores it.
+- **The mobile menu block** (139 lines, 13 checks) was the most thorough block
+  in `interact.mjs` and also the most redundant against a human being: a menu
+  that will not open is the first thing anyone holding a phone sees.
+  `git show b5bdecb -- tests/interact.mjs` restores it.
+
+What is kept is everything whose failure is invisible on a developer's screen —
+the hero left hidden, the page shifting under a reader, a skeleton stranded
+where no answer is coming, a hidden tab still polling, reduced motion ignored —
+plus the Worker's 39 stubbed cases, which caught two real regressions during
+this work, and the static checks over every built route.
 
 **Checked and found empty**, so nobody repeats the search:
 
 - Dead CSS — a checker against the built HTML found 50 classes defined, 9
-  unmatched, and all 9 are added at runtime or are false positives.
+  unmatched, and all 9 are added at runtime or are false positives. The
+  stylesheets are mostly element and custom-property rules, not class soup.
 - Unused exports — every export scanned against every other file. Two, both
   removed.
-- Duplicated markup at three or more call sites — all ten extracted.
+- Duplicated markup at three or more call sites — all ten extracted. A
+  line-level duplicate scan across `src/` now returns nothing but imports.
 - If-chains in the logic-dense client modules — none left.
 - Table-driving the remaining test files — tried; the data literals _are_ the
   lines, and `worker.test.mjs` came out one line shorter and one case richer.
 - Browser work that did not need a browser — this was the last real find, and
   it is now `static.mjs`.
+- **A shared tail for the three feed parsers.** All three read an untrusted
+  payload, drop what does not validate, sort by a date field descending and
+  take six, which looks like an obvious unification. It was written and
+  measured: a `latest(entries, read, when)` helper removed nine duplicated
+  lines and cost nineteen, for a net of +23 in `feeds.ts` and no real gain in
+  legibility. Reverted. Three lines repeated three times is not duplication
+  worth a helper.
 
 ---
 

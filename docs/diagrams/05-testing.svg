@@ -1,18 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 8 764 769" width="764" height="769" role="img">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 8 764 804" width="764" height="804" role="img">
 <defs><marker id="head-6b6d76" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6b6d76"/></marker></defs>
-<rect x="28" y="8" width="764" height="769" fill="#ffffff"/>
+<rect x="28" y="8" width="764" height="804" fill="#ffffff"/>
 <text xml:space="preserve" x="60" y="66.6" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28" text-anchor="start"><tspan x="60" dy="0">Testing</tspan></text>
-<text xml:space="preserve" x="60" y="89.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">Four suites, one shared harness, everything run in CI on every push.</tspan></text>
+<text xml:space="preserve" x="60" y="89.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">Five suites, one shared harness, everything run in CI on every push.</tspan></text>
 <rect x="310" y="150" width="200" height="64" rx="8" fill="#e3f3ec" stroke="#1d7a52" stroke-width="1.5"/>
 <text xml:space="preserve" x="410" y="187.28" fill="#1d7a52" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="410" dy="0">tests/harness.mjs</tspan><tspan x="410" dy="20">launch · proxy · report</tspan></text>
 <rect x="60" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
-<text xml:space="preserve" x="160" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">verify.mjs</tspan><tspan x="160" dy="20">10 routes, a11y, links</tspan></text>
+<text xml:space="preserve" x="160" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">verify.mjs</tspan><tspan x="160" dy="20">9 routes in a browser</tspan></text>
 <rect x="560" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
-<text xml:space="preserve" x="660" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">interact.mjs</tspan><tspan x="660" dy="20">63 interaction checks</tspan></text>
+<text xml:space="preserve" x="660" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">interact.mjs</tspan><tspan x="660" dy="20">26 interaction checks</tspan></text>
 <rect x="60" y="370" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
-<text xml:space="preserve" x="160" y="407.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">feeds.test.mjs</tspan><tspan x="160" dy="20">28 parser cases</tspan></text>
+<text xml:space="preserve" x="160" y="407.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">static.mjs</tspan><tspan x="160" dy="20">11 pages, read from dist/</tspan></text>
+<rect x="310" y="370" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="410" y="407.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="410" dy="0">schedule.test.mjs</tspan><tspan x="410" dy="20">14 cadence cases</tspan></text>
 <rect x="560" y="370" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
-<text xml:space="preserve" x="660" y="407.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">worker.test.mjs</tspan><tspan x="660" dy="20">38 stubbed cases</tspan></text>
+<text xml:space="preserve" x="660" y="407.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">worker.test.mjs</tspan><tspan x="660" dy="20">39 stubbed cases</tspan></text>
 <rect x="310" y="480" width="200" height="64" rx="8" fill="#e5edf8" stroke="#1e4a8a" stroke-width="1.5"/>
 <text xml:space="preserve" x="410" y="517.28" fill="#1e4a8a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="410" dy="0">ci.yml</tspan><tspan x="410" dy="20">typecheck · build · all</tspan></text>
 <polyline points="304,182 266,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
@@ -20,7 +22,8 @@
 <polyline points="266,292 304,512" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
 <polyline points="554,292 516,512" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
 <polyline points="266,402 304,512" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="410,440 410,474" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
 <polyline points="554,402 516,512" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
 <text xml:space="preserve" x="60" y="627.1" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" text-anchor="start"><tspan x="60" dy="0">What each one is for</tspan></text>
-<text xml:space="preserve" x="60" y="653.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">verify      every route renders: one h1, no overflow, no broken internal link,</tspan><tspan x="60" dy="17.5">            no image without alt, no link without a name, theme persists</tspan><tspan x="60" dy="17.5">interact    what only exists under a pointer, a key or a scroll — the mobile</tspan><tspan x="60" dy="17.5">            panel, the entrance, tilt and lean, the poll cadence, reduced motion</tspan><tspan x="60" dy="17.5">feeds       the parsers, against recorded payloads, so no network is needed</tspan><tspan x="60" dy="17.5">worker      every debug reason string, token reuse, 429 handling, last-good</tspan></text>
+<text xml:space="preserve" x="60" y="653.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">static      read out of dist/, no browser: one h1, no broken internal link, no</tspan><tspan x="60" dy="17.5">            image without alt, no link without a name, the SEO block, the feeds</tspan><tspan x="60" dy="17.5">interact    what only exists under a pointer, a key or a scroll — the entrance,</tspan><tspan x="60" dy="17.5">            the header, the now-playing skeleton, a hidden tab, reduced motion</tspan><tspan x="60" dy="17.5">verify      what a browser is actually for: overflow at three viewports, an</tspan><tspan x="60" dy="17.5">            error-free console, the theme surviving a navigation, the reveal</tspan><tspan x="60" dy="17.5">schedule    the poll cadence, to the millisecond, as a pure function</tspan><tspan x="60" dy="17.5">worker      every debug reason string, token reuse, 429 handling, last-good</tspan></text>
 </svg>
