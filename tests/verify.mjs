@@ -43,7 +43,26 @@ console.log(`Checking ${routes.length} routes…`);
 const browser = await launch();
 const DESKTOP = { viewport: { width: 1280, height: 900 } };
 
-// 1. Every route renders, no console errors, no broken internal links, no overflow.
+/* 1. Every route renders, with no console error, no broken internal link and
+   no horizontal overflow.
+
+   The markup assertions — one <h1>, every image with alt, every link with an
+   accessible name, every internal link resolving — are properties of the HTML
+   and do not vary with the viewport, so they run once. Only overflow does,
+   which is the whole reason three viewports are opened at all. */
+const markup = () => ({
+  h1: document.querySelectorAll('h1').length,
+  imgNoAlt: [...document.querySelectorAll('img')].filter((i) => !i.hasAttribute('alt')).length,
+  emptyLinks: [...document.querySelectorAll('a')]
+    .filter((a) => !a.textContent.trim() && !a.getAttribute('aria-label') && !a.querySelector('[aria-label]'))
+    .map((a) => a.getAttribute('href')),
+  internal: [...document.querySelectorAll('a[href^="/"]')].map((a) => a.getAttribute('href')),
+});
+const overflowing = () =>
+  document.documentElement.scrollWidth > window.innerWidth + 1
+    ? `${document.documentElement.scrollWidth}px > ${window.innerWidth}px`
+    : null;
+
 for (const [width, height, tag] of [
   [1440, 900, 'desktop'],
   [768, 1024, 'tablet'],
@@ -53,33 +72,25 @@ for (const [width, height, tag] of [
   const page = await ctx.newPage();
   page.on('pageerror', (e) => issues.push(`[${tag}] pageerror: ${e.message}`));
   page.on('console', (m) => m.type() === 'error' && issues.push(`[${tag}] console: ${m.text()}`));
+  const first = tag === 'desktop';
+
   for (const route of routes) {
     const res = await page.goto(BASE + route, { waitUntil: 'load', timeout: 20000 });
     if (!res || res.status() >= 400) {
       issues.push(`[${tag}] ${route} -> HTTP ${res?.status()}`);
       continue;
     }
-    const found = await page.evaluate(() => ({
-      overflow:
-        document.documentElement.scrollWidth > window.innerWidth + 1
-          ? `${document.documentElement.scrollWidth}px > ${window.innerWidth}px`
-          : null,
-      h1: document.querySelectorAll('h1').length,
-      imgNoAlt: [...document.querySelectorAll('img')].filter((i) => !i.hasAttribute('alt')).length,
-      emptyLinks: [...document.querySelectorAll('a')]
-        .filter((a) => !a.textContent.trim() && !a.getAttribute('aria-label') && !a.querySelector('[aria-label]'))
-        .map((a) => a.getAttribute('href')),
-      internal: [...document.querySelectorAll('a[href^="/"]')].map((a) => a.getAttribute('href')),
-    }));
-    flag(found.overflow, `[${tag}] ${route} horizontal overflow: ${found.overflow}`);
-    flag(found.h1 !== 1, `[${tag}] ${route} has ${found.h1} <h1>`);
-    flag(found.imgNoAlt, `[${tag}] ${route} ${found.imgNoAlt} img without alt`);
-    flag(found.emptyLinks.length, `[${tag}] ${route} link with no accessible name: ${found.emptyLinks.join(', ')}`);
-    if (tag === 'desktop') {
-      for (const link of new Set(found.internal)) {
-        const r = await page.request.get(`${ORIGIN}${link}`);
-        flag(r.status() >= 400, `broken internal link on ${route}: ${link} -> ${r.status()}`);
-      }
+    const overflow = await page.evaluate(overflowing);
+    flag(overflow, `[${tag}] ${route} horizontal overflow: ${overflow}`);
+    if (!first) continue;
+
+    const found = await page.evaluate(markup);
+    flag(found.h1 !== 1, `${route} has ${found.h1} <h1>`);
+    flag(found.imgNoAlt, `${route} ${found.imgNoAlt} img without alt`);
+    flag(found.emptyLinks.length, `${route} link with no accessible name: ${found.emptyLinks.join(', ')}`);
+    for (const link of new Set(found.internal)) {
+      const r = await page.request.get(`${ORIGIN}${link}`);
+      flag(r.status() >= 400, `broken internal link on ${route}: ${link} -> ${r.status()}`);
     }
   }
   await ctx.close();
