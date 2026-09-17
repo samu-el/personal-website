@@ -1,12 +1,12 @@
 ---
+import Chips from '@/components/Chips.astro';
 import Layout from '@/layouts/Layout.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import Section from '@/components/Section.astro';
 import { navIndex } from '@/lib/posts';
-import { site, socials } from '@/lib/site';
+import { site } from '@/lib/site';
 import { href } from '@/lib/paths';
 import { roles } from '@/data/experience';
-import { Icon } from 'astro-icon/components';
 import SocialLinks from '@/components/SocialLinks.astro';
 
 const title = 'About';
@@ -31,8 +31,8 @@ const glance = [
     Software engineer,
     <em class="block italic text-accent">Addis Ababa.</em>
     <Fragment slot="aside">
-      Ten years of web and mobile development across eight languages and three platforms. Currently
-      at Mereb Technologies, building products for clients in Europe and the US.
+      Ten years of web and mobile development across eight languages and three platforms. Currently at Mereb
+      Technologies, building products for clients in Europe and the US.
     </Fragment>
   </PageHeader>
 
@@ -42,24 +42,21 @@ const glance = [
       <div class="lg:col-span-7">
         <div class="prose prose-lg" data-reveal>
           <p>
-            Samuel Mussie is a software engineer based in Addis Ababa, Ethiopia. He works across the
-            stack on web and mobile products — data modelling and services through to front ends and
-            deployment.
+            Samuel Mussie is a software engineer based in Addis Ababa, Ethiopia. He works across the stack on web and
+            mobile products — data modelling and services through to front ends and deployment.
           </p>
           <p>
-            He is currently at <a href={site.companyUrl} target="_blank" rel="noopener noreferrer"
-              >Mereb Technologies</a
-            >, where the work covers multi-tenant SaaS platforms, procurement and telemedicine
-            systems, mobile applications, and retrieval-augmented AI features for clients in Europe
-            and the US. Before that, four years of independent contract development on client
-            stacks: Node and Python services, React front ends, iOS and Flutter applications, and
-            Telegram bots.
+            He is currently at <a href={site.companyUrl} target="_blank" rel="noopener noreferrer">Mereb Technologies</a
+            >, where the work covers multi-tenant SaaS platforms, procurement and telemedicine systems, mobile
+            applications, and retrieval-augmented AI features for clients in Europe and the US. Before that, four years
+            of independent contract development on client stacks: Node and Python services, React front ends, iOS and
+            Flutter applications, and Telegram bots.
           </p>
 
           <h2>Languages and platforms</h2>
           <p>
-            Production experience in TypeScript, Python, JavaScript, Dart, Swift, PHP, Java and SQL.
-            Web, iOS and Android. A full list of tools is on the <a href={href('/stack')}>stack</a> page.
+            Production experience in TypeScript, Python, JavaScript, Dart, Swift, PHP, Java and SQL. Web, iOS and
+            Android. A full list of tools is on the <a href={href('/stack')}>stack</a> page.
           </p>
 
           <h2>Education</h2>
@@ -140,12 +137,7 @@ const glance = [
               <h3 class="row-title display text-[clamp(1.5rem,2.6vw,1.9rem)]">{role.title}</h3>
               <p class="mt-1.5 text-[0.9375rem] text-accent">
                 {role.url ? (
-                  <a
-                    href={role.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="link link-accent"
-                  >
+                  <a href={role.url} target="_blank" rel="noopener noreferrer" class="link link-accent">
                     {role.org}
                   </a>
                 ) : (
@@ -153,30 +145,19 @@ const glance = [
                 )}
               </p>
               {role.summary && (
-                <p class="mt-5 max-w-2xl text-[0.9375rem] leading-relaxed text-muted lg:text-base">
-                  {role.summary}
-                </p>
+                <p class="mt-5 max-w-2xl text-[0.9375rem] leading-relaxed text-muted lg:text-base">{role.summary}</p>
               )}
               {role.highlights.length > 0 && (
                 <ul class="mt-6 space-y-2.5">
                   {role.highlights.map((h) => (
                     <li class="relative max-w-2xl pl-5 text-[0.9375rem] leading-relaxed text-muted">
-                      <span
-                        class="absolute left-0 top-[0.72em] h-px w-2.5 bg-accent"
-                        aria-hidden="true"
-                      />
+                      <span class="absolute left-0 top-[0.72em] h-px w-2.5 bg-accent" aria-hidden="true" />
                       {h}
                     </li>
                   ))}
                 </ul>
               )}
-              {role.tags.length > 0 && (
-                <ul class="mt-7 flex flex-wrap gap-1.5" aria-label="Focus areas">
-                  {role.tags.map((t) => (
-                    <li class="chip">{t}</li>
-                  ))}
-                </ul>
-              )}
+              <Chips items={role.tags} label="Focus areas" />
             </div>
           </li>
         ))

@@ -56,10 +56,10 @@ function stub({
     if (url.includes('accounts.spotify.com')) {
       calls.token++;
       return new Response(
-        tokenStatus === 200
-          ? JSON.stringify({ access_token: 'tok', scope: tokenScope, expires_in: expiresIn })
-          : 'no',
-        { status: tokenStatus },
+        tokenStatus === 200 ? JSON.stringify({ access_token: 'tok', scope: tokenScope, expires_in: expiresIn }) : 'no',
+        {
+          status: tokenStatus,
+        },
       );
     }
     // Checked first: both endpoints live on api.spotify.com.
@@ -101,8 +101,7 @@ const RECENT = {
   ],
 };
 
-const get = (path, env = ENV) =>
-  worker.fetch(new Request(`https://w.example${path}`, { method: 'GET' }), env);
+const get = (path, env = ENV) => worker.fetch(new Request(`https://w.example${path}`, { method: 'GET' }), env);
 
 const reasonOf = async (opts, env = ENV, path = '/?debug=1') => {
   stub(opts);
@@ -141,11 +140,7 @@ test('debug reports missing secrets without revealing values', async () => {
    telling them apart by hand cost two rounds of guessing — so each is pinned. */
 for (const [what, opts, reason] of [
   ['an expired refresh token', { tokenStatus: 400 }, 'token_exchange_failed_400'],
-  [
-    'nothing playing, which proves token and scope are good',
-    { playStatus: 204 },
-    'spotify_204_nothing_playing',
-  ],
+  ['nothing playing, which proves token and scope are good', { playStatus: 204 }, 'spotify_204_nothing_playing'],
   ['a token without user-read-currently-playing', { playStatus: 403 }, 'spotify_403'],
   ['an invalid access token', { playStatus: 401 }, 'spotify_401'],
   ['a rate limit', { playStatus: 429 }, 'spotify_429'],
@@ -349,17 +344,11 @@ test('any other path is passed through to the origin', async () => {
 
 test('a write method is rejected, HEAD is not', async () => {
   stub(PLAYING);
-  const post = await worker.fetch(
-    new Request('https://w.example/now-playing.json', { method: 'POST' }),
-    ENV,
-  );
+  const post = await worker.fetch(new Request('https://w.example/now-playing.json', { method: 'POST' }), ENV);
   assert.equal(post.status, 405);
   assert.equal(post.headers.get('allow'), 'GET, HEAD');
 
-  const head = await worker.fetch(
-    new Request('https://w.example/now-playing.json', { method: 'HEAD' }),
-    ENV,
-  );
+  const head = await worker.fetch(new Request('https://w.example/now-playing.json', { method: 'HEAD' }), ENV);
   assert.equal(head.status, 200);
 });
 

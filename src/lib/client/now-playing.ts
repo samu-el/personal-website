@@ -176,8 +176,7 @@ export function nowPlaying() {
     const at = Number(data.progressMs);
     // A finished track has no position, so there is no bar to draw. A paused
     // one does, and showing it frozen is the point.
-    const drawable =
-      el.bar && el.progress && state !== 'recent' && duration > 0 && Number.isFinite(at);
+    const drawable = el.bar && el.progress && state !== 'recent' && duration > 0 && Number.isFinite(at);
 
     if (!drawable) {
       total = 0;
@@ -191,8 +190,7 @@ export function nowPlaying() {
        clock from the visitor's, and losing the correction costs only the few
        seconds it was worth. */
     const stamp = Number(data.fetchedAt);
-    const age =
-      live && Number.isFinite(stamp) ? Math.min(Math.max(Date.now() - stamp, 0), MAX_AGE_MS) : 0;
+    const age = live && Number.isFinite(stamp) ? Math.min(Math.max(Date.now() - stamp, 0), MAX_AGE_MS) : 0;
 
     // A new track must not glide backwards out of the old one's position.
     if (data.title !== lastTitle && el.bar) {

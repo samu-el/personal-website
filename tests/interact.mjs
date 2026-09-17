@@ -8,23 +8,21 @@
  * Usage:
  *   npm run build && npm run preview & npm run verify:interact
  */
-import { BASE, DESKTOP, MOBILE, launch, results, sleep } from './harness.mjs';
+import { BASE, DESKTOP, MOBILE, launch, results, scroll, scrollBy, sleep, visit } from './harness.mjs';
 
 const { check, report } = results();
 /** The word-by-word hero runs for about 1.4s; wait it out before measuring. */
 const ENTRANCE = 2200;
+const CALM = { reducedMotion: 'reduce' };
 
 const browser = await launch();
+const opacityOf = (els) => els.map((e) => Number(getComputedStyle(e).opacity));
 
 // ── 1. Mobile menu ──────────────────────────────────────────────────────
 {
-  const ctx = await browser.newContext(MOBILE);
-  const page = await ctx.newPage();
-  const errors = [];
-  page.on('pageerror', (e) => errors.push(String(e)));
-  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  const { page, errors, close } = await visit(browser, '/', { ...MOBILE, watch: true });
   await sleep(ENTRANCE);
-  await page.evaluate(() => window.scrollTo({ top: 600, behavior: 'instant' }));
+  await scroll(page, 600);
   await sleep(300);
 
   await page.click('#menu-toggle');
@@ -34,7 +32,6 @@ const browser = await launch();
 
   const open = await page.evaluate(() => {
     const menu = document.getElementById('mobile-menu');
-    const scrim = document.getElementById('menu-scrim');
     const box = menu.getBoundingClientRect();
     const rows = [...menu.querySelectorAll('.menu-row')];
     return {
@@ -45,7 +42,7 @@ const browser = await launch();
       rowsCount: rows.length,
       rowsVisible: rows.every((r) => Number(getComputedStyle(r).opacity) === 1),
       background: getComputedStyle(menu).backgroundColor,
-      scrim: Number(getComputedStyle(scrim).opacity),
+      scrim: Number(getComputedStyle(document.getElementById('menu-scrim')).opacity),
       // What the page renders where the panel's last row is.
       atLastRow: document.elementFromPoint(60, box.bottom - 12)?.closest('#mobile-menu, #main')?.id,
     };
@@ -56,44 +53,25 @@ const browser = await launch();
     mid > 0 && mid < open.height,
     `${Math.round(mid)} -> ${open.height}`,
   );
-  check('menu: opens below the header bar', open.top >= 48 && open.top <= 72, `top=${open.top}`);
-  check('menu: tall enough for every row', open.height > 300, `height=${open.height}`);
-  check(
-    'menu: no row spills outside the panel',
-    open.rowsInside && open.rowsCount >= 5,
-    `rows=${open.rowsCount} inside=${open.rowsInside}`,
-  );
+  check('menu: opens below the header bar', open.top >= 48 && open.top <= 72, open);
+  check('menu: tall enough for every row', open.height > 300, open);
+  check('menu: no row spills outside the panel', open.rowsInside && open.rowsCount >= 5, open);
   check('menu: rows have arrived', open.rowsVisible);
   check('menu: panel is opaque', /^rgb\(\d+, \d+, \d+\)$/.test(open.background), open.background);
-  check(
-    'menu: page under the last row is the panel, not the page',
-    open.atLastRow === 'mobile-menu',
-    `hit=${open.atLastRow}`,
-  );
-  check('menu: scrim veils the page', open.scrim === 1, `opacity=${open.scrim}`);
+  check('menu: page under the last row is the panel, not the page', open.atLastRow === 'mobile-menu', open);
+  check('menu: scrim veils the page', open.scrim === 1, open);
+
   /* A disclosure, so focus stays on the trigger and Tab walks in. */
   const tabbed = await page.evaluate(() => document.activeElement?.id);
   await page.keyboard.press('Tab');
-  const inside = await page.evaluate(() => ({
-    inPanel: document.activeElement?.closest('#mobile-menu') !== null,
-    label: document.activeElement?.textContent?.trim().slice(0, 12),
-  }));
-  check(
-    'menu: Tab walks from the trigger into the panel',
-    tabbed === 'menu-toggle' && inside.inPanel,
-    `${tabbed} -> ${JSON.stringify(inside)}`,
-  );
+  const inside = await page.evaluate(() => document.activeElement?.closest('#mobile-menu') !== null);
+  check('menu: Tab walks from the trigger into the panel', tabbed === 'menu-toggle' && inside, `${tabbed}/${inside}`);
 
   /* And Tab does not escape past the last row while it is open. */
-  const stops = await page.evaluate(async () => {
-    const rows = document.querySelectorAll('#mobile-menu a, #mobile-menu button').length;
-    return rows;
-  });
+  const stops = await page.$$eval('#mobile-menu a, #mobile-menu button', (n) => n.length);
   for (let i = 0; i < stops; i++) await page.keyboard.press('Tab');
   const wrapped = await page.evaluate(
-    () =>
-      document.activeElement?.closest('#mobile-menu') !== null ||
-      document.activeElement?.id === 'menu-toggle',
+    () => document.activeElement?.closest('#mobile-menu') !== null || document.activeElement?.id === 'menu-toggle',
   );
   check('menu: Tab stays inside the open panel', wrapped, `stops=${stops}`);
 
@@ -103,7 +81,7 @@ const browser = await launch();
      measured here as a jump of the site's own. */
   await page.keyboard.press('Escape');
   await sleep(700);
-  await page.evaluate(() => window.scrollTo({ top: 600, behavior: 'instant' }));
+  await scroll(page, 600);
   await sleep(300);
   const moved = await page.evaluate(async () => {
     const before = window.scrollY;
@@ -111,11 +89,7 @@ const browser = await launch();
     await new Promise((r) => setTimeout(r, 800));
     return { before, after: window.scrollY };
   });
-  check(
-    'menu: opening does not move the page',
-    Math.abs(moved.after - moved.before) < 8,
-    `${moved.before} -> ${moved.after}`,
-  );
+  check('menu: opening does not move the page', Math.abs(moved.after - moved.before) < 8, moved);
 
   // A tap outside closes it.
   await page.click('#menu-scrim', { position: { x: 200, y: 700 } });
@@ -124,11 +98,7 @@ const browser = await launch();
     hidden: document.getElementById('mobile-menu').hidden,
     scrim: Number(getComputedStyle(document.getElementById('menu-scrim')).opacity),
   }));
-  check(
-    'menu: closes on a tap outside',
-    byScrim.hidden && byScrim.scrim === 0,
-    JSON.stringify(byScrim),
-  );
+  check('menu: closes on a tap outside', byScrim.hidden && byScrim.scrim === 0, byScrim);
 
   // Escape closes it and hands focus back to the trigger.
   await page.click('#menu-toggle');
@@ -139,16 +109,12 @@ const browser = await launch();
     hidden: document.getElementById('mobile-menu').hidden,
     focus: document.activeElement?.id,
   }));
-  check(
-    'menu: Escape closes it and restores focus',
-    byEsc.hidden && byEsc.focus === 'menu-toggle',
-    JSON.stringify(byEsc),
-  );
+  check('menu: Escape closes it and restores focus', byEsc.hidden && byEsc.focus === 'menu-toggle', byEsc);
 
   // A deliberate scroll closes it; the panel is a header dropdown, not a page.
   await page.click('#menu-toggle');
   await sleep(650);
-  await page.evaluate(() => window.scrollTo({ top: window.scrollY + 400, behavior: 'instant' }));
+  await scrollBy(page, 400);
   await sleep(700);
   check(
     'menu: closes on a deliberate scroll',
@@ -156,66 +122,48 @@ const browser = await launch();
   );
 
   check('menu: no errors', errors.length === 0, errors.join(' | '));
-  await ctx.close();
+  await close();
 }
 
 // ── 2. Desktop motion ───────────────────────────────────────────────────
-const ctx = await browser.newContext(DESKTOP);
-const page = await ctx.newPage();
-const errors = [];
-page.on('pageerror', (e) => errors.push(String(e)));
-page.on('console', (m) => m.type() === 'error' && errors.push(m.text()));
-await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+const { page, errors, close } = await visit(browser, '/', { ...DESKTOP, watch: true });
 await sleep(150);
 
+const lastWord = () => page.$eval('.hero-words .w:last-child', (el) => Number(getComputedStyle(el).opacity));
 const words = await page.locator('.hero-words .w').count();
 check('hero: words present', words >= 9, `count=${words}`);
-check(
-  'hero: last word starts hidden',
-  Number(await page.$eval('.hero-words .w:last-child', (el) => getComputedStyle(el).opacity)) < 1,
-);
+check('hero: last word starts hidden', (await lastWord()) < 1);
 await sleep(ENTRANCE);
-check(
-  'hero: last word ends visible',
-  Number(await page.$eval('.hero-words .w:last-child', (el) => getComputedStyle(el).opacity)) === 1,
-);
-const enter = await page.$$eval('.hero-enter', (els) =>
-  els.map((e) => getComputedStyle(e).opacity),
-);
+check('hero: last word ends visible', (await lastWord()) === 1);
+const enter = await page.$$eval('.hero-enter', (els) => els.map((e) => Number(getComputedStyle(e).opacity)));
 check(
   'hero: surrounding text follows the words in',
-  enter.every((o) => Number(o) === 1),
+  enter.every((o) => o === 1),
   enter.join(','),
 );
 
 // Header compression and the reading hairline.
-const barTall = await page.$eval(
-  '#site-header .header-bar',
-  (el) => el.getBoundingClientRect().height,
-);
-await page.evaluate(() => window.scrollTo({ top: 400, behavior: 'instant' }));
+const barHeight = () => page.$eval('#site-header .header-bar', (el) => el.getBoundingClientRect().height);
+const barTall = await barHeight();
+await scroll(page, 400);
 await sleep(500);
-const barShort = await page.$eval(
-  '#site-header .header-bar',
-  (el) => el.getBoundingClientRect().height,
-);
-/* The bar compresses inside a height it never changes. It used to animate
-   its own height, which moved every following element up by 8px each time
-   the threshold was crossed — so the assertions are that the compression
-   happened AND that the page did not move. */
+const barShort = await barHeight();
+/* The bar compresses inside a height it never changes. It used to animate its
+   own height, which moved every following element up by 8px each time the
+   threshold was crossed — so the assertions are that the compression happened
+   AND that the page did not move. */
 const compressed = await page.evaluate(() => {
   const sub = getComputedStyle(document.querySelector('.wordmark-sub'));
   return {
     subMaxHeight: parseFloat(sub.maxHeight) || 0,
     subOpacity: Number(sub.opacity),
-    avatarScale: getComputedStyle(document.querySelector('.wordmark-avatar')).scale,
     scrolledAttr: document.getElementById('site-header').hasAttribute('data-scrolled'),
   };
 });
 check(
   'header: compresses on scroll',
   compressed.scrolledAttr && compressed.subMaxHeight === 0 && compressed.subOpacity === 0,
-  JSON.stringify(compressed),
+  compressed,
 );
 check(
   'header: compressing never changes the bar height',
@@ -235,65 +183,53 @@ check('header: compressing does not move the page', shifted === 0, `${shifted}px
 const progress = await page.$eval('.scroll-progress', (el) => ({
   supports: CSS.supports('animation-timeline: scroll()'),
   timeline: getComputedStyle(el).animationTimeline,
-  width: el.getBoundingClientRect().width,
   scale: new DOMMatrix(getComputedStyle(el).transform).a,
 }));
 check(
   'header: reading hairline tracks the scroll',
-  !progress.supports ||
-    (progress.timeline.startsWith('scroll(') && progress.scale > 0 && progress.scale < 1),
-  JSON.stringify(progress),
+  !progress.supports || (progress.timeline.startsWith('scroll(') && progress.scale > 0 && progress.scale < 1),
+  progress,
 );
-await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+await scroll(page, 0);
 await sleep(600);
 check(
   'header: restores at the top',
   await page.evaluate(() => {
     const sub = getComputedStyle(document.querySelector('.wordmark-sub'));
-    return (
-      !document.getElementById('site-header').hasAttribute('data-scrolled') &&
-      Number(sub.opacity) === 1 &&
-      parseFloat(sub.maxHeight) > 0
-    );
+    const header = document.getElementById('site-header');
+    return !header.hasAttribute('data-scrolled') && Number(sub.opacity) === 1 && parseFloat(sub.maxHeight) > 0;
   }),
 );
 
 // The nav indicator sits under the current page and follows the pointer.
+const indicatorX = () => page.$eval('.nav-indicator', (el) => el.style.getPropertyValue('--x'));
 const navHome = await page.$eval('#primary-nav', (el) => el.hasAttribute('data-indicator'));
-const first = page.locator('#primary-nav .nav-link').first();
-const restX = await page.$eval('.nav-indicator', (el) => el.style.getPropertyValue('--x'));
-await first.hover();
+const restX = await indicatorX();
+await page.locator('#primary-nav .nav-link').first().hover();
 await sleep(500);
-const hoverX = await page.$eval('.nav-indicator', (el) => ({
+const hovered = await page.$eval('.nav-indicator', (el) => ({
   x: el.style.getPropertyValue('--x'),
-  w: el.style.getPropertyValue('--w'),
-  opacity: getComputedStyle(el).opacity,
+  w: parseFloat(el.style.getPropertyValue('--w')),
+  opacity: Number(getComputedStyle(el).opacity),
 }));
 check(
   'nav: indicator follows the hovered link',
-  hoverX.x !== restX && parseFloat(hoverX.w) > 0 && Number(hoverX.opacity) === 1,
-  `${restX} -> ${JSON.stringify(hoverX)}`,
+  hovered.x !== restX && hovered.w > 0 && hovered.opacity === 1,
+  `${restX} -> ${JSON.stringify(hovered)}`,
 );
 await page.mouse.move(700, 500);
 await sleep(500);
-check(
-  'nav: indicator returns to the current page',
-  (await page.$eval('.nav-indicator', (el) => el.style.getPropertyValue('--x'))) === restX ||
-    !navHome,
-);
+check('nav: indicator returns to the current page', (await indicatorX()) === restX || !navHome);
 
-/* Metric numerals count up on arrival — on a page of its own.
-   The animation is one-shot and unobserves itself, so any earlier check
-   that scrolls past the metrics consumes it and this one then measures a
-   number that has already finished. That is not hypothetical: the counter
-   sits 40% into view at the scroll position the header check uses, which
-   is exactly the observer's threshold. */
-const count = await (async () => {
-  const own = await browser.newContext(DESKTOP);
-  const fresh = await own.newPage();
-  await fresh.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+/* Metric numerals count up on arrival — on a page of its own. The animation is
+   one-shot and unobserves itself, so any earlier check that scrolls past the
+   metrics consumes it and this one then measures a number that has already
+   finished. That is not hypothetical: the counter sits 40% into view at the
+   scroll position the header check uses, which is exactly the threshold. */
+{
+  const own = await visit(browser, '/', DESKTOP);
   await sleep(ENTRANCE);
-  const out = await fresh.evaluate(async () => {
+  const count = await own.page.evaluate(async () => {
     const el = document.querySelector('[data-count]');
     const box = el.getBoundingClientRect();
     const initial = el.textContent.trim();
@@ -301,22 +237,16 @@ const count = await (async () => {
     await new Promise((r) => setTimeout(r, 300));
     const mid = el.textContent.trim();
     await new Promise((r) => setTimeout(r, 1500));
-    return {
-      initial,
-      mid,
-      end: el.textContent.trim(),
-      // Proof it had not already run before the scroll.
-      wasBelowFold: box.top >= window.innerHeight,
-    };
+    // wasBelowFold is proof it had not already run before the scroll.
+    return { initial, mid, end: el.textContent.trim(), wasBelowFold: box.top >= window.innerHeight };
   });
   await own.close();
-  return out;
-})();
-check(
-  'count-up: animates and lands on the real figure',
-  count.wasBelowFold && count.mid !== count.end && count.end === count.initial,
-  JSON.stringify(count),
-);
+  check(
+    'count-up: animates and lands on the real figure',
+    count.wasBelowFold && count.mid !== count.end && count.end === count.initial,
+    count,
+  );
+}
 
 // Heavy rules draw in.
 const draw = await page.evaluate(async () => {
@@ -331,57 +261,40 @@ const draw = await page.evaluate(async () => {
     scale: new DOMMatrix(getComputedStyle(rule).transform).a,
   };
 });
-check(
-  'rule: draws in on arrival',
-  draw.pending && draw.visible && draw.scale > 0.99,
-  JSON.stringify(draw),
-);
+check('rule: draws in on arrival', draw.pending && draw.visible && draw.scale > 0.99, draw);
 
 // Ledger rows under the pointer.
-const row = page.locator('.ledger-row').first();
-await row.scrollIntoViewIfNeeded();
-await page.evaluate(() => window.scrollBy({ top: -100, behavior: 'instant' }));
-await sleep(400);
-const read = (el) => ({
+const readRow = (el) => ({
   index: getComputedStyle(el.querySelector('.row-index')).color,
   title: getComputedStyle(el.querySelector('.row-title')).transform,
   rule: new DOMMatrix(getComputedStyle(el, '::after').transform).a,
 });
-const rowRest = await row.evaluate(read);
+const row = page.locator('.ledger-row').first();
+await row.scrollIntoViewIfNeeded();
+await scrollBy(page, -100);
+await sleep(400);
+const rowRest = await row.evaluate(readRow);
 await row.hover({ position: { x: 300, y: 40 } });
 await sleep(700);
-const rowHover = await row.evaluate(read);
-check(
-  'row hover: index lights',
-  rowRest.index !== rowHover.index,
-  `${rowRest.index} -> ${rowHover.index}`,
-);
-check(
-  'row hover: title nudges',
-  rowHover.title !== rowRest.title && rowHover.title !== 'none',
-  rowHover.title,
-);
-check(
-  'row hover: underline draws',
-  rowHover.rule > 0.99 && rowRest.rule < 0.01,
-  `${rowRest.rule} -> ${rowHover.rule}`,
-);
+const rowHover = await row.evaluate(readRow);
+check('row hover: index lights', rowRest.index !== rowHover.index, `${rowRest.index} -> ${rowHover.index}`);
+check('row hover: title nudges', rowHover.title !== rowRest.title && rowHover.title !== 'none', rowHover.title);
+check('row hover: underline draws', rowHover.rule > 0.99 && rowRest.rule < 0.01, `${rowRest.rule} -> ${rowHover.rule}`);
 await page.mouse.move(5, 5);
 
 // The ticker pauses so a word can be read.
 const band = page.locator('.marquee-band').first();
+const playState = () =>
+  band
+    .locator('.animate-marquee')
+    .first()
+    .evaluate((el) => getComputedStyle(el).animationPlayState);
 await band.scrollIntoViewIfNeeded();
 await sleep(300);
-const tickerRunning = await band
-  .locator('.animate-marquee')
-  .first()
-  .evaluate((el) => getComputedStyle(el).animationPlayState);
+const tickerRunning = await playState();
 await band.hover();
 await sleep(120);
-const tickerPaused = await band
-  .locator('.animate-marquee')
-  .first()
-  .evaluate((el) => getComputedStyle(el).animationPlayState);
+const tickerPaused = await playState();
 check(
   'ticker: pauses under the pointer',
   tickerRunning === 'running' && tickerPaused === 'paused',
@@ -389,27 +302,23 @@ check(
 );
 await page.mouse.move(5, 5);
 
-// Preview frames.
-const frame = page.locator('.group\\/frame').first();
-await frame.scrollIntoViewIfNeeded();
+// Preview frames tilt toward the cursor and settle when it leaves.
+const card = page.locator('.group\\/frame').first().locator('.frame-card');
+await card.scrollIntoViewIfNeeded();
 await sleep(300);
-const fbox = await frame
-  .locator('.frame-card')
-  .evaluate((el) => el.getBoundingClientRect().toJSON());
+const fbox = await card.evaluate((el) => el.getBoundingClientRect().toJSON());
 await page.mouse.move(fbox.x + fbox.width * 0.9, fbox.y + fbox.height * 0.2);
 await sleep(650);
-const tilt = await frame.locator('.frame-card').evaluate((el) => ({
+const tilt = await card.evaluate((el) => ({
   rx: el.style.getPropertyValue('--rx'),
   ry: el.style.getPropertyValue('--ry'),
   lift: getComputedStyle(el).getPropertyValue('--lift').trim(),
 }));
-check('frame: tilts toward the cursor', Boolean(tilt.rx && tilt.ry), JSON.stringify(tilt));
+check('frame: tilts toward the cursor', Boolean(tilt.rx && tilt.ry), tilt);
 check('frame: lifts on hover', tilt.lift === '-4px', tilt.lift);
 await page.mouse.move(5, 5);
 await sleep(150);
-const settled = await frame
-  .locator('.frame-card')
-  .evaluate((el) => el.style.getPropertyValue('--rx') + el.style.getPropertyValue('--ry'));
+const settled = await card.evaluate((el) => el.style.getPropertyValue('--rx') + el.style.getPropertyValue('--ry'));
 check('frame: settles when the cursor leaves', settled === '');
 
 // Watermarks drift against the scroll.
@@ -421,13 +330,13 @@ const drift = await page.$eval('.rail-index', (el) => ({
 check(
   'watermark: drifts against the scroll',
   !drift.supports || (drift.timeline === 'view()' && drift.name === 'drift'),
-  JSON.stringify(drift),
+  drift,
 );
 
 // Buttons lean toward the cursor.
 const btn = page.locator('.btn').first();
 await btn.scrollIntoViewIfNeeded();
-await page.evaluate(() => window.scrollBy({ top: -200, behavior: 'instant' }));
+await scrollBy(page, -200);
 await sleep(300);
 const bbox = await btn.evaluate((el) => el.getBoundingClientRect().toJSON());
 await page.mouse.move(bbox.x + bbox.width * 0.9, bbox.y + bbox.height * 0.8);
@@ -436,90 +345,74 @@ const lean = await btn.evaluate((el) => el.style.translate);
 check('button: leans toward the cursor', /px/.test(lean) && lean !== '0px 0px', lean);
 await page.mouse.move(5, 5);
 await sleep(120);
-check(
-  'button: settles when the cursor leaves',
-  (await btn.evaluate((el) => el.style.translate)) === '',
-);
+check('button: settles when the cursor leaves', (await btn.evaluate((el) => el.style.translate)) === '');
 
 // A theme change eases rather than snapping.
-await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+await scroll(page, 0);
 await sleep(200);
 await page.locator('#theme-toggle').click();
-const easing = await page.evaluate(() =>
-  document.documentElement.classList.contains('theme-transition'),
-);
+const easing = await page.evaluate(() => document.documentElement.classList.contains('theme-transition'));
 await sleep(600);
-const eased = await page.evaluate(
-  () => !document.documentElement.classList.contains('theme-transition'),
-);
+const eased = await page.evaluate(() => !document.documentElement.classList.contains('theme-transition'));
 check('theme: change eases, then stops slowing the page', easing && eased, `${easing}/${eased}`);
 
 // The ink field morphs between pages.
-const heroField = await page.$eval('[style*="view-transition-name:field"]', (el) => el.tagName);
+const fieldTag = () => page.$eval('[style*="view-transition-name:field"]', (el) => el.tagName);
+const heroField = await fieldTag();
 await page.goto(`${BASE}/about/`, { waitUntil: 'networkidle' });
-const headerField = await page.$eval('[style*="view-transition-name:field"]', (el) => el.tagName);
 check(
   'view transition: hero and page header share the field',
-  heroField === 'SECTION' && headerField === 'SECTION',
+  heroField === 'SECTION' && (await fieldTag()) === 'SECTION',
 );
 
 await sleep(300);
 const period = page.locator('#timeline .ledger-row').first();
+const periodColour = () => period.evaluate((el) => getComputedStyle(el.querySelector('.row-index')).color);
 await period.scrollIntoViewIfNeeded();
-await page.evaluate(() => window.scrollBy({ top: -120, behavior: 'instant' }));
+await scrollBy(page, -120);
 await sleep(500);
-const pRest = await period.evaluate((el) => getComputedStyle(el.querySelector('.row-index')).color);
+const pRest = await periodColour();
 await period.hover({ position: { x: 200, y: 60 } });
 await sleep(500);
-check(
-  'about: the timeline period lights on hover',
-  pRest !== (await period.evaluate((el) => getComputedStyle(el.querySelector('.row-index')).color)),
-);
+check('about: the timeline period lights on hover', pRest !== (await periodColour()));
 
 check('desktop: no errors', errors.length === 0, errors.join(' | '));
-await ctx.close();
+await close();
 
 // ── 3. Reduced motion ───────────────────────────────────────────────────
 {
-  const calm = await browser.newContext({ ...DESKTOP, reducedMotion: 'reduce' });
-  const page = await calm.newPage();
-  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  const { page, close } = await visit(browser, '/', { ...DESKTOP, ...CALM });
   await sleep(150);
-  const state = await page.evaluate(() => ({
-    words: [...document.querySelectorAll('.hero-words .w')].map((e) => getComputedStyle(e).opacity),
-    enter: [...document.querySelectorAll('.hero-enter')].map((e) => getComputedStyle(e).opacity),
-    pending: document.querySelectorAll('.draw-pending, .reveal-pending').length,
-  }));
+  const state = await page.evaluate(() => {
+    const opacity = (sel) => [...document.querySelectorAll(sel)].map((e) => Number(getComputedStyle(e).opacity));
+    return {
+      words: opacity('.hero-words .w'),
+      enter: opacity('.hero-enter'),
+      pending: document.querySelectorAll('.draw-pending, .reveal-pending').length,
+    };
+  });
   check(
     'reduced motion: hero words are there at once',
-    state.words.every((o) => Number(o) === 1),
+    state.words.every((o) => o === 1),
     state.words.join(','),
   );
   check(
     'reduced motion: surrounding text is there at once',
-    state.enter.every((o) => Number(o) === 1),
+    state.enter.every((o) => o === 1),
     state.enter.join(','),
   );
-  check(
-    'reduced motion: nothing is held back for a reveal',
-    state.pending === 0,
-    `${state.pending}`,
-  );
+  check('reduced motion: nothing is held back for a reveal', state.pending === 0, `${state.pending}`);
+
   const bbox = await page.$eval('.btn', (el) => el.getBoundingClientRect().toJSON());
   await page.mouse.move(bbox.x + bbox.width * 0.9, bbox.y + bbox.height * 0.8);
   await sleep(120);
-  check(
-    'reduced motion: buttons do not lean',
-    (await page.$eval('.btn', (el) => el.style.translate)) === '',
-  );
-  await calm.close();
+  check('reduced motion: buttons do not lean', (await page.$eval('.btn', (el) => el.style.translate)) === '');
+  await close();
 }
 
 // ── 4. Mobile menu, reduced motion ──────────────────────────────────────
 {
-  const calm = await browser.newContext({ ...MOBILE, reducedMotion: 'reduce' });
-  const page = await calm.newPage();
-  await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+  const { page, close } = await visit(browser, '/', { ...MOBILE, ...CALM });
   await sleep(200);
   await page.click('#menu-toggle');
   await sleep(150);
@@ -527,15 +420,15 @@ await ctx.close();
     const menu = document.getElementById('mobile-menu');
     return {
       height: Math.round(menu.getBoundingClientRect().height),
-      rows: [...menu.querySelectorAll('.menu-row')].map((r) => getComputedStyle(r).opacity),
+      rows: [...menu.querySelectorAll('.menu-row')].map((r) => Number(getComputedStyle(r).opacity)),
     };
   });
   check(
     'reduced motion: menu opens at once, fully readable',
-    open.height > 300 && open.rows.every((o) => Number(o) === 1),
-    JSON.stringify(open),
+    open.height > 300 && open.rows.every((o) => o === 1),
+    open,
   );
-  await calm.close();
+  await close();
 }
 
 // ── 5. Now-playing poll cadence ─────────────────────────────────────────
@@ -544,22 +437,19 @@ await ctx.close();
    instead of a fixed interval, backs off when it cannot reach it, and does
    not poll a tab nobody is looking at. */
 {
-  const ctx = await browser.newContext(DESKTOP);
   const hits = [];
   let mode = 'playing';
-  await ctx.route('**/api/now-playing.json*', async (route) => {
-    hits.push({ t: Date.now(), mode });
+  const stub = async (route) => {
+    hits.push(Date.now());
     if (mode === 'down') return route.fulfill({ status: 503, body: 'no' });
     const playing = mode === 'playing';
+    // 5s while playing, 10s idle — what the Worker actually sends — with 1s
+    // already spent at the edge.
+    const ttl = playing ? 5 : 10;
     await route.fulfill({
       status: 200,
       contentType: 'application/json; charset=utf-8',
-      headers: {
-        // 5s while playing, 10s idle — what the Worker actually sends — and
-        // 1s already spent at the edge.
-        'Cache-Control': `public, max-age=${playing ? 5 : 10}, s-maxage=${playing ? 5 : 10}`,
-        Age: '1',
-      },
+      headers: { 'Cache-Control': `public, max-age=${ttl}, s-maxage=${ttl}`, Age: '1' },
       body: JSON.stringify({
         playing,
         state: playing ? 'playing' : 'paused',
@@ -571,81 +461,74 @@ await ctx.close();
         ...(playing ? { fetchedAt: Date.now() } : {}),
       }),
     });
-  });
-  const page = await ctx.newPage();
+  };
   // The card, and so the poll, lives on /now.
-  await page.goto(`${BASE}/now/`, { waitUntil: 'networkidle' });
+  const { page, close } = await visit(browser, '/now/', { ...DESKTOP, route: stub });
 
-  const gapsFor = async (label, ms) => {
+  const gapsFor = async (ms) => {
     hits.length = 0;
     await sleep(ms);
-    const g = [];
-    for (let i = 1; i < hits.length; i++) g.push(hits[i].t - hits[i - 1].t);
-    return { label, count: hits.length, gaps: g };
+    return { count: hits.length, gaps: hits.slice(1).map((t, i) => t - hits[i]) };
   };
+  const visibility = (hidden) =>
+    page.evaluate((h) => {
+      for (const [prop, value] of [
+        ['hidden', h],
+        ['visibilityState', h ? 'hidden' : 'visible'],
+      ]) {
+        Object.defineProperty(document, prop, { configurable: true, get: () => value });
+      }
+      document.dispatchEvent(new Event('visibilitychange'));
+    }, hidden);
 
-  const playing = await gapsFor('playing', 13000);
   // 5s advertised, 1s spent, so about 4s of freshness left each time.
+  const playing = await gapsFor(13000);
   check(
     'poll: playing follows the freshness the response advertises',
     playing.gaps.length >= 2 && playing.gaps.every((g) => g > 3600 && g < 6200),
-    JSON.stringify(playing),
+    playing,
   );
 
   mode = 'paused';
   await sleep(6500);
-  const paused = await gapsFor('paused', 22000);
+  const paused = await gapsFor(22000);
   check(
     'poll: a paused answer is checked less often',
     paused.gaps.length >= 1 && paused.gaps.every((g) => g > 8000),
-    JSON.stringify(paused),
+    paused,
   );
 
-  /* Reloaded so the backoff is measured from its first step: left running,
-     it had already doubled past the width of any reasonable test window —
-     which is the behaviour under test working, not failing. */
+  /* Reloaded so the backoff is measured from its first step: left running, it
+     had already doubled past the width of any reasonable test window — which
+     is the behaviour under test working, not failing. */
   mode = 'down';
   await page.reload({ waitUntil: 'commit' });
-  const down = await gapsFor('down', 20000);
+  const down = await gapsFor(20000);
   check(
     'poll: a failing endpoint is backed off, not hammered',
-    down.gaps.length >= 2 &&
-      down.gaps[0] > 4000 &&
-      down.gaps[1] > down.gaps[0] * 1.6 &&
-      down.count < 6,
-    JSON.stringify(down),
+    down.gaps.length >= 2 && down.gaps[0] > 4000 && down.gaps[1] > down.gaps[0] * 1.6 && down.count < 6,
+    down,
   );
 
   // A tab nobody is looking at makes no requests at all.
   mode = 'playing';
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
-    Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  await visibility(true);
   hits.length = 0;
   await sleep(9000);
   check('poll: a hidden tab does not poll', hits.length === 0, `${hits.length} request(s)`);
 
   // Coming back asks immediately rather than waiting out the interval.
-  await page.evaluate(() => {
-    Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
-    Object.defineProperty(document, 'visibilityState', {
-      configurable: true,
-      get: () => 'visible',
-    });
-    document.dispatchEvent(new Event('visibilitychange'));
-  });
+  await visibility(false);
   await sleep(700);
   check('poll: returning to the tab asks at once', hits.length >= 1, `${hits.length} request(s)`);
-  await ctx.close();
+  await close();
 }
 
 // ── 6. Now-playing skeleton ─────────────────────────────────────────────
 /* The card is filled entirely in the browser, so before this it appeared out
    of nothing when the fetch resolved. What is under test is that it holds its
-   own shape first, that the swap costs no layout shift, and that a skeleton
-   is never left standing where no answer is coming. */
+   own shape first, that the swap costs no layout shift, and that a skeleton is
+   never left standing where no answer is coming. */
 {
   const track = {
     playing: true,
@@ -656,47 +539,45 @@ await ctx.close();
     progressMs: 42000,
     durationMs: 300000,
   };
-
-  /**
-   * Loads /now with the endpoint held open, so the loading state can be
-   * measured before it resolves. `answer` is fulfilled on release.
-   */
-  const withGate = async (answer, context = DESKTOP) => {
-    const ctx = await browser.newContext(context);
-    let release;
-    const gate = new Promise((r) => (release = r));
-    await ctx.route('**/api/now-playing.json*', async (route) => {
-      await gate;
-      await route.fulfill(answer());
-    });
-    const page = await ctx.newPage();
-    await page.addInitScript(() => {
-      window.__cls = 0;
-      new PerformanceObserver((l) => {
-        for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value;
-      }).observe({ type: 'layout-shift', buffered: true });
-    });
-    await page.goto(`${BASE}/now/`, { waitUntil: 'commit' });
-    await sleep(1500);
-    return { ctx, page, release };
-  };
-
-  const ok = (body) => () => ({
+  const ok = (body) => ({
     status: 200,
     contentType: 'application/json',
     headers: { 'Cache-Control': 'public, max-age=5, s-maxage=5', Age: '1' },
     body: JSON.stringify({ ...body, fetchedAt: Date.now() }),
   });
 
+  /** Loads /now with the endpoint held open, so the loading state can be read. */
+  const withGate = async (answer, opts = DESKTOP) => {
+    let release;
+    const gate = new Promise((r) => (release = r));
+    const session = await visit(browser, '/now/', {
+      ...opts,
+      wait: 'commit',
+      // Layout shift is observed from the very first frame, before the answer.
+      init: () => {
+        window.__cls = 0;
+        new PerformanceObserver((l) => {
+          for (const e of l.getEntries()) if (!e.hadRecentInput) window.__cls += e.value;
+        }).observe({ type: 'layout-shift', buffered: true });
+      },
+      route: async (route) => {
+        await gate;
+        await route.fulfill(answer);
+      },
+    });
+    await sleep(1500);
+    return { ...session, release };
+  };
+
   const read = (page) =>
     page.evaluate(() => {
-      const s = document.getElementById('now-playing');
+      const card = document.getElementById('now-playing');
       const link = document.getElementById('np-link');
       return {
-        state: s.dataset.state,
-        hidden: s.hidden,
-        height: Math.round(s.getBoundingClientRect().height),
-        busy: s.getAttribute('aria-busy'),
+        state: card.dataset.state,
+        hidden: card.hidden,
+        height: Math.round(card.getBoundingClientRect().height),
+        busy: card.getAttribute('aria-busy'),
         linkAriaHidden: link.getAttribute('aria-hidden'),
         linkTabindex: link.getAttribute('tabindex'),
         // The sleeve's placeholder is excluded: it is retired by the image
@@ -709,17 +590,17 @@ await ctx.close();
 
   // A track: the common case, and the one the geometry is tuned against.
   {
-    const { ctx, page, release } = await withGate(ok(track));
+    const { page, release, close } = await withGate(ok(track));
     const loading = await read(page);
     check(
       'skeleton: the card is on screen before the answer is',
       loading.state === 'loading' && !loading.hidden && loading.height > 200 && loading.bars >= 5,
-      JSON.stringify(loading),
+      loading,
     );
     check(
       'skeleton: the card is marked busy and is not a link yet',
       loading.busy === 'true' && loading.linkAriaHidden === 'true' && loading.linkTabindex === '-1',
-      `busy=${loading.busy} aria-hidden=${loading.linkAriaHidden} tabindex=${loading.linkTabindex}`,
+      loading,
     );
     release();
     await sleep(1200);
@@ -727,7 +608,7 @@ await ctx.close();
     check(
       'skeleton: the real content replaces it',
       ready.state === 'ready' && ready.title === track.title && ready.bars === 0,
-      JSON.stringify({ state: ready.state, title: ready.title, bars: ready.bars }),
+      ready,
     );
     check(
       'skeleton: the swap does not move the page',
@@ -737,14 +618,14 @@ await ctx.close();
     check(
       'skeleton: the link and the busy flag are handed back',
       ready.busy === null && ready.linkAriaHidden === null && ready.linkTabindex === null,
-      JSON.stringify({ busy: ready.busy, ah: ready.linkAriaHidden, ti: ready.linkTabindex }),
+      ready,
     );
-    await ctx.close();
+    await close();
   }
 
   // Mobile, where the column is narrow enough for the title to be the risk.
   {
-    const { ctx, page, release } = await withGate(ok(track), MOBILE);
+    const { page, release, close } = await withGate(ok(track), MOBILE);
     const loading = await read(page);
     release();
     await sleep(1200);
@@ -754,81 +635,63 @@ await ctx.close();
       ready.state === 'ready' && Math.abs(ready.height - loading.height) <= 1,
       `height ${loading.height} -> ${ready.height}`,
     );
-    await ctx.close();
+    await close();
   }
 
   // Nothing to show: the card must leave, not sit there pulsing for ever.
   {
-    const { ctx, page, release } = await withGate(ok({ playing: false }));
-    const loading = await read(page);
-    check('skeleton: shown while the answer is pending', loading.state === 'loading');
+    const { page, release, close } = await withGate(ok({ playing: false }));
+    check('skeleton: shown while the answer is pending', (await read(page)).state === 'loading');
     release();
     await sleep(1200);
     const empty = await read(page);
     check(
       'skeleton: an answer with no track hides the card',
       empty.state === 'empty' && empty.hidden === true && empty.busy === null,
-      JSON.stringify({ state: empty.state, hidden: empty.hidden, busy: empty.busy }),
+      empty,
     );
-    await ctx.close();
+    await close();
   }
 
   // A failing endpoint must not leave a skeleton standing either.
   {
-    const ctx = await browser.newContext(DESKTOP);
-    await ctx.route('**/api/now-playing.json*', (route) =>
-      route.fulfill({ status: 503, body: 'no' }),
-    );
-    const page = await ctx.newPage();
-    await page.goto(`${BASE}/now/`, { waitUntil: 'networkidle' });
+    const { page, close } = await visit(browser, '/now/', {
+      ...DESKTOP,
+      route: (route) => route.fulfill({ status: 503, body: 'no' }),
+    });
     await sleep(1200);
     check(
       'skeleton: a failing endpoint hides the card rather than pulsing at it',
       await page.evaluate(() => {
-        const s = document.getElementById('now-playing');
-        return s.dataset.state === 'empty' && s.hidden === true;
+        const card = document.getElementById('now-playing');
+        return card.dataset.state === 'empty' && card.hidden === true;
       }),
     );
-    await ctx.close();
+    await close();
   }
 
   // Without script there is no answer coming, so there is nothing to promise.
   {
-    const ctx = await browser.newContext({ ...DESKTOP, javaScriptEnabled: false });
-    const page = await ctx.newPage();
-    await page.goto(`${BASE}/now/`, { waitUntil: 'load' });
+    const { page, close } = await visit(browser, '/now/', { ...DESKTOP, javaScriptEnabled: false, wait: 'load' });
     check(
       'skeleton: no script means no skeleton',
       await page.evaluate(() => document.getElementById('now-playing').hidden === true),
     );
-    await ctx.close();
+    await close();
   }
 
-  // Reduced motion: a placeholder that cannot pulse must still be a plain
-  // bar, not one frozen half-faded.
+  // Reduced motion: a placeholder that cannot pulse must still be a plain bar,
+  // not one frozen half-faded.
   {
-    const ctx = await browser.newContext({ ...DESKTOP, reducedMotion: 'reduce' });
-    let release;
-    const gate = new Promise((r) => (release = r));
-    await ctx.route('**/api/now-playing.json*', async (route) => {
-      await gate;
-      await route.fulfill(ok(track)());
-    });
-    const page = await ctx.newPage();
-    await page.goto(`${BASE}/now/`, { waitUntil: 'commit' });
-    await sleep(1200);
-    const opacities = await page.evaluate(() =>
-      [...document.querySelectorAll('#now-playing .sk')].map((e) =>
-        Number(getComputedStyle(e).opacity),
-      ),
-    );
+    const { page, release, close } = await withGate(ok(track), { ...DESKTOP, ...CALM });
+    const opacities = await page.$$eval('#now-playing .sk', opacityOf);
     check(
       'skeleton: under reduced motion the bars rest at full opacity',
       opacities.length > 0 && opacities.every((o) => o === 1),
       opacities.join(','),
     );
     release();
-    await ctx.close();
+    await close();
   }
 }
 

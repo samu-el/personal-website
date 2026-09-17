@@ -12,8 +12,7 @@
   }
   .btn,
   .card {
-    transition-property:
-      background-color, color, border-color, box-shadow, transform, translate, scale;
+    transition-property: background-color, color, border-color, box-shadow, transform, translate, scale;
   }
 
   @media (hover: none) {

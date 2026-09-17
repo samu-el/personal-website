@@ -17,10 +17,7 @@ const hasAnyPostFile = Object.keys(postFiles).length > 0;
  */
 export async function publishedPosts(): Promise<CollectionEntry<'posts'>[]> {
   if (!hasAnyPostFile) return [];
-  const posts = await getCollection(
-    'posts',
-    ({ data }) => !data.aiWritten && (import.meta.env.DEV || !data.draft),
-  );
+  const posts = await getCollection('posts', ({ data }) => !data.aiWritten && (import.meta.env.DEV || !data.draft));
   return posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 }
 

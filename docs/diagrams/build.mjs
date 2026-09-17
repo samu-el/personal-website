@@ -22,7 +22,11 @@ const BLUE_BG = '#e5edf8';
 
 let seq = 0;
 const id = () => `el${(seq += 1).toString(36).padStart(4, '0')}`;
-const nonce = () => Math.floor(Math.random() * 2 ** 31);
+/* Excalidraw wants a seed and a version nonce per element. They are counted
+   rather than randomised so a regenerated scene is byte-identical to the one
+   in git when nothing about it changed — otherwise every run is a diff. */
+let counter = 0;
+const nonce = () => (counter = (counter * 1103515245 + 12345) % 2 ** 31);
 
 /** Fields every element carries, so each helper only states what differs. */
 const base = (over) => ({
@@ -122,11 +126,7 @@ export const flat = (els) =>
  * An arrow between two boxes, bound at both ends so it follows them when
  * either is dragged in the editor.
  */
-export function arrow(
-  from,
-  to,
-  { label, dashed = false, color = MUTED, gap = 6, offset = 0 } = {},
-) {
+export function arrow(from, to, { label, dashed = false, color = MUTED, gap = 6, offset = 0 } = {}) {
   const fx = from.x + from.width / 2;
   const fy = from.y + from.height / 2;
   const tx = to.x + to.width / 2;

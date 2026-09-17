@@ -14,6 +14,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeGitHub, normalizeSpotify, parseLetterboxd } from '../src/lib/feeds.ts';
 
+/** The repository names a call kept, in the order it kept them. */
+const names = (out) => out.recent.map((r) => r.name);
+
 const repo = (over = {}) => ({
   name: 'thing',
   html_url: 'https://github.com/samu-el/thing',
@@ -39,10 +42,7 @@ test('normalizeGitHub drops forks, archived and private repositories', () => {
     repo({ name: 'retired', archived: true }),
     repo({ name: 'secret', private: true }),
   ]);
-  assert.deepEqual(
-    out.recent.map((r) => r.name),
-    ['mine'],
-  );
+  assert.deepEqual(names(out), ['mine']);
 });
 
 test('normalizeGitHub drops repositories on the exclude list', () => {
@@ -52,10 +52,7 @@ test('normalizeGitHub drops repositories on the exclude list', () => {
     repo({ name: 'Simple-Blog' }),
     repo({ name: 'telemed' }),
   ]);
-  assert.deepEqual(
-    out.recent.map((r) => r.name),
-    ['telemed'],
-  );
+  assert.deepEqual(names(out), ['telemed']);
 });
 
 test('an excluded repository does not contribute a language either', () => {
@@ -82,10 +79,7 @@ test('normalizeGitHub skips repositories with no push date', () => {
     repo({ name: 'ok' }),
     repo({ name: 'never-pushed', pushed_at: null }),
   ]);
-  assert.deepEqual(
-    out.recent.map((r) => r.name),
-    ['ok'],
-  );
+  assert.deepEqual(names(out), ['ok']);
 });
 
 test('normalizeGitHub dedupes and sorts languages, ignoring empty ones', () => {
@@ -99,16 +93,14 @@ test('normalizeGitHub dedupes and sorts languages, ignoring empty ones', () => {
 });
 
 test('normalizeGitHub tolerates a missing description and star count', () => {
-  const out = normalizeGitHub({ public_repos: 1 }, [
-    repo({ description: null, stargazers_count: undefined }),
-  ]);
+  const out = normalizeGitHub({ public_repos: 1 }, [repo({ description: null, stargazers_count: undefined })]);
   assert.equal(out.recent[0].description, null);
   assert.equal(out.recent[0].stars, 0);
 });
 
 test('normalizeGitHub returns an empty list rather than throwing on no repos', () => {
   const out = normalizeGitHub({ public_repos: 0 }, []);
-  assert.deepEqual(out.recent, []);
+  assert.deepEqual(names(out), []);
   assert.deepEqual(out.languages, []);
 });
 
@@ -119,10 +111,7 @@ test('normalizeGitHub drops repositories older than the age cap', () => {
     repo({ name: 'still-recent', pushed_at: days(700) }),
     repo({ name: 'ancient', pushed_at: days(1800) }),
   ]);
-  assert.deepEqual(
-    out.recent.map((r) => r.name),
-    ['current', 'still-recent'],
-  );
+  assert.deepEqual(names(out), ['current', 'still-recent']);
 });
 
 test('an aged-out repository still counts towards the language summary', () => {
@@ -130,7 +119,7 @@ test('an aged-out repository still counts towards the language summary', () => {
   const out = normalizeGitHub({ public_repos: 1 }, [
     repo({ name: 'ancient', language: 'Swift', pushed_at: new Date(0).toISOString() }),
   ]);
-  assert.deepEqual(out.recent, []);
+  assert.deepEqual(names(out), []);
   assert.deepEqual(out.languages, ['Swift']);
 });
 
@@ -157,9 +146,7 @@ test('normalizeSpotify reads title, artist, album and url', () => {
 });
 
 test('normalizeSpotify joins multiple artists', () => {
-  const [track] = normalizeSpotify([
-    play({ artists: [{ name: 'Rophnan' }, { name: 'Aster Aweke' }] }),
-  ]);
+  const [track] = normalizeSpotify([play({ artists: [{ name: 'Rophnan' }, { name: 'Aster Aweke' }] })]);
   assert.equal(track.artist, 'Rophnan, Aster Aweke');
 });
 

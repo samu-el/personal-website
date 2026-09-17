@@ -25,9 +25,7 @@ const BASE = process.env.BASE ?? '/';
  * none its index still builds (so dropping in a post is all it takes) but it
  * is marked noindex — and a noindex page has no business in the sitemap.
  */
-const hasPosts = readdirSync(new URL('./src/content/posts', import.meta.url)).some((f) =>
-  /\.mdx?$/.test(f),
-);
+const hasPosts = readdirSync(new URL('./src/content/posts', import.meta.url)).some((f) => /\.mdx?$/.test(f));
 
 export default defineConfig({
   site: SITE,

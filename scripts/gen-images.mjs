@@ -66,10 +66,7 @@ for (const [size, name] of [
   [192, 'icon-192.png'],
   [180, 'apple-touch-icon.png'],
 ]) {
-  await sharp(out('icon-512.png'))
-    .resize(size, size)
-    .png({ compressionLevel: 9 })
-    .toFile(out(name));
+  await sharp(out('icon-512.png')).resize(size, size).png({ compressionLevel: 9 }).toFile(out(name));
   console.log(`✓ public/${name} (${size}×${size})`);
 }
 

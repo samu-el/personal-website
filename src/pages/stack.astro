@@ -36,11 +36,7 @@ const index = await navIndex('/stack');
                   <span class="text-accent">{group.index}</span>
                   {group.title}
                 </p>
-                <h2
-                  class="display mt-4 text-[clamp(1.75rem,3.2vw,2.4rem)]"
-                  data-reveal
-                  style="--reveal-delay:40ms"
-                >
+                <h2 class="display mt-4 text-[clamp(1.75rem,3.2vw,2.4rem)]" data-reveal style="--reveal-delay:40ms">
                   {group.title}
                 </h2>
                 <p
@@ -63,8 +59,7 @@ const index = await navIndex('/stack');
                     // grid reads as one table. The top rule comes from .ledger.
                     i % 2 === 0 ? 'sm:border-r sm:pr-6' : 'sm:pl-6',
                     // No bottom rule under the last row, whichever column it is.
-                    i >= group.items.length - (group.items.length % 2 === 0 ? 2 : 1) &&
-                      'sm:border-b-0',
+                    i >= group.items.length - (group.items.length % 2 === 0 ? 2 : 1) && 'sm:border-b-0',
                     i === group.items.length - 1 && 'border-b-0',
                   ]}
                   data-reveal
@@ -79,9 +74,7 @@ const index = await navIndex('/stack');
                   )}
                   <span class="min-w-0 flex-1">
                     <p class="text-[0.9375rem] font-medium tracking-tight text-fg">{item.name}</p>
-                    {item.note && (
-                      <p class="mt-0.5 font-mono text-2xs tracking-wide text-subtle">{item.note}</p>
-                    )}
+                    {item.note && <p class="mt-0.5 font-mono text-2xs tracking-wide text-subtle">{item.note}</p>}
                   </span>
                 </li>
               ))}
@@ -100,9 +93,9 @@ const index = await navIndex('/stack');
         <div class="lg:col-span-7">
           <div class="prose" data-reveal style="--reveal-delay:60ms">
             <p>
-              Astro with content collections, Tailwind CSS, and no client framework. The JavaScript
-              on a page is a theme toggle, a mobile menu, a command palette, a scroll observer and a
-              clock; there is no JS bundle. Fonts are self-hosted.
+              Astro with content collections, Tailwind CSS, and no client framework. The JavaScript on a page is a theme
+              toggle, a mobile menu, a command palette, a scroll observer and a clock; there is no JS bundle. Fonts are
+              self-hosted.
             </p>
             <p>Built to static HTML and deployed by GitHub Actions.</p>
           </div>

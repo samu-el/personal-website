@@ -29,9 +29,7 @@ const { bareFooter = false, ...head } = Astro.props;
  */
 const path = head.path ?? '/';
 const section =
-  path === '/'
-    ? site.role
-    : (nav.find((n) => n.href !== '/' && path.startsWith(n.href))?.label ?? site.role);
+  path === '/' ? site.role : (nav.find((n) => n.href !== '/' && path.startsWith(n.href))?.label ?? site.role);
 ---
 
 <!doctype html>
@@ -48,8 +46,7 @@ const section =
           /* storage blocked — fall through to system */
         }
         const isDark =
-          pref === 'dark' ||
-          (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+          pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.classList.toggle('dark', isDark);
         document.documentElement.dataset.theme = pref;
         document.documentElement.classList.add('js');
@@ -89,9 +86,7 @@ const section =
         // A viewport change can bring elements into view without any scroll.
         const arm = () => {
           const fold = window.innerHeight * 0.92;
-          for (const el of $$(
-            '[data-reveal]:not(.reveal-pending), [data-draw]:not(.draw-pending)',
-          )) {
+          for (const el of $$('[data-reveal]:not(.reveal-pending), [data-draw]:not(.draw-pending)')) {
             // Anything already on screen stays put — no stutter on first paint.
             if (el.getBoundingClientRect().top <= fold) continue;
             // A rule draws in; everything else fades up. Same observer.

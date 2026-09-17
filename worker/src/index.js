@@ -3,14 +3,13 @@
  * right now" without handing Spotify credentials to a browser.
  *
  * The site is static HTML on GitHub Pages and cannot hold a secret; this can.
- * The client id, secret and refresh token are Worker secrets, and the browser
- * only ever sees the trimmed JSON below. It is mounted on a route of the
- * site's own domain, so the page fetch is same-origin: no CORS preflight, no
- * third-party request, nothing for a blocker to object to.
- *
- * Plain JavaScript in one file with no imports, so the same source works with
- * `wrangler deploy` and can be pasted into the dashboard editor. Types come
+ * It is mounted on a route of the site's own domain, so the page fetch is
+ * same-origin. Plain JavaScript in one file with no imports, so the same
+ * source works with `wrangler deploy` and in the dashboard editor; types come
  * from JSDoc and `tsc` still checks them.
+ *
+ * Why the cache is short, why the token is held in module scope, why a 429 is
+ * handled the way it is: docs/architecture.md, "Now playing".
  */
 
 /**
@@ -21,13 +20,12 @@
  */
 
 /**
- * What the page receives. Every field after `stale` is added only on a
+ * What the page receives. Everything from `reason` down is added only on a
  * `?debug=1` request.
  *
  * @typedef {object} Payload
  * @property {boolean} playing
- * @property {'playing' | 'paused' | 'recent'} [state] Which source the title
- *   came from: the live player, or the history endpoint.
+ * @property {'playing' | 'paused' | 'recent'} [state] Which source the title came from.
  * @property {string} [title]
  * @property {string} [artist]
  * @property {string} [album]
@@ -37,8 +35,7 @@
  * @property {number} [progressMs]
  * @property {number} [durationMs]
  * @property {number} [fetchedAt] Epoch ms at which progressMs was read.
- * @property {boolean} [stale] A remembered answer, served because the live
- *   read failed.
+ * @property {boolean} [stale] A remembered answer, served because the live read failed.
  * @property {string} [reason]
  * @property {object} [secrets] Presence, never values.
  * @property {string} [spotifyMessage]
@@ -56,29 +53,19 @@
  * @typedef {Payload & { failed?: boolean, rateLimited?: boolean }} Diag
  */
 
-/**
- * Seconds the edge holds an answer.
- *
- * The cache exists to shield Spotify's rate limit, not to save latency, so it
- * is deliberately short: at 30s a visitor refreshing the page got the same
- * payload for half a minute and reasonably concluded it was broken. A miss
- * costs one Spotify call, so the ceiling is flat however much traffic arrives.
- */
+/** Seconds the edge holds an answer. Short on purpose: it shields Spotify's
+ *  rate limit, it is not there to save latency. */
 const CACHE_SECONDS = 5;
 /** A stopped player is not about to change on its own. */
 const CACHE_SECONDS_IDLE = 10;
 
-/**
- * Spotify binds scopes to a refresh token at authorisation time, so a token
- * granted without this can never mint an access token that has it —
- * re-exchanging is futile, the consent screen has to be approved again.
- */
+/** Bound to the refresh token at authorisation time, so a token without it can
+ *  never acquire it by being refreshed — the consent screen has to run again. */
 const REQUIRED_SCOPE = 'user-read-currently-playing';
 
-const PLAYER_ENDPOINT =
-  // additional_types surfaces podcast episodes, which otherwise come back as
-  // a null item while something is plainly playing.
-  'https://api.spotify.com/v1/me/player/currently-playing?additional_types=track,episode';
+/** additional_types surfaces podcast episodes, which otherwise come back as a
+ *  null item while something is plainly playing. */
+const PLAYER_ENDPOINT = 'https://api.spotify.com/v1/me/player/currently-playing?additional_types=track,episode';
 /** Needs user-read-recently-played, a different grant from the one above. */
 const RECENT_ENDPOINT = 'https://api.spotify.com/v1/me/player/recently-played?limit=1';
 
@@ -88,13 +75,8 @@ const TOKEN_SKEW_MS = 60_000;
 const LAST_GOOD_MAX_MS = 10 * 60_000;
 
 /**
- * The access token, reused across requests in this isolate.
- *
- * Tokens last an hour, and this was previously exchanged on every cache miss:
- * up to 720 exchanges an hour for a credential one would have covered, half
- * of all Spotify calls aimed at accounts.spotify.com, which is rate-limited
- * in its own right. Isolate-local on purpose — not the edge cache, which is
- * keyed by URL on a real zone and no place for a credential.
+ * The access token, reused across requests in this isolate — not the edge
+ * cache, which is keyed by URL on a real zone and no place for a credential.
  *
  * @type {{ token: string, scope: string, expires: number } | null}
  */
@@ -109,9 +91,9 @@ let cachedToken = null;
 let lastGood = null;
 
 /**
- * Reads the fields the page needs out of a track or a podcast episode. The
- * two shapes differ enough to be annoying: an episode has no `artists` and no
- * `album`, carrying its show in `show` and its art at the top level.
+ * Reads the fields the page needs out of a track or a podcast episode. An
+ * episode has no `artists` and no `album`, carrying its show in `show` and its
+ * art at the top level.
  *
  * @param {any} item
  * @returns {Payload}
@@ -132,20 +114,18 @@ function readTrack(item) {
 }
 
 /**
+ * No stale-while-revalidate: it would serve a known-stale answer past the TTL,
+ * which is the staleness the short TTL exists to remove.
+ *
  * @param {Payload} body
  * @param {number} maxAge Seconds; 0 means never store this answer.
  * @returns {Response}
  */
 function json(body, maxAge) {
-  /* No stale-while-revalidate: it hides refresh latency by serving a known
-     stale answer, which is the one thing this endpoint must not do. A
-     max-age this short is also how you know the Worker answered and not the
-     static fallback at the origin, which sends max-age=600. */
-  const cache = maxAge === 0 ? 'no-store' : `public, max-age=${maxAge}, s-maxage=${maxAge}`;
   return new Response(JSON.stringify(body), {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': cache,
+      'Cache-Control': maxAge === 0 ? 'no-store' : `public, max-age=${maxAge}, s-maxage=${maxAge}`,
       'Access-Control-Allow-Origin': '*',
       'X-Content-Type-Options': 'nosniff',
     },
@@ -153,8 +133,8 @@ function json(body, maxAge) {
 }
 
 /**
- * Trades the refresh token for an access token good for an hour, or hands
- * back the one this isolate is already holding.
+ * Trades the refresh token for an access token good for an hour, or hands back
+ * the one this isolate is already holding.
  *
  * @param {Env} env
  * @returns {Promise<{ token: string | null, status: number, scope: string, cached: boolean }>}
@@ -176,15 +156,14 @@ async function accessToken(env) {
     }),
   });
   if (!res.ok) {
-    // A rejected exchange invalidates whatever we held: a revoked refresh
-    // token must not keep answering from memory.
+    // A revoked refresh token must not keep answering from memory.
     cachedToken = null;
     return { token: null, status: res.status, scope: '', cached: false };
   }
   const body = await res.json();
   const token = typeof body?.access_token === 'string' ? body.access_token : null;
-  // Spotify echoes the scopes the refresh token carries, the only way to see
-  // a missing one without waiting for a 401.
+  // Spotify echoes the scopes the refresh token carries, the only way to see a
+  // missing one without waiting for a 401.
   const scope = typeof body?.scope === 'string' ? body.scope : '';
   if (token) {
     const ttl = typeof body.expires_in === 'number' ? body.expires_in : 3600;
@@ -194,8 +173,8 @@ async function accessToken(env) {
 }
 
 /**
- * Seconds Spotify asked us to wait, from a 429's Retry-After. Bounded,
- * because a bad value would otherwise pin the card to one answer indefinitely.
+ * Seconds Spotify asked us to wait, from a 429's Retry-After. Bounded, because
+ * a bad value would otherwise pin the card to one answer indefinitely.
  *
  * @param {Response} res
  */
@@ -205,7 +184,9 @@ function retryAfter(res) {
 }
 
 /**
- * Asks the player what is on now.
+ * Asks the player what is on now. 204 is Spotify's "nothing is playing" — a
+ * success, and proof that both the token and its scope are good. 401 is a bad
+ * token, 403 a token without the scope, 429 a rate limit.
  *
  * @param {string} token
  * @param {Diag} diag Mutated with the diagnostics a debug request reports.
@@ -213,25 +194,19 @@ function retryAfter(res) {
  */
 async function readPlayer(token, diag) {
   const res = await fetch(PLAYER_ENDPOINT, { headers: { Authorization: `Bearer ${token}` } });
-
-  /* 204 is Spotify's "nothing is playing" — a success, and proof that both
-     the token and its scope are good. 401 is a bad token, 403 a token without
-     the scope, 429 a rate limit. */
-  diag.reason =
-    { 200: 'spotify_200', 204: 'spotify_204_nothing_playing' }[res.status] ??
-    `spotify_${res.status}`;
+  diag.reason = { 200: 'spotify_200', 204: 'spotify_204_nothing_playing' }[res.status] ?? `spotify_${res.status}`;
 
   if (res.status >= 400) {
     diag.failed = true;
-    // Spotify's own words separate a missing scope ("Permissions missing")
-    // from a free account ("Premium required"); the status cannot.
+    // Spotify's own words separate a missing scope ("Permissions missing") from
+    // a free account ("Premium required"); the status cannot.
     diag.spotifyMessage = await res
       .clone()
       .text()
       .then((t) => t.slice(0, 300))
       .catch(() => '');
-    // A rate limit is the one rejection answered by making fewer calls, so
-    // hold what Spotify asked for and skip the history endpoint below.
+    // A rate limit is the one rejection answered by making fewer calls, so hold
+    // what Spotify asked for and skip the history endpoint below.
     if (res.status === 429) {
       diag.rateLimited = true;
       diag.retryAfter = retryAfter(res);
@@ -268,7 +243,8 @@ async function readPlayer(token, diag) {
 /**
  * The last thing that finished, for when the player is empty. Reached after a
  * rejection too: a token holding only user-read-recently-played gets a 401 or
- * 403 above and can still answer this, which beats a blank card.
+ * 403 above and can still answer this, which beats a blank card. No progress is
+ * reported — this track finished, and the page must not draw a bar for it.
  *
  * @param {string} token
  * @param {Diag} diag
@@ -287,14 +263,14 @@ async function readRecent(token, diag) {
   return {
     ...readTrack(played.track),
     state: 'recent',
-    // No progress: this track finished, and where it finished is not
-    // something the page should draw a bar for.
     playedAt: typeof played.played_at === 'string' ? played.played_at : undefined,
   };
 }
 
 /**
- * Everything the endpoint knows, for one request.
+ * Everything the endpoint knows, for one request. A Spotify outage and an
+ * expired token mean the same to the page — show nothing new — so neither
+ * surfaces as an error.
  *
  * @param {Env} env
  * @returns {Promise<{ payload: Payload, diag: Diag }>}
@@ -317,15 +293,13 @@ async function answer(env) {
     }
 
     payload = (await readPlayer(token, diag)) ?? payload;
-    // Nothing on the player at all — closed the app, or never opened it
-    // today. A rate limit is the exception: another call spends the same
-    // limit for nothing.
+    // Nothing on the player at all — closed the app, or never opened it today.
+    // A rate limit is the exception: another call spends the same limit for
+    // nothing.
     if (!payload.title && !diag.rateLimited) {
       payload = (await readRecent(token, diag)) ?? payload;
     }
   } catch {
-    // A Spotify outage and an expired token mean the same to the page: show
-    // nothing new. Never surface a 500 for this.
     diag.failed = true;
   }
   return { payload, diag };
@@ -346,13 +320,10 @@ export default {
        auth. */
     const debug = url.searchParams.has('debug');
 
-    /* The endpoint answers on its own root as well as the .json path: behind
-       the zone route only the latter is reached, but on a workers.dev URL the
-       root is the obvious thing to open. Anything else belongs to the static
-       origin, so pass it through and stay transparent. */
-    if (url.pathname !== '/' && !url.pathname.endsWith('/now-playing.json')) {
-      return fetch(request);
-    }
+    /* Answers on its own root as well as the .json path: behind the zone route
+       only the latter is reached, but on a workers.dev URL the root is the
+       obvious thing to open. Anything else belongs to the static origin. */
+    if (url.pathname !== '/' && !url.pathname.endsWith('/now-playing.json')) return fetch(request);
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
     }
@@ -365,9 +336,7 @@ export default {
       SPOTIFY_REFRESH_TOKEN: Boolean(env.SPOTIFY_REFRESH_TOKEN),
     };
     if (!Object.values(secrets).every(Boolean)) {
-      const body = debug
-        ? { playing: false, reason: 'missing_secrets', secrets }
-        : { playing: false };
+      const body = debug ? { playing: false, reason: 'missing_secrets', secrets } : { playing: false };
       return json(body, debug ? 0 : CACHE_SECONDS_IDLE);
     }
 
@@ -398,15 +367,8 @@ export default {
 
     if (debug) {
       const { failed: _f, rateLimited: _r, playing: _p, ...rest } = diag;
-      return json(
-        {
-          ...payload,
-          ...rest,
-          scopeOk: (diag.grantedScopes ?? '').split(' ').includes(REQUIRED_SCOPE),
-          secrets,
-        },
-        0,
-      );
+      const scopeOk = (diag.grantedScopes ?? '').split(' ').includes(REQUIRED_SCOPE);
+      return json({ ...payload, ...rest, scopeOk, secrets }, 0);
     }
 
     // Under a rate limit, hold the answer for as long as Spotify asked: the

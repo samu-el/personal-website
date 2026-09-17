@@ -25,14 +25,7 @@ import { href } from '@/lib/paths';
 const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playing.json');
 ---
 
-<section
-  id="now-playing"
-  hidden
-  data-state="loading"
-  data-endpoint={endpoint}
-  aria-busy="true"
-  class="scroll-mt-24"
->
+<section id="now-playing" hidden data-state="loading" data-endpoint={endpoint} aria-busy="true" class="scroll-mt-24">
   <div class="wrap py-10 lg:py-16">
     <a
       id="np-link"
@@ -53,19 +46,14 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
 
       <div class="relative flex items-center gap-5 sm:gap-7">
         <div class="min-w-0 flex-1">
-          <p
-            class="flex items-center gap-2.5 whitespace-nowrap font-mono text-2xs uppercase tracking-[0.1em] text-subtle sm:tracking-[0.14em]"
-          >
+          <p class="flex items-center gap-2.5 whitespace-nowrap meta sm:tracking-[0.14em]">
             <span id="np-eq" class="eq" aria-hidden="true">
               <span></span><span></span><span></span><span></span>
             </span>
             <span id="np-state"><span class="sk sk-state"></span></span>
           </p>
 
-          <p
-            id="np-title"
-            class="display mt-4 text-[clamp(1.5rem,3.6vw,2.35rem)] leading-tight text-fg"
-          >
+          <p id="np-title" class="display mt-4 text-[clamp(1.5rem,3.6vw,2.35rem)] leading-tight text-fg">
             <span class="sk sk-title"></span>
           </p>
           <p id="np-artist" class="mt-2 text-[0.9375rem] text-muted sm:text-base">
@@ -97,9 +85,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
             </p>
           </div>
 
-          <p
-            class="mt-4 flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.1em] text-subtle"
-          >
+          <p class="mt-4 flex items-center gap-2 meta">
             <Icon name="simple-icons:spotify" class="size-3.5 text-jade" aria-hidden="true" />
             Spotify
           </p>

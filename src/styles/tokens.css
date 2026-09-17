@@ -3,10 +3,8 @@
    Warm ink + paper. Gold as the single accent, jade as a quiet second.
    ------------------------------------------------------------------ */
 @theme {
-  --font-sans:
-    'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
-  --font-mono:
-    'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
+  --font-sans: 'Geist Variable', 'Geist', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'Geist Mono Variable', 'Geist Mono', ui-monospace, 'SFMono-Regular', 'Menlo', monospace;
   --font-display: 'Instrument Serif', 'Iowan Old Style', Georgia, 'Times New Roman', serif;
 
   --text-2xs: 0.6875rem;

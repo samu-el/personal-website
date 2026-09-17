@@ -2,15 +2,14 @@
 import Layout from '@/layouts/Layout.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import { navIndex } from '@/lib/posts';
-import { site, socials } from '@/lib/site';
+import { site } from '@/lib/site';
 import { href } from '@/lib/paths';
 import { services } from '@/data/stack';
 import { Icon } from 'astro-icon/components';
 import SocialLinks from '@/components/SocialLinks.astro';
 
 const title = 'Contact';
-const description =
-  'Contact Samuel Mussie — software engineer in Addis Ababa, Ethiopia. Email or LinkedIn.';
+const description = 'Contact Samuel Mussie — software engineer in Addis Ababa, Ethiopia. Email or LinkedIn.';
 
 const index = await navIndex('/contact');
 
@@ -51,12 +50,7 @@ const routes = [
     Get in touch.
     <em class="block italic text-accent">{site.email}</em>
     <Fragment slot="aside">Email me or reach out on LinkedIn.</Fragment>
-    <div
-      slot="after"
-      class="relative mt-10 flex flex-wrap gap-3"
-      data-reveal
-      style="--reveal-delay:180ms"
-    >
+    <div slot="after" class="relative mt-10 flex flex-wrap gap-3" data-reveal style="--reveal-delay:180ms">
       <a href={`mailto:${site.email}`} class="btn btn-primary">
         <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
         {site.email}
@@ -88,7 +82,7 @@ const routes = [
             <div class="flex items-start sm:col-span-5 sm:col-start-8 sm:justify-end lg:col-span-6 lg:col-start-7">
               <a
                 href={r.ctaHref}
-                class="hit inline-flex items-center gap-2 font-mono text-2xs uppercase tracking-[0.12em] text-fg transition-colors hover:text-accent"
+                class="hit inline-flex items-center gap-2 meta text-fg transition-colors hover:text-accent"
               >
                 <Icon name={r.icon} class="size-4 text-subtle" aria-hidden="true" />
                 {r.cta}
@@ -118,11 +112,7 @@ const routes = [
       <div class="lg:col-span-5 lg:col-start-8">
         <h2 class="meta">Types of work</h2>
         <ul class="ledger mt-4">
-          {
-            services.map((s) => (
-              <li class="py-3.5 text-[0.9375rem] leading-relaxed text-fg">{s.title}</li>
-            ))
-          }
+          {services.map((s) => <li class="py-3.5 text-[0.9375rem] leading-relaxed text-fg">{s.title}</li>)}
         </ul>
         <a href={href('/work')} class="btn btn-ghost mt-7 !px-4 !py-2 !text-[0.8125rem]">
           Selected work

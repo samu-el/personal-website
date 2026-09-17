@@ -22,8 +22,8 @@ const index = await navIndex('/writing');
     Things I had to figure out
     <em class="block italic text-accent">and could not find written down.</em>
     <Fragment slot="aside">
-      Hiring, handovers, and what breaks when AI features meet real users. No cadence, no newsletter
-      — I publish when I have something I would defend in an argument.
+      Hiring, handovers, and what breaks when AI features meet real users. No cadence, no newsletter — I publish when I
+      have something I would defend in an argument.
       <div class="mt-5">
         <a href={href('/rss.xml')} class="btn btn-ghost !px-4 !py-2 !text-[0.8125rem]">
           <Icon name="lucide:rss" class="size-3.5" aria-hidden="true" />
@@ -40,7 +40,7 @@ const index = await navIndex('/writing');
           data-reveal
           style="--reveal-delay:220ms"
         >
-          <li class="mr-1 font-mono text-2xs uppercase tracking-[0.14em] text-subtle">Topics</li>
+          <li class="mr-1 meta">Topics</li>
           {tags.map((t) => (
             <li class="chip">{t}</li>
           ))}
@@ -55,10 +55,6 @@ const index = await navIndex('/writing');
         {posts.map((post, i) => <PostCard post={post} index={i} />)}
       </div>
     </div>
-    {
-      posts.length === 0 && (
-        <p class="py-16 text-muted">Nothing published yet. The drafts are worse than nothing.</p>
-      )
-    }
+    {posts.length === 0 && <p class="py-16 text-muted">Nothing published yet. The drafts are worse than nothing.</p>}
   </div>
 </Layout>

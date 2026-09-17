@@ -123,25 +123,17 @@ const server = createServer(async (req, res) => {
     console.log(`\nGranted scopes: ${granted.join(', ') || '(none reported)'}`);
 
     if (!hasRequired) {
-      // Worth stopping on. Scopes are bound at authorisation time, so this
-      // token can never acquire the missing one by being refreshed — pasting
-      // it anywhere just reproduces the 401 it is going to cause.
+      // Worth stopping on: scopes are bound at approval time, so this token
+      // can never acquire the missing one by being refreshed.
       console.error(
-        `\n!! This token is MISSING ${REQUIRED_SCOPE}.\n` +
-          '   The now-playing Worker will answer 401 "Permissions missing" with it.\n' +
-          '   Scopes are fixed when you approve, so refreshing cannot add it later.\n\n' +
-          '   Most likely this checkout is out of date — run: git pull\n' +
+        `\n!! This token is MISSING ${REQUIRED_SCOPE}, so the Worker can only answer 401.\n` +
           `   The consent screen must list "currently playing". Requested: ${SCOPES}`,
       );
       process.exitCode = 1;
       return;
     }
-    console.log('\nAdd it, plus the client id and secret, as repository secrets:');
-    console.log('  Settings → Secrets and variables → Actions → New repository secret');
-    console.log('\n  SPOTIFY_CLIENT_ID');
-    console.log('  SPOTIFY_CLIENT_SECRET');
-    console.log('  SPOTIFY_REFRESH_TOKEN');
-    console.log('\nThe next build will pick up the feed. Treat all three as passwords.');
+    console.log('\nAdd all three as repository secrets — see docs/architecture.md, "Now playing".');
+    console.log('Treat them as passwords.');
   } catch (err) {
     res.writeHead(500, { 'Content-Type': 'text/html' });
     res.end(page('Failed', `<p>${err.message}</p>`));

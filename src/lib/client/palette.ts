@@ -29,9 +29,7 @@ function score(entry: Entry, q: string) {
   if (label.startsWith(q)) return 1000;
   if (label.includes(q)) return 700;
 
-  const haystack = `${label} ${entry.section} ${entry.hint ?? ''} ${entry.keywords ?? ''}`
-    .toLowerCase()
-    .trim();
+  const haystack = `${label} ${entry.section} ${entry.hint ?? ''} ${entry.keywords ?? ''}`.toLowerCase().trim();
   let i = 0;
   let points = 0;
   let streak = 0;
@@ -184,8 +182,7 @@ export function commandPalette() {
   /* Global keys: ⌘K anywhere, and single letters when nothing else has the
      keyboard. `g` arms a jump for the next keypress. */
   const typing = (el: EventTarget | null) =>
-    el instanceof HTMLElement &&
-    (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
+    el instanceof HTMLElement && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
 
   let chord = 0;
   document.addEventListener('keydown', (event) => {

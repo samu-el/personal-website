@@ -21,8 +21,7 @@ const hasAside = Astro.slots.has('aside');
 ---
 
 <section class="field-ink relative overflow-hidden" style="view-transition-name:field">
-  <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true">
-  </div>
+  <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true"></div>
   <div class:list={['wrap relative', compact ? 'py-12 lg:py-20' : 'py-14 lg:py-32']}>
     {
       index && (
@@ -39,11 +38,7 @@ const hasAside = Astro.slots.has('aside');
 
     <div class="relative mt-8 grid gap-8 lg:mt-10 lg:grid-cols-12 lg:gap-8">
       <div class:list={[hasAside ? 'lg:col-span-8' : 'lg:col-span-12']}>
-        <h1
-          class="display-hero text-[clamp(3rem,8.6vw,7rem)]"
-          data-reveal
-          style="--reveal-delay:60ms"
-        >
+        <h1 class="display-hero text-[clamp(3rem,8.6vw,7rem)]" data-reveal style="--reveal-delay:60ms">
           <slot />
         </h1>
       </div>

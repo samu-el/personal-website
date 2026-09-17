@@ -1,0 +1,28 @@
+---
+/** Album art or a poster, hotlinked, with a placeholder when there is none. */
+interface Props {
+  src: string | null;
+  width: number;
+  height: number;
+  class: string;
+}
+const { src, width, height, class: cls } = Astro.props as Props;
+const box = `${cls} shrink-0 rounded border border-line`;
+---
+
+{
+  src ? (
+    <img
+      {src}
+      alt=""
+      {width}
+      {height}
+      loading="lazy"
+      decoding="async"
+      referrerpolicy="no-referrer"
+      class:list={[box, 'object-cover']}
+    />
+  ) : (
+    <span class:list={[box, 'bg-surface-2']} aria-hidden="true" />
+  )
+}

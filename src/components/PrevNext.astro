@@ -1,0 +1,57 @@
+---
+import { Icon } from 'astro-icon/components';
+import { href } from '@/lib/paths';
+
+/**
+ * The pair of links at the foot of a detail page. Hidden outright when there
+ * is nowhere to go, so a lone entry leaves no empty bordered strip.
+ */
+interface Props {
+  base: string;
+  back: { id: string; title: string } | null;
+  forward: { id: string; title: string } | null;
+  backLabel: string;
+  forwardLabel: string;
+  size?: string;
+  label: string;
+}
+const { base, back, forward, backLabel, forwardLabel, size = 'text-xl', label } = Astro.props as Props;
+const cue = 'inline-flex items-center gap-2 meta';
+const arrow = 'size-3 transition-transform duration-300';
+const title = `${size} font-medium leading-snug tracking-tight transition-colors group-hover:text-accent`;
+---
+
+<nav aria-label={label} class="border-t border-line" hidden={!back && !forward}>
+  <div class="wrap grid gap-px sm:grid-cols-2">
+    {
+      back ? (
+        <a
+          href={href(`${base}/${back.id}`)}
+          class="group flex flex-col justify-between gap-4 border-b border-line py-8 sm:border-b-0 sm:border-r sm:pr-8"
+        >
+          <span class={cue}>
+            <Icon name="lucide:arrow-left" class={`${arrow} group-hover:-translate-x-0.5`} aria-hidden="true" />
+            {backLabel}
+          </span>
+          <span class={title}>{back.title}</span>
+        </a>
+      ) : (
+        <div class="hidden sm:block" />
+      )
+    }
+    {
+      forward && (
+        <a
+          href={href(`${base}/${forward.id}`)}
+          class="group flex flex-col items-start justify-between gap-4 py-8 sm:items-end sm:pl-8 sm:text-right"
+        >
+          <span class={cue}>
+            {forwardLabel}
+            <Icon name="lucide:arrow-right" class={`${arrow} group-hover:translate-x-0.5`} aria-hidden="true" />
+          </span>
+          <span class={title}>{forward.title}</span>
+        </a>
+      )
+    }
+  </div>
+</nav>
