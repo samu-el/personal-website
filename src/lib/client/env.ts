@@ -7,7 +7,7 @@
  * up without re-reading anything.
  */
 export const calm = matchMedia('(prefers-reduced-motion: reduce)');
-export const fine = matchMedia('(hover: hover) and (pointer: fine)');
+const fine = matchMedia('(hover: hover) and (pointer: fine)');
 export const dark = matchMedia('(prefers-color-scheme: dark)');
 
 /** Motion is welcome. */
