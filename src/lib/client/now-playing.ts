@@ -1,4 +1,5 @@
 import { byId } from './dom';
+import { nextPoll } from './schedule';
 import { clock, since } from './time';
 
 /**
@@ -26,14 +27,6 @@ interface Payload {
   stale?: boolean;
 }
 
-/* The poll follows the endpoint rather than a clock — asking earlier
-   re-reads a byte-identical body. docs/architecture.md, "Now playing". */
-const MIN_MS = 4000;
-const FALLBACK_MS = 10000;
-/** A paused or finished track is not about to change on its own. */
-const IDLE_MS = 30000;
-const BACKOFF_MS = 5000;
-const BACKOFF_MAX_MS = 5 * 60000;
 /** Bound on the staleness correction, so a badly set clock cannot peg the bar. */
 const MAX_AGE_MS = 60000;
 
@@ -102,17 +95,6 @@ export function nowPlaying() {
     // Ran off the end: the next poll knows what replaced it, and carrying on
     // would only be wrong faster.
     if (ms >= total) stopTicker();
-  }
-
-  /** How long this answer stays true, in ms: its TTL less the Age it has spent. */
-  function freshnessLeft(res: Response) {
-    const cc = res.headers.get('Cache-Control') ?? '';
-    const ttl = Number((cc.match(/s-maxage=(\d+)/) ?? cc.match(/max-age=(\d+)/) ?? [])[1]);
-    if (!Number.isFinite(ttl) || ttl <= 0) return 0;
-    const age = Number(res.headers.get('Age')) || 0;
-    // A beat of slack, so we land just after it turns over rather than just
-    // before and having to come straight back.
-    return Math.max(0, ttl - age) * 1000 + 100;
   }
 
   /** Replaces any pending poll. Jittered, so open tabs do not line up. */
@@ -213,18 +195,16 @@ export function nowPlaying() {
       // Offline, blocked, or DNS still catching up.
     }
 
-    if (data) {
-      strikes = 0;
-      /* A remembered answer means the Worker could not reach Spotify, and it
-         has already told the edge how long to sit on it. */
-      const idle = !data.playing || data.stale;
-      schedule(Math.max(MIN_MS, freshnessLeft(res!) || (idle ? IDLE_MS : FALLBACK_MS)));
-    } else {
-      // Geometric and capped: a Worker that is down does not get better for
-      // being asked twice a second.
-      strikes += 1;
-      schedule(Math.min(BACKOFF_MS * 2 ** (strikes - 1), BACKOFF_MAX_MS));
-    }
+    strikes = data ? 0 : strikes + 1;
+    schedule(
+      nextPoll({
+        cacheControl: res?.headers.get('Cache-Control'),
+        age: res?.headers.get('Age'),
+        playing: data?.playing,
+        stale: data?.stale,
+        failures: strikes,
+      }),
+    );
 
     // A title is the only requirement: paused and finished both count.
     if (!data?.title) {

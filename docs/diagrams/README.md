@@ -42,3 +42,9 @@ unchanged scene produces a byte-identical file and leaves no diff.
 The `.excalidraw` scene is the editable original and keeps the bindings. The
 `.svg` is what anyone reading the documentation actually sees, and it means a
 diagram going stale is visible in the diff rather than hidden inside JSON.
+
+The `.excalidraw` files are written minified — one line each. They are machine
+output handed to an editor, not something anyone reads as text, and
+pretty-printing the six of them cost 7,667 lines of committed whitespace and
+turned every regeneration into a thousand-line diff. The `.svg` is the
+reviewable artifact.
