@@ -262,10 +262,10 @@ const row = (n) => 150 + n * 110;
   const interact = box(col(2), row(1), W, H, 'interact.mjs\n63 interaction checks', {
     fill: p.PAPER,
   });
-  const feedsT = box(col(0), row(2), W, H, 'feeds.test.mjs\nparsers, no network', {
+  const feedsT = box(col(0), row(2), W, H, 'feeds.test.mjs\n28 parser cases', {
     fill: p.PAPER,
   });
-  const workerT = box(col(2), row(2), W, H, 'worker.test.mjs\n37 stubbed cases', { fill: p.PAPER });
+  const workerT = box(col(2), row(2), W, H, 'worker.test.mjs\n38 stubbed cases', { fill: p.PAPER });
   const ci = box(col(1), row(3), W, H, 'ci.yml\ntypecheck · build · all', {
     fill: p.BLUE_BG,
     color: p.BLUE,
@@ -291,4 +291,68 @@ const row = (n) => 150 + n * 110;
     ),
   );
   await write('05-testing', els);
+}
+
+/* ── 6. Client runtime ─────────────────────────────────────────────────── */
+{
+  const els = [];
+  els.push(
+    ...heading(
+      60,
+      40,
+      'Client runtime',
+      'What actually runs in the browser, and what each module is allowed to touch.',
+    ),
+  );
+
+  const theme = box(col(0), row(0), W, H, 'Layout.astro\ntheme, pre-paint', {
+    fill: p.GOLD_BG,
+    color: p.GOLD,
+  });
+  const env = box(col(1), row(1), W, H, 'client/env.ts\ncalm · fine · dark', {
+    fill: p.JADE_BG,
+    color: p.JADE,
+  });
+  const dom = box(col(1), row(2), W, H, 'client/dom.ts\n$ · $$ · byId', {
+    fill: p.JADE_BG,
+    color: p.JADE,
+  });
+  const follow = box(col(1), row(0), W, H, 'client/follow.ts\none pointer listener', {
+    fill: p.JADE_BG,
+    color: p.JADE,
+  });
+
+  const header = box(col(2), row(0), W, H, 'header.ts\npanel · indicator', { fill: p.PAPER });
+  const np = box(col(2), row(1), W, H, 'now-playing.ts\npoll · paint · progress', { fill: p.PAPER });
+  const palette = box(col(2), row(2), W, H, 'palette.ts\nsearch · chords', { fill: p.PAPER });
+  const small = box(col(2), row(3), W, H, 'toc · count · copy-email', { fill: p.PAPER });
+
+  const data = box(col(3), row(1), W, H, 'DOM as the channel\ndata-* · JSON script tag', {
+    fill: p.BLUE_BG,
+    color: p.BLUE,
+  });
+
+  els.push(theme, env, dom, follow, header, np, palette, small, data);
+  els.push(
+    ...arrow(env, header, { offset: -14 }),
+    ...arrow(dom, header, { offset: 14 }),
+    ...arrow(env, np),
+    ...arrow(dom, palette),
+    ...arrow(follow, header, { dashed: true }),
+    ...arrow(theme, env, { label: 'data-theme', dashed: true }),
+    ...arrow(dom, small),
+    ...arrow(data, np, { label: 'data-endpoint' }),
+    ...arrow(data, palette, { label: 'cmdk-data' }),
+  );
+
+  els.push(
+    text(col(0), row(4) + 20, 'Rules this layout enforces', { size: 18 }),
+    text(
+      col(0),
+      row(4) + 50,
+      'processed     every module above is a processed <script>, so Astro bundles\n              and dedupes them. Only the theme script is inline, because it\n              has to run before first paint.\nno define:vars it forces a script inline, which forbids imports. Data reaches\n              the client through the DOM instead.\nno router      navigation is native cross-document view transitions, so\n              astro:page-load never fires and nothing re-initialises.\nthree gates    env.ts answers prefers-reduced-motion, pointer: fine and the\n              colour scheme once, for every module that asks.',
+      { size: 14, color: p.MUTED },
+    ),
+  );
+  await write('06-client-runtime', els);
 }

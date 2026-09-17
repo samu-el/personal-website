@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 8 1264 736.5" width="1264" height="736.5" role="img">
+<defs><marker id="head-6b6d76" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6b6d76"/></marker></defs>
+<rect x="28" y="8" width="1264" height="736.5" fill="#ffffff"/>
+<text xml:space="preserve" x="60" y="66.6" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28" text-anchor="start"><tspan x="60" dy="0">System</tspan></text>
+<text xml:space="preserve" x="60" y="89.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">Static site, built in CI, served from Pages behind Cloudflare. One Worker holds the only secret.</tspan></text>
+<rect x="60" y="150" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="187.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">src/content</tspan><tspan x="160" dy="20">projects · posts</tspan></text>
+<rect x="60" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">src/pages</tspan><tspan x="160" dy="20">11 routes</tspan></text>
+<rect x="310" y="370" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="410" y="407.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="410" dy="0">src/lib/feeds.ts</tspan><tspan x="410" dy="20">build-time reads</tspan></text>
+<rect x="310" y="260" width="200" height="64" rx="8" fill="#e5edf8" stroke="#1e4a8a" stroke-width="1.5"/>
+<text xml:space="preserve" x="410" y="297.28" fill="#1e4a8a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="410" dy="0">Astro build</tspan><tspan x="410" dy="20">deploy.yml</tspan></text>
+<rect x="560" y="260" width="200" height="64" rx="8" fill="#e5edf8" stroke="#1e4a8a" stroke-width="1.5"/>
+<text xml:space="preserve" x="660" y="297.28" fill="#1e4a8a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">dist/</tspan><tspan x="660" dy="20">HTML · CSS · a little JS</tspan></text>
+<rect x="810" y="260" width="200" height="64" rx="8" fill="#e5edf8" stroke="#1e4a8a" stroke-width="1.5"/>
+<text xml:space="preserve" x="910" y="297.28" fill="#1e4a8a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="910" dy="0">GitHub Pages</tspan><tspan x="910" dy="20">origin</tspan></text>
+<rect x="1060" y="260" width="200" height="64" rx="8" fill="#fdf0dc" stroke="#a15c00" stroke-width="1.5"/>
+<text xml:space="preserve" x="1160" y="297.28" fill="#a15c00" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="1160" dy="0">Cloudflare</tspan><tspan x="1160" dy="20">smr.et</tspan></text>
+<rect x="1060" y="480" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="1160" y="517.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="1160" dy="0">Browser</tspan></text>
+<rect x="560" y="370" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#6b6d76" stroke-width="1.5"/>
+<text xml:space="preserve" x="660" y="407.28" fill="#6b6d76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">GitHub API</tspan></text>
+<rect x="60" y="370" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#6b6d76" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="407.28" fill="#6b6d76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">Letterboxd RSS</tspan></text>
+<rect x="810" y="130" width="200" height="64" rx="8" fill="#fdf0dc" stroke="#a15c00" stroke-width="1.5"/>
+<text xml:space="preserve" x="910" y="167.28" fill="#a15c00" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="910" dy="0">Worker</tspan><tspan x="910" dy="20">smr.et/api/*</tspan></text>
+<rect x="1060" y="130" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#6b6d76" stroke-width="1.5"/>
+<text xml:space="preserve" x="1160" y="167.28" fill="#6b6d76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="1160" dy="0">Spotify API</tspan></text>
+<polyline points="266,182 304,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="266,292 304,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="410,364 410,330" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="516,292 554,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="766,292 804,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="1016,292 1054,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="1126,330 1126,474" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="1111.6" y="393.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="1111.6" dy="0">HTML</tspan></text>
+<polyline points="266,402 304,402" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<polyline points="554,402 516,402" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<polyline points="1054,292 1016,162" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="1013.4" y="218.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="1013.4" dy="0">/api/*</tspan></text>
+<polyline points="1016,162 1054,162" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<polyline points="1194,474 1194,330" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="1154.4" y="393.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="1154.4" dy="0">poll /api/*</tspan></text>
+<text xml:space="preserve" x="60" y="647.1" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" text-anchor="start"><tspan x="60" dy="0">Secrets never reach the browser</tspan></text>
+<text xml:space="preserve" x="60" y="673.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">Build-time secrets (Spotify, GitHub token) are read through process.env in CI only —</tspan><tspan x="60" dy="17.5">Astro inlines nothing into client JS except PUBLIC_*. The Worker holds the refresh token</tspan><tspan x="60" dy="17.5">as an encrypted Worker secret. The page only ever sees trimmed JSON.</tspan></text>
+</svg>

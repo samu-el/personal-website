@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 8 1107.44 596.5" width="1107.44" height="596.5" role="img">
+<defs><marker id="head-6b6d76" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6b6d76"/></marker></defs>
+<rect x="28" y="8" width="1107.44" height="596.5" fill="#ffffff"/>
+<text xml:space="preserve" x="60" y="66.6" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28" text-anchor="start"><tspan x="60" dy="0">Now playing</tspan></text>
+<text xml:space="preserve" x="60" y="89.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">One card, three states, and a poll that follows the endpoint rather than a clock.</tspan></text>
+<rect x="60" y="150" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="187.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">NowPlaying.astro</tspan><tspan x="160" dy="20">markup + skeleton</tspan></text>
+<rect x="60" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">now-playing.ts</tspan><tspan x="160" dy="20">poll · paint</tspan></text>
+<rect x="310" y="260" width="200" height="64" rx="8" fill="#fdf0dc" stroke="#a15c00" stroke-width="1.5"/>
+<text xml:space="preserve" x="410" y="297.28" fill="#a15c00" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="410" dy="0">Edge cache</tspan><tspan x="410" dy="20">s-maxage 5s / 10s</tspan></text>
+<rect x="560" y="260" width="200" height="64" rx="8" fill="#fdf0dc" stroke="#a15c00" stroke-width="1.5"/>
+<text xml:space="preserve" x="660" y="297.28" fill="#a15c00" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">Worker fetch()</tspan></text>
+<rect x="810" y="150" width="200" height="64" rx="8" fill="#e3f3ec" stroke="#1d7a52" stroke-width="1.5"/>
+<text xml:space="preserve" x="910" y="187.28" fill="#1d7a52" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="910" dy="0">Token, isolate-local</tspan><tspan x="910" dy="20">reused for its hour</tspan></text>
+<rect x="810" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#6b6d76" stroke-width="1.5"/>
+<text xml:space="preserve" x="910" y="297.28" fill="#6b6d76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="910" dy="0">currently-playing</tspan></text>
+<rect x="810" y="370" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#6b6d76" stroke-width="1.5"/>
+<text xml:space="preserve" x="910" y="407.28" fill="#6b6d76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="910" dy="0">recently-played</tspan></text>
+<rect x="560" y="370" width="200" height="64" rx="8" fill="#e3f3ec" stroke="#1d7a52" stroke-width="1.5"/>
+<text xml:space="preserve" x="660" y="407.28" fill="#1d7a52" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">lastGood</tspan><tspan x="660" dy="20">10 min memory</tspan></text>
+<polyline points="160,220 160,254" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="266,292 304,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="256.2" y="283.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="256.2" dy="0">no-store</tspan></text>
+<polyline points="516,292 554,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="520.6" y="283.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="520.6" dy="0">miss</tspan></text>
+<polyline points="766,292 804,182" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="766,292 804,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="766,292 804,402" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="738.2" y="338.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="738.2" dy="0">204 / no item</tspan></text>
+<polyline points="660,330 660,364" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="624" y="338.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="624" dy="0">on failure</tspan></text>
+<text xml:space="preserve" x="60" y="507.1" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" text-anchor="start"><tspan x="60" dy="0">Client states</tspan></text>
+<text xml:space="preserve" x="60" y="533.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">loading  skeleton, set before first paint, aria-busy, link inert</tspan><tspan x="60" dy="17.5">ready    content swapped in; bars clear themselves (textContent)</tspan><tspan x="60" dy="17.5">empty    no Worker, no track, or a failed request — card removed</tspan></text>
+<text xml:space="preserve" x="600" y="507.1" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" text-anchor="start"><tspan x="600" dy="0">Poll cadence</tspan></text>
+<text xml:space="preserve" x="600" y="533.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="600" dy="0">next = (s-maxage − Age) + jitter   ~4.3s playing, ~9.4s paused</tspan><tspan x="600" dy="17.5">failure  5s → 10s → … capped at 5 min</tspan><tspan x="600" dy="17.5">hidden tab  no poll at all; returning polls at once</tspan></text>
+</svg>

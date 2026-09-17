@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 8 1014 606.5" width="1014" height="606.5" role="img">
+<defs><marker id="head-6b6d76" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6b6d76"/></marker></defs>
+<rect x="28" y="8" width="1014" height="606.5" fill="#ffffff"/>
+<text xml:space="preserve" x="60" y="66.6" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28" text-anchor="start"><tspan x="60" dy="0">Motion</tspan></text>
+<text xml:space="preserve" x="60" y="89.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">One duration scale, three gates, and two scripts that follow the pointer.</tspan></text>
+<rect x="60" y="150" width="200" height="64" rx="8" fill="#fdf0dc" stroke="#a15c00" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="187.28" fill="#a15c00" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">tokens.css</tspan><tspan x="160" dy="20">--t-1 … --t-5</tspan></text>
+<rect x="60" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">motion.css</tspan><tspan x="160" dy="20">reveal · VT · tilt</tspan></text>
+<rect x="60" y="370" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="407.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">touch.css</tspan><tspan x="160" dy="20">:active · hit areas</tspan></text>
+<rect x="310" y="260" width="200" height="64" rx="8" fill="#e3f3ec" stroke="#1d7a52" stroke-width="1.5"/>
+<text xml:space="preserve" x="410" y="297.28" fill="#1d7a52" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="410" dy="0">client/env.ts</tspan><tspan x="410" dy="20">calm · fine · dark</tspan></text>
+<rect x="560" y="150" width="200" height="64" rx="8" fill="#e3f3ec" stroke="#1d7a52" stroke-width="1.5"/>
+<text xml:space="preserve" x="660" y="187.28" fill="#1d7a52" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">client/follow.ts</tspan><tspan x="660" dy="20">one delegated listener</tspan></text>
+<rect x="810" y="150" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="910" y="187.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="910" dy="0">Buttons lean</tspan><tspan x="910" dy="20">5px toward cursor</tspan></text>
+<rect x="810" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="910" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="910" dy="0">Frames tilt</tspan><tspan x="910" dy="20">±4°, glow follows</tspan></text>
+<rect x="560" y="370" width="200" height="64" rx="8" fill="#e3f3ec" stroke="#1d7a52" stroke-width="1.5"/>
+<text xml:space="preserve" x="660" y="407.28" fill="#1d7a52" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">IntersectionObserver</tspan><tspan x="660" dy="20">reveal + rule draw</tspan></text>
+<polyline points="160,220 160,254" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="266,292 304,292" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<polyline points="516,292 554,182" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="766,182 804,182" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="766,182 804,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="516,292 554,402" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="60" y="517.1" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" text-anchor="start"><tspan x="60" dy="0">Three gates, every time</tspan></text>
+<text xml:space="preserve" x="60" y="543.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">1. prefers-reduced-motion collapses every duration AND delay to nothing</tspan><tspan x="60" dy="17.5">2. (hover: hover) and (pointer: fine) guards anything cursor-driven</tspan><tspan x="60" dy="17.5">3. .js on &lt;html&gt; opts in anything a failed script must not leave hidden</tspan></text>
+<text xml:space="preserve" x="620" y="517.1" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" text-anchor="start"><tspan x="620" dy="0">Measured</tspan></text>
+<text xml:space="preserve" x="620" y="543.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="620" dy="0">tilt catches the cursor   530ms → 0ms</tspan><tspan x="620" dy="17.5">button lean                250ms → 149ms</tspan><tspan x="620" dy="17.5">header compression shift     8px → 0px</tspan></text>
+</svg>

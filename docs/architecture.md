@@ -1,27 +1,35 @@
 # Architecture
 
 How smr.et is built, why it is built that way, and where each decision lives in
-the code. The diagrams in [`docs/diagrams/`](./diagrams) are Excalidraw scenes —
-open any `.excalidraw` file at [excalidraw.com](https://excalidraw.com) with
-**File → Open**, or drag it onto the canvas. They are generated from
+the code. Each section carries its diagram inline.
+
+The diagrams live in [`docs/diagrams/`](./diagrams) and are written twice: an
+`.excalidraw` scene to edit — open it at
+[excalidraw.com](https://excalidraw.com) with **File → Open** — and an `.svg`
+to read, which is what is embedded below. Both are generated from
 [`scenes.mjs`](./diagrams/scenes.mjs), so they are regenerated rather than
 redrawn when something moves:
 
-```
-node docs/diagrams/scenes.mjs
+```sh
+npm run diagrams
 ```
 
-| Scene                       | What it shows                                   |
-| --------------------------- | ----------------------------------------------- |
-| `01-system.excalidraw`      | Build, deploy, serve, and where the secrets are |
-| `02-now-playing.excalidraw` | The Worker, the edge cache, and the client poll |
-| `03-motion.excalidraw`      | The motion system and its three gates           |
-| `04-content.excalidraw`     | Collections in, routes out                      |
-| `05-testing.excalidraw`     | The four suites and what each is for            |
+| Scene               | Level | What it shows                                                 |
+| ------------------- | ----- | ------------------------------------------------------------- |
+| `01-system`         | High  | Build, deploy, serve, and where the secrets are               |
+| `02-now-playing`    | Code  | The Worker's fetch path, the token cache, and the client poll |
+| `03-motion`         | Code  | The duration scale, the three gates, the two pointer scripts  |
+| `04-content`        | Code  | Collections in, routes out, and the flags that gate rendering |
+| `05-testing`        | Code  | The four suites, the shared harness, what each one covers     |
+| `06-client-runtime` | Code  | Every module that runs in the browser and what it may touch   |
+
+[How to edit them](./diagrams/README.md).
 
 ---
 
 ## 1. The shape of the thing
+
+![The system: repo, build, Pages, Worker, Spotify](./diagrams/01-system.svg)
 
 A personal site for a software engineer: eleven routes, no client framework, no
 analytics, no cookies. Astro 7 renders everything to static HTML at build time;
@@ -91,6 +99,8 @@ block, the console easter egg reads the address from `<html data-email>`.
 ---
 
 ## 3. The client runtime
+
+![The client runtime: which module runs, and what each may touch](./diagrams/06-client-runtime.svg)
 
 `src/lib/client/` is the shared browser code. Before it, every component script
 opened its own `matchMedia`, wrote its own `getElementById` cluster, and
@@ -234,6 +244,8 @@ which layer it is in before adding `!important`.
 
 ## 5. Motion, and its three gates
 
+![Motion: one duration scale, three gates, two pointer scripts](./diagrams/03-motion.svg)
+
 Everything that moves is gated three ways, every time:
 
 1. **`prefers-reduced-motion`** collapses every duration _and delay_ to nothing.
@@ -256,6 +268,8 @@ role/location line collapses, the avatar draws in — and the page does not move
 ---
 
 ## 6. Content
+
+![Content: collections in, routes out](./diagrams/04-content.svg)
 
 Two collections, `projects` and `posts`, defined in `content.config.ts` with
 zod schemas. Three flags decide what is ever rendered:
@@ -282,7 +296,7 @@ prettier-plugin-astro's tokenizer, which then reports dozens of phantom errors.
 
 ## 7. Now playing
 
-See `02-now-playing.excalidraw`.
+![Now playing: the Worker, the edge cache, and the client poll](./diagrams/02-now-playing.svg)
 
 The site is static and cannot hold a secret. A Cloudflare Worker can: the
 Spotify client id, secret and refresh token are Worker secrets, encrypted at
@@ -366,6 +380,8 @@ image needs no Chromium installed at all.
 ---
 
 ## 9. Testing
+
+![Testing: four suites, one harness, all of it in CI](./diagrams/05-testing.svg)
 
 Four suites, one shared harness (`tests/harness.mjs`), all run in CI on every
 push. The harness owns the launcher, the egress proxy, the viewport presets and
