@@ -31,6 +31,9 @@ npm run dev        # http://localhost:4321
 | `npm run check`      | `astro check` — types across `.astro`, `.ts`, content    |
 | `npm run preview`    | Serve the built `dist/` locally                          |
 | `npm run images`     | Regenerate `public/og.png` and the app icons             |
+| `npm run diagrams`   | Regenerate the architecture diagrams from `scenes.mjs`   |
+| `npm run shots`      | Re-capture the project screenshots                       |
+| `npm run test:unit`  | The Node suites: feed parsers and the poll cadence       |
 
 Node 22+ is expected (see `.github/workflows/`).
 
@@ -39,7 +42,9 @@ Node 22+ is expected (see `.github/workflows/`).
 `tests/verify.mjs` drives a real browser over every built route and asserts the things that
 break silently on a static site: console errors, horizontal overflow, heading structure, links
 with no accessible name, broken internal links, the theme toggle cycling and persisting, the
-mobile menu, the work filter, the scroll reveal, and the RSS/sitemap/OG/JSON-LD output.
+showcase invariants, the command palette, the scroll reveal, and the RSS/sitemap/OG/JSON-LD
+output. `tests/interact.mjs` covers what only exists under a pointer, a key or a scroll.
+`docs/architecture.md` §9 says what each of the five suites is for.
 
 ```bash
 npm run build
@@ -79,7 +84,7 @@ src/
 ├── layouts/Layout.astro  # <head>, theme bootstrap, reveal observer
 ├── pages/                # routes
 └── styles/
-    ├── global.css        # design tokens, component classes, prose styles
+    ├── global.css        # imports the six sheets below, in source order
     └── fonts.css         # self-hosted @font-face rules
 ```
 
@@ -124,18 +129,20 @@ than shipping quietly.
 
 ## Design system
 
-One stylesheet, `src/styles/global.css`, holds all of it:
+`src/styles/` is six sheets — `tokens`, `base`, `components`, `prose`, `motion`, `touch` —
+imported by `global.css` in source order, plus `fonts`.
 
-- **Colour** is two token sets — light on `:root`, dark on `.dark` — exposed to Tailwind as
+- **Colour** is two token sets, light on `:root` and dark on `.dark`, exposed to Tailwind as
   semantic utilities (`bg-bg`, `text-muted`, `border-line`, `text-accent`). Nothing in a
   component references a raw hex value, so a palette change is a single edit.
 - **Type** is three families: Instrument Serif for display, Geist for body and UI, Geist Mono
   for labels and metadata. Self-hosted, latin subsets only, ~112 KB total.
 - **Theme** is three-state: system → light → dark, cycled by the header toggle, resolved by an
   inline script before first paint so there is no flash.
-- **Motion** is a scroll reveal that is opt-in from JS: elements are visible by default and the
-  script only animates ones it is actively observing, so a blocked script cannot hide content.
-  Everything respects `prefers-reduced-motion`.
+- **Motion** is gated three ways and every duration comes from one scale.
+
+The reasoning — colour as a field, the duration scale, layer precedence, the three motion
+gates — is in [`docs/architecture.md`](docs/architecture.md) §4 and §5, with diagrams.
 
 ---
 
