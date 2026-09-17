@@ -9,8 +9,10 @@ Written against the current `master` of
 [github.com/excalidraw/excalidraw](https://github.com/excalidraw/excalidraw) —
 the element type definitions in `packages/element/src/types.ts`, the tool,
 font and export constants in `packages/common/src/constants.ts`, the encryption
-module in `packages/excalidraw/data/encryption.ts`, the component props and
-`UIOptions` documentation, and the project README. The scene-file notes at the end come from
+module in `packages/excalidraw/data/encryption.ts`, the shortcut list in
+`packages/excalidraw/components/HelpDialog.tsx`, the room and share-link
+handling in `excalidraw-app/data/index.ts`, the component props and `UIOptions`
+documentation, and the project README. The scene-file notes at the end come from
 generating and round-tripping scenes here rather than from their source.
 
 ---
@@ -69,6 +71,66 @@ callback — so sharing, rooms and the persistence behind them are the
 application's, not the component's. Real-time collaboration, end-to-end
 encrypted sessions, read-only links, local-first autosave to the browser and
 offline use as a PWA all sit on that side of the line.
+
+---
+
+## The keyboard is the interface
+
+Every tool has both a letter and a digit — `V`/`1` selection, `R`/`2`
+rectangle, `D`/`3` diamond, `O`/`4` ellipse, `A`/`5` arrow, `L`/`6` line,
+`P`/`7` freedraw, `T`/`8` text, `9` image, `E`/`0` eraser — plus `H` hand, `N`
+sticky note, `F` frame, `K` laser, `B` bucket fill, `I` eye dropper, `Q` lock.
+Two mental models for the same palette: reach with the drawing hand, or run
+along the number row.
+
+A few carry more than convenience:
+
+| Keys                     | What it does                                                                                                 |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `Tab` / `Shift+Tab`      | Converts the selected element to another type in place. Rectangle to diamond to ellipse without redrawing.   |
+| `Ctrl/Cmd` while drawing | Prevents binding — the escape hatch from the arrow-binding model below, when you want a line that stays put. |
+| `Ctrl/Cmd` + arrow       | Creates a flowchart node from the selection; `Alt` + arrow walks between them.                               |
+| `Ctrl/Cmd` + click       | Deep-selects into a group; `Ctrl/Cmd` + drag deep box-selects.                                               |
+| `Alt` + drag             | Duplicates rather than moves. `Ctrl/Cmd+D` does the same without the mouse.                                  |
+| `A` then three clicks    | Draws a curved arrow; `L` and three clicks a curved line.                                                    |
+
+The rest is what you would expect and worth knowing exists: zoom (`Ctrl/Cmd`
+`+`/`-`/`0`, `Shift+1` to fit, `Shift+2` to selection), z-order (`Ctrl/Cmd+[`
+and `]`, with `Shift` or `Alt` for all the way), alignment (`Ctrl/Cmd+Shift`
+plus an arrow), grouping (`Ctrl/Cmd+G`), flipping (`Shift+H`, `Shift+V`), style
+copy and paste (`Ctrl/Cmd+Alt+C` and `V`), zen mode (`Alt+Z`), view mode
+(`Alt+R`), theme (`Alt+Shift+D`) and grid (`Ctrl/Cmd+'`). The application's own
+`?` dialog is the authoritative list.
+
+---
+
+## How sharing actually works
+
+This is where "end-to-end encrypted" stops being a claim and becomes a
+mechanism, and it is simpler than it sounds.
+
+**A collaboration link is `#room=<roomId>,<roomKey>`.** Both are generated in
+the browser — the id from random bytes, the key separately, validated on parse
+as exactly 22 characters. Both live in the URL **fragment**, and a fragment is
+never sent to the server. So the room server routes traffic for an id it can
+see and relays payloads it cannot read; the key travels only in the link you
+hand someone, through whatever channel you chose.
+
+Scene updates go over a WebSocket as element batches, with a filter first:
+invisibly small elements and recently-deleted ones are excluded rather than
+synced, so the wire carries changes that mean something.
+
+**A share link is `#json=<id>,<key>`** — the same shape for a different
+purpose. The scene is compressed and encrypted client-side, uploaded, and the
+backend returns an id; embedded files go to storage under
+`/files/shareLinks/<id>` with a size cap. The result is a read-only snapshot,
+and again the server holds ciphertext and an identifier while the key stays in
+the fragment.
+
+The two together explain the earlier note about `onExportToBackend`: the
+component knows how to encrypt and serialise, and knows nothing about where
+anything goes. A host that never passes that callback gets an editor with no
+sharing at all — not a disabled button, an absent one.
 
 ---
 
@@ -151,6 +213,10 @@ encrypts, so a modified ciphertext fails to decrypt rather than decrypting to
 something plausible. The input side is permissive — a string, a `Uint8Array`, a
 `Blob` or a `File`, all normalised to an `ArrayBuffer` first — because the same
 routine protects scene deltas and uploaded images alike.
+
+Where the key goes is the other half, and it is in
+[How sharing actually works](#how-sharing-actually-works): the URL fragment,
+which the browser never sends to a server.
 
 ---
 
