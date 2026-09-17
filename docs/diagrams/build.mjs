@@ -193,10 +193,68 @@ export const scene = (elements) => ({
   files: {},
 });
 
+/**
+ * The same scene as an SVG, so the diagrams are readable in the doc and in a
+ * pull request without anyone importing JSON first. Deliberately plain: a
+ * rectangle, a line of text and a polyline cover everything these scenes use,
+ * and Excalidraw remains the editor for anything richer.
+ */
+export function svg(elements) {
+  const els = flat(elements);
+  const xs = els.flatMap((e) => [e.x, e.x + (e.width || 0)]);
+  const ys = els.flatMap((e) => [e.y, e.y + (e.height || 0)]);
+  const pad = 32;
+  const [x0, y0] = [Math.min(...xs) - pad, Math.min(...ys) - pad];
+  const [w, h] = [Math.max(...xs) - x0 + pad, Math.max(...ys) - y0 + pad];
+
+  const esc = (v) => String(v).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' })[c]);
+  const draw = (el) => {
+    if (el.type === 'rectangle') {
+      const dash = el.strokeStyle === 'dashed' ? ' stroke-dasharray="6 4"' : '';
+      return `<rect x="${el.x}" y="${el.y}" width="${el.width}" height="${el.height}" rx="8" fill="${el.backgroundColor === 'transparent' ? 'none' : el.backgroundColor}" stroke="${el.strokeColor}" stroke-width="1.5"${dash}/>`;
+    }
+    if (el.type === 'text') {
+      const lines = String(el.text).split('\n');
+      const centred = Boolean(el.containerId) || el.textAlign === 'center';
+      const x = centred ? el.x + el.width / 2 : el.x;
+      const top = el.y + el.fontSize * 0.95;
+      const spans = lines
+        .map((line, i) => `<tspan x="${x}" dy="${i === 0 ? 0 : el.fontSize * 1.25}">${esc(line)}</tspan>`)
+        .join('');
+      // xml:space, or a renderer collapses the leading spaces the aligned
+      // notes under each diagram use as columns.
+      const face = centred ? 'ui-sans-serif, system-ui, sans-serif' : 'ui-monospace, SFMono-Regular, Menlo, monospace';
+      return `<text xml:space="preserve" x="${x}" y="${top}" fill="${el.strokeColor}" font-family="${face}" font-size="${el.fontSize}" text-anchor="${centred ? 'middle' : 'start'}">${spans}</text>`;
+    }
+    if (el.type === 'arrow') {
+      const pts = el.points.map(([px, py]) => `${el.x + px},${el.y + py}`).join(' ');
+      const dash = el.strokeStyle === 'dashed' ? ' stroke-dasharray="6 4"' : '';
+      return `<polyline points="${pts}" fill="none" stroke="${el.strokeColor}" stroke-width="1.5"${dash} marker-end="url(#head-${el.strokeColor.slice(1)})"/>`;
+    }
+    return '';
+  };
+
+  const heads = [...new Set(els.filter((e) => e.type === 'arrow').map((e) => e.strokeColor))]
+    .map(
+      (c) =>
+        `<marker id="head-${c.slice(1)}" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="${c}"/></marker>`,
+    )
+    .join('');
+
+  return [
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${w} ${h}" width="${w}" height="${h}" role="img">`,
+    `<defs>${heads}</defs>`,
+    `<rect x="${x0}" y="${y0}" width="${w}" height="${h}" fill="#ffffff"/>`,
+    ...els.map(draw),
+    '</svg>',
+  ].join('\n');
+}
+
 export async function write(name, elements) {
-  const out = new URL(`./${name}.excalidraw`, import.meta.url);
-  await writeFile(out, JSON.stringify(scene(elements), null, 2) + '\n');
-  console.log(`${name}.excalidraw  ${flat(elements).length} elements`);
+  const json = new URL(`./${name}.excalidraw`, import.meta.url);
+  await writeFile(json, JSON.stringify(scene(elements), null, 2) + '\n');
+  await writeFile(new URL(`./${name}.svg`, import.meta.url), svg(elements) + '\n');
+  console.log(`${name}  ${flat(elements).length} elements  (.excalidraw + .svg)`);
 }
 
 export const palette = { INK, MUTED, GOLD, GOLD_BG, JADE, JADE_BG, PAPER, BLUE, BLUE_BG };
