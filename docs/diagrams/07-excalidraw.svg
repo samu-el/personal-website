@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="28 8 1264 726.5" width="1264" height="726.5" role="img">
+<defs><marker id="head-6b6d76" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="#6b6d76"/></marker></defs>
+<rect x="28" y="8" width="1264" height="726.5" fill="#ffffff"/>
+<text xml:space="preserve" x="60" y="66.6" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="28" text-anchor="start"><tspan x="60" dy="0">Excalidraw</tspan></text>
+<text xml:space="preserve" x="60" y="89.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">Where the component ends, the application begins, and the key never goes.</tspan></text>
+<rect x="60" y="150" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="187.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">Scene</tspan><tspan x="160" dy="20">flat element array</tspan></text>
+<rect x="310" y="150" width="200" height="64" rx="8" fill="#e3f3ec" stroke="#1d7a52" stroke-width="1.5"/>
+<text xml:space="preserve" x="410" y="186.62" fill="#1d7a52" font-family="ui-sans-serif, system-ui, sans-serif" font-size="14" text-anchor="middle"><tspan x="410" dy="0">The component</tspan><tspan x="410" dy="17.5">@excalidraw/excalidraw</tspan></text>
+<rect x="60" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">localStorage</tspan><tspan x="160" dy="20">elements + app state</tspan></text>
+<rect x="60" y="370" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="160" y="407.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="160" dy="0">IndexedDB</tspan><tspan x="160" dy="20">files-db · library</tspan></text>
+<rect x="560" y="260" width="200" height="64" rx="8" fill="#fdf0dc" stroke="#a15c00" stroke-width="1.5"/>
+<text xml:space="preserve" x="660" y="297.28" fill="#a15c00" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">excalidraw.com</tspan><tspan x="660" dy="20">the hosted app</tspan></text>
+<rect x="560" y="150" width="200" height="64" rx="8" fill="#e5edf8" stroke="#1e4a8a" stroke-width="1.5"/>
+<text xml:space="preserve" x="660" y="187.28" fill="#1e4a8a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="660" dy="0">AES-GCM</tspan><tspan x="660" dy="20">12-byte IV per op</tspan></text>
+<rect x="810" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#6b6d76" stroke-width="1.5"/>
+<text xml:space="preserve" x="910" y="297.28" fill="#6b6d76" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="910" dy="0">Room server</tspan><tspan x="910" dy="20">relays ciphertext</tspan></text>
+<rect x="810" y="370" width="200" height="64" rx="8" fill="#e5edf8" stroke="#1e4a8a" stroke-width="1.5"/>
+<text xml:space="preserve" x="910" y="407.28" fill="#1e4a8a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="910" dy="0">#room=id,key</tspan><tspan x="910" dy="20">#json=id,key</tspan></text>
+<rect x="1060" y="260" width="200" height="64" rx="8" fill="#f4f1ea" stroke="#16171a" stroke-width="1.5"/>
+<text xml:space="preserve" x="1160" y="297.28" fill="#16171a" font-family="ui-sans-serif, system-ui, sans-serif" font-size="16" text-anchor="middle"><tspan x="1160" dy="0">Another browser</tspan></text>
+<polyline points="266,182 304,182" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="304,182 266,292" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<polyline points="304,182 266,402" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<polyline points="516,182 554,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="660,254 660,220" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="634.8" y="228.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="634.8" dy="0">encrypt</tspan></text>
+<polyline points="766,292 804,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="749" y="283.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="749" dy="0">ciphertext</tspan></text>
+<polyline points="1016,292 1054,292" fill="none" stroke="#6b6d76" stroke-width="1.5" marker-end="url(#head-6b6d76)"/>
+<polyline points="1016,402 1054,292" fill="none" stroke="#6b6d76" stroke-width="1.5" stroke-dasharray="6 4" marker-end="url(#head-6b6d76)"/>
+<text xml:space="preserve" x="1009.8" y="338.4" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" text-anchor="start"><tspan x="1009.8" dy="0">the key</tspan></text>
+<text xml:space="preserve" x="60" y="567.1" fill="#16171a" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" text-anchor="start"><tspan x="60" dy="0">The line that explains the rest</tspan></text>
+<text xml:space="preserve" x="60" y="593.3" fill="#6b6d76" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="14" text-anchor="start"><tspan x="60" dy="0">component    the element model, rendering, export, and the encrypt/serialise step.</tspan><tspan x="60" dy="17.5">             Knows nothing about where anything goes.</tspan><tspan x="60" dy="17.5">application  rooms, share links, storage, the PWA. The shareable-link button</tspan><tspan x="60" dy="17.5">             exists only when a host passes onExportToBackend.</tspan><tspan x="60" dy="17.5">the key      lives in the URL fragment, which a browser never sends to a server.</tspan><tspan x="60" dy="17.5">             So the room server routes an id it can see and relays bytes it cannot read.</tspan><tspan x="60" dy="17.5">no accounts  no server-side copy, no cross-device sync. Excalidraw+ is a separate product.</tspan></text>
+</svg>
