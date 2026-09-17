@@ -4,6 +4,7 @@
  * The applied theme is set before first paint by the inline script in Layout.astro,
  * so there is no flash on load or navigation.
  */
+import { Icon } from 'astro-icon/components';
 ---
 
 <button
@@ -13,42 +14,17 @@
   aria-label="Change colour theme"
   title="Change colour theme"
 >
-  <!-- Each icon is shown by the data-theme attribute on <html> -->
-  <svg
-    class="theme-icon theme-icon--system size-[15px]"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.7"
-    stroke-linecap="round"
-    aria-hidden="true"
-  >
-    <rect x="2" y="3" width="20" height="14" rx="2"></rect>
-    <path d="M8 21h8m-4-4v4"></path>
-  </svg>
-  <svg
-    class="theme-icon theme-icon--light size-[15px]"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.7"
-    stroke-linecap="round"
-    aria-hidden="true"
-  >
-    <circle cx="12" cy="12" r="4"></circle>
-    <path d="M12 2v2m0 16v2M2 12h2m16 0h2M4.9 4.9l1.5 1.5m11.2 11.2 1.5 1.5M19.1 4.9l-1.5 1.5M6.4 17.6l-1.5 1.5"></path>
-  </svg>
-  <svg
-    class="theme-icon theme-icon--dark size-[15px]"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    stroke-width="1.7"
-    stroke-linecap="round"
-    aria-hidden="true"
-  >
-    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"></path>
-  </svg>
+  {
+    /* Shown by the data-theme attribute on <html>, so the applied theme and
+       the icon can never disagree. */
+    [
+      ['system', 'lucide:monitor'],
+      ['light', 'lucide:sun'],
+      ['dark', 'lucide:moon'],
+    ].map(([pref, icon]) => (
+      <Icon name={icon} class={`theme-icon theme-icon--${pref} size-[15px]`} aria-hidden="true" />
+    ))
+  }
   <span class="sr-only" id="theme-state">System theme</span>
 </button>
 
