@@ -16,6 +16,8 @@ handling in `excalidraw-app/data/index.ts`, the local persistence in
 documentation, and the project README. The scene-file notes at the end come from
 generating and round-tripping scenes here rather than from their source.
 
+![Excalidraw: where the component ends, the application begins, and the key never goes](./diagrams/07-excalidraw.svg)
+
 ---
 
 ## An open-source canvas, published as a component

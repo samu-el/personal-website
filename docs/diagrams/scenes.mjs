@@ -331,3 +331,49 @@ const row = (n) => 150 + n * 110;
   );
   await write('06-client-runtime', els);
 }
+
+/* ── 7. Excalidraw itself ──────────────────────────────────────────────── */
+{
+  const els = [];
+  els.push(
+    ...heading(60, 40, 'Excalidraw', 'Where the component ends, the application begins, and the key never goes.'),
+  );
+
+  const scene = box(col(0), row(0), W, H, 'Scene\nflat element array', { fill: p.PAPER });
+  const component = box(col(1), row(0), W, H, 'The component\n@excalidraw/excalidraw', {
+    fill: p.JADE_BG,
+    color: p.JADE,
+    size: 14,
+  });
+  const local = box(col(0), row(1), W, H, 'localStorage\nelements + app state', { fill: p.PAPER });
+  const idb = box(col(0), row(2), W, H, 'IndexedDB\nfiles-db · library', { fill: p.PAPER });
+
+  const app = box(col(2), row(1), W, H, 'excalidraw.com\nthe hosted app', { fill: p.GOLD_BG, color: p.GOLD });
+  const crypt = box(col(2), row(0), W, H, 'AES-GCM\n12-byte IV per op', { fill: p.BLUE_BG, color: p.BLUE });
+  const room = box(col(3), row(1), W, H, 'Room server\nrelays ciphertext', { fill: p.PAPER, color: p.MUTED });
+  const link = box(col(3), row(2), W, H, '#room=id,key\n#json=id,key', { fill: p.BLUE_BG, color: p.BLUE });
+  const peer = box(col(4), row(1), W, H, 'Another browser', { fill: p.PAPER });
+
+  els.push(scene, component, local, idb, app, crypt, room, link, peer);
+  els.push(
+    ...arrow(scene, component),
+    ...arrow(component, local, { dashed: true }),
+    ...arrow(component, idb, { dashed: true }),
+    ...arrow(component, app),
+    ...arrow(app, crypt, { label: 'encrypt' }),
+    ...arrow(app, room, { label: 'ciphertext' }),
+    ...arrow(room, peer),
+    ...arrow(link, peer, { label: 'the key', dashed: true }),
+  );
+
+  els.push(
+    text(col(0), row(4) - 40, 'The line that explains the rest', { size: 18 }),
+    text(
+      col(0),
+      row(4) - 10,
+      'component    the element model, rendering, export, and the encrypt/serialise step.\n             Knows nothing about where anything goes.\napplication  rooms, share links, storage, the PWA. The shareable-link button\n             exists only when a host passes onExportToBackend.\nthe key      lives in the URL fragment, which a browser never sends to a server.\n             So the room server routes an id it can see and relays bytes it cannot read.\nno accounts  no server-side copy, no cross-device sync. Excalidraw+ is a separate product.',
+      { size: 14, color: p.MUTED },
+    ),
+  );
+  await write('07-excalidraw', els);
+}

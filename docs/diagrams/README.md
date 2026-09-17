@@ -1,6 +1,6 @@
 # Diagrams
 
-Six scenes, each written twice: an `.excalidraw` file to edit and an `.svg` to
+Seven scenes, each written twice: an `.excalidraw` file to edit and an `.svg` to
 look at. Both are generated — `scenes.mjs` is the source of truth.
 
 | Scene               | Level | Shows                                                                     |
@@ -11,6 +11,7 @@ look at. Both are generated — `scenes.mjs` is the source of truth.
 | `04-content`        | Code  | Collections in, routes out, and the two flags that gate rendering         |
 | `05-testing`        | Code  | The four suites, the shared harness, and what each one covers             |
 | `06-client-runtime` | Code  | Every module that runs in the browser and what it is allowed to touch     |
+| `07-excalidraw`     | High  | Excalidraw itself: the component/application line, and where the key goes |
 
 ## Reading them
 
