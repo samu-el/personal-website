@@ -39,11 +39,13 @@ Node 22+ is expected (see `.github/workflows/`).
 
 ### Smoke suite
 
-`tests/verify.mjs` drives a real browser over every built route and asserts the things that
-break silently on a static site: console errors, horizontal overflow, heading structure, links
-with no accessible name, broken internal links, the theme toggle cycling and persisting, the
-showcase invariants, the command palette, the scroll reveal, and the RSS/sitemap/OG/JSON-LD
-output. `tests/interact.mjs` covers what only exists under a pointer, a key or a scroll.
+Two layers. `tests/static.mjs` reads the built `dist/` directly and asserts what is a property
+of the HTML — heading structure, alt text, accessible link names, internal links resolving, the
+SEO block, the RSS/sitemap/OG/JSON-LD output, the showcase invariants. It needs no browser and
+runs in about a second. `tests/verify.mjs` then drives a real browser over every route for the
+things that need one: console errors, horizontal overflow at three viewports, the theme
+persisting across a navigation, the scroll reveal, the command palette, a 404 that is a 404.
+`tests/interact.mjs` covers what only exists under a pointer, a key or a scroll.
 `docs/architecture.md` §9 says what each of the five suites is for.
 
 ```bash
