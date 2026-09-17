@@ -1,0 +1,139 @@
+# Inside Excalidraw
+
+Background for [`docs/diagrams/`](./diagrams), which generates Excalidraw scenes
+rather than drawing them. This is the tool those scenes are written for: what it
+is, the element model its files and its multiplayer protocol are both built on,
+the component API it publishes, and the encryption its collaboration rests on.
+
+Written against the current `master` of
+[github.com/excalidraw/excalidraw](https://github.com/excalidraw/excalidraw) —
+the element type definitions in `packages/element/src/types.ts`, the encryption
+module in `packages/excalidraw/data/encryption.ts`, the component props
+documentation and the project README. The scene-file notes at the end come from
+generating and round-tripping scenes here rather than from their source.
+
+---
+
+## An open-source canvas, published as a component
+
+Excalidraw is an MIT-licensed virtual whiteboard with a deliberately hand-drawn
+look. There are two things behind one name: a React component published as
+`@excalidraw/excalidraw` that anyone can embed, and the hosted application at
+excalidraw.com built on it, which adds real-time collaboration, end-to-end
+encryption, a shape library, and offline use as a PWA that autosaves to the
+browser.
+
+The split matters when reading the source. Everything about _what a drawing is_
+lives in the packages; everything about rooms, sharing links and persistence is
+the application around them. The collaboration server is a separate project
+again.
+
+---
+
+## Everything is an element in a flat array
+
+A scene is not a tree. It is an ordered array of elements, and every
+relationship between them — a label inside a box, an arrow pinned to two shapes,
+a shape inside a frame — is expressed by elements holding each other's `id`.
+That single decision explains most of the format's surface area.
+
+The element types fall into a few families:
+
+- **Generic** — selection, rectangle, diamond, ellipse.
+- **Linear** — line and arrow, which carry a point list rather than a size.
+- **Text and containers** — text, sticky note, frame, magic frame.
+- **Media** — image, iframe, embeddable.
+- **Free draw** — the pen stroke.
+
+All of them extend one base with the geometry (`x`, `y`, `width`, `height`,
+`angle`), the styling (stroke and fill, opacity, roughness) and a set of
+structural fields that are the interesting part:
+
+| Field                       | What it carries                                                                                                                                                                                                                   |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `boundElements`             | What is attached to this element — the ids of its bound text and of every arrow that terminates on it. Held on the shape, pointing outward.                                                                                       |
+| `containerId`               | Set on a _text_ element to name the shape it sits inside. The other half of the same relationship, pointing back. Both sides are stored.                                                                                          |
+| `startBinding` `endBinding` | On an arrow: the element it is pinned to, the attachment point as normalised ratios rather than absolute coordinates, and a bind mode — `inside`, `orbit` or `skip`.                                                              |
+| `version` `versionNonce`    | A sequential counter and a random value regenerated on every change. Together they let two clients that edited the same element independently agree on which edit wins, with no server umpire.                                    |
+| `updated`                   | Epoch milliseconds of the last change.                                                                                                                                                                                            |
+| `index`                     | A _fractional_ index kept in step with the array position. Inserting between two elements picks a value between theirs rather than renumbering, which is what makes concurrent reordering and undo survive a multiplayer session. |
+
+**The consequence worth internalising.** A labelled box is two elements, not
+one: a rectangle whose `boundElements` names a text, and a text whose
+`containerId` names the rectangle. Write only one of them and the editor loads a
+scene that looks right and stops behaving right — the label will not move with
+the box. `box()` in `build.mjs` returns the container with its label attached as
+`__label`, and `flat()` expands the pair just before serialisation, for exactly
+this reason.
+
+---
+
+## The embedding API keeps elements and UI state apart
+
+The component takes a scene in through `initialData` and hands control back
+through an `excalidrawAPI` callback exposing methods such as `updateScene` and
+`updateLibrary`. Changes come out through one callback:
+
+```jsx
+<Excalidraw
+  initialData={{ elements, appState }}
+  excalidrawAPI={(api) => { ref.current = api }}
+  onChange={(elements, appState, files) => …}
+  theme="dark"
+  viewModeEnabled
+/>
+```
+
+Three things come back, and the separation is the design: **elements** is the
+drawing, **appState** is everything about the viewer rather than the drawing —
+scroll position, zoom, current tool, selection — and **files** holds binary
+assets keyed separately so they are not copied into every element that shows
+them.
+
+Host applications that need their own metadata put it in `customData` on an
+element, which the editor carries around without interpreting.
+
+---
+
+## Collaboration is encrypted in the browser
+
+The encryption is ordinary Web Crypto, which is the point — there is nothing
+bespoke to get wrong. A key is generated as AES-GCM, extractable, and exported
+as a JWK, from which the application takes the `k` value as its string form.
+Each encryption generates a fresh 12-byte initialisation vector from
+`crypto.getRandomValues()`, and the result is returned as the ciphertext buffer
+alongside that IV.
+
+GCM is chosen over a plain cipher mode deliberately: it authenticates as well as
+encrypts, so a modified ciphertext fails to decrypt rather than decrypting to
+something plausible. The input side is permissive — a string, a `Uint8Array`, a
+`Blob` or a `File`, all normalised to an `ArrayBuffer` first — because the same
+routine protects scene deltas and uploaded images alike.
+
+---
+
+## Generating scenes without the editor
+
+A `.excalidraw` file is the element array plus a thin envelope: a `type` of
+`"excalidraw"`, a format `version`, a `source` string, the `appState` the scene
+should open with, and a `files` map. Writing that JSON directly is a reasonable
+way to keep diagrams in version control, and the editor opens the result with
+**File → Open**.
+
+Three things to know before doing it, learned by doing it here:
+
+- **Every field is required.** The format stores state rather than computing it,
+  so an element missing `groupIds` or `roundness` is rejected even though the
+  value is empty. Supply a complete base and override what differs — which is
+  what `base()` in `build.mjs` does.
+- **Geometry is measured, not derived.** Text elements carry their own `width`
+  and `height`; nothing lays them out. Generating text means estimating the
+  advance width of the chosen face — 0.58 em per character for the hand-drawn
+  one, here.
+- **`seed` is not decoration.** It drives the hand-drawn jitter, so a stable
+  seed redraws the same wobble. Deriving seeds deterministically rather than
+  randomly is what lets a regenerated scene be byte-identical to the one already
+  committed; otherwise every regeneration is a diff of nothing.
+
+See [`docs/diagrams/README.md`](./diagrams/README.md) for the subset of the
+format these scenes use, and how to round-trip one through excalidraw.com.

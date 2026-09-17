@@ -52,9 +52,11 @@ reviewable artifact.
 ## The Excalidraw scene format
 
 `build.mjs` writes this format directly rather than driving an editor, so what
-follows is what it has to get right. Excalidraw's own documentation is at
-[docs.excalidraw.com](https://docs.excalidraw.com); this is the subset these
-scenes use.
+follows is what it has to get right — the subset these scenes use.
+[`docs/excalidraw.md`](../excalidraw.md) covers the tool itself: the element
+model behind this format, the component API, and how its collaboration is
+encrypted. Excalidraw's own documentation is at
+[docs.excalidraw.com](https://docs.excalidraw.com).
 
 ### The envelope
 

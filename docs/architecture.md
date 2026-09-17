@@ -23,7 +23,9 @@ npm run diagrams
 | `05-testing`        | Code  | The four suites, the shared harness, what each one covers     |
 | `06-client-runtime` | Code  | Every module that runs in the browser and what it may touch   |
 
-[How to edit them](./diagrams/README.md).
+[How to edit them](./diagrams/README.md), and
+[what Excalidraw itself is](./excalidraw.md) — the element model these scenes
+are written against, its component API and its encryption.
 
 ---
 
