@@ -11,7 +11,8 @@ the element type definitions in `packages/element/src/types.ts`, the tool,
 font and export constants in `packages/common/src/constants.ts`, the encryption
 module in `packages/excalidraw/data/encryption.ts`, the shortcut list in
 `packages/excalidraw/components/HelpDialog.tsx`, the room and share-link
-handling in `excalidraw-app/data/index.ts`, the component props and `UIOptions`
+handling in `excalidraw-app/data/index.ts`, the local persistence in
+`excalidraw-app/data/LocalData.ts`, the component props and `UIOptions`
 documentation, and the project README. The scene-file notes at the end come from
 generating and round-tripping scenes here rather than from their source.
 
@@ -131,6 +132,36 @@ The two together explain the earlier note about `onExportToBackend`: the
 component knows how to encrypt and serialise, and knows nothing about where
 anything goes. A host that never passes that callback gets an editor with no
 sharing at all — not a disabled button, an absent one.
+
+---
+
+## Where a drawing lives, and what does not exist
+
+Excalidraw's persistence story is easiest to describe by what it leaves out.
+
+**There are no accounts.** Nothing asks who you are, nothing is stored against
+an identity, and there is no cross-device sync. Open the same drawing on a
+laptop and a phone and you have two unrelated drawings unless you carried a
+link between them. Excalidraw+ is a separate, paid product that adds the
+server-side half; everything described here is the free application.
+
+**A drawing lives in your browser.** The app writes non-deleted elements and a
+filtered copy of the app state to `localStorage`, and binary files — pasted and
+uploaded images — to IndexedDB, in a `files-db` / `files-store` pair, with the
+shape library in its own store beside it. Saving is debounced rather than
+per-keystroke, and skipped entirely while the tab is hidden or while a lock is
+held during collaboration, so a background tab is not fighting an active one.
+
+**The filtering matters more than it looks.** The app state written to disk has
+had things removed — the collaboration username among them — so reopening a
+tab does not silently restore identity or session state that belonged to a
+moment rather than to the drawing. Unused files are swept after 24 hours by a
+`lastRetrieved` stamp, so a scene that dropped an image stops carrying its
+bytes around.
+
+This is what "local-first" means concretely, and it is why the share links in
+the previous section are the whole of the persistence-beyond-this-machine
+story: there is no other copy on a server to fall back on.
 
 ---
 
