@@ -476,48 +476,56 @@ Two things that are configuration, not code:
 
 ---
 
-## 11. Why this is 8,720 lines
+## 11. Why this is 8,704 lines
 
 The simplification work that produced most of this document had a target of a
-20% cut, from 10,389 lines to 8,311. It came in at 8,720 — 16.1%. This section
-records what was taken and what was left, because "there is nothing more" is
-worth nothing without the measurements behind it.
+20% cut, from 10,389 lines to 8,311. It came in at 8,704 — 16.2%. This section
+records what was taken, what was left and what was searched for and not found,
+because "there is nothing more" is worth nothing without the measurements
+behind it.
 
-Taken across nine pull requests: the dead `astro:page-load` machinery for a
-router this site does not ship; `global.css` split six ways with byte-identical
-output; the Worker restructured and its typedefs moved to a `.d.ts`; ten
-components extracted wherever markup repeated three times or more; `follow()`,
-`byId()`, `nextPoll()`, one front-matter reader and one label class shared
-instead of copied; if-chains replaced by lookup tables; long-form rationale
-moved into this file with a pointer left behind; three inline scripts turned
-into modules; the generated Excalidraw scenes minified from 7,667 lines of
-committed whitespace to six; two dead exports; the poll cadence lifted out of
-the browser into a pure function, which made it exactly testable and the suite
-fifty seconds faster.
+**Taken**, across seventeen pull requests: the dead `astro:page-load` machinery
+for a router this site does not ship, found and removed three separate times;
+`global.css` split six ways with byte-identical output; the Worker restructured
+and its typedefs moved to a `.d.ts`; ten components extracted wherever markup
+repeated three times or more; `follow()`, `byId()`, `nextPoll()`, one
+front-matter reader and one label class shared instead of copied; if-chains
+replaced by lookup tables; long-form rationale moved into this file with a
+pointer left behind; three inline scripts turned into modules; the generated
+Excalidraw scenes minified from 7,667 lines of committed whitespace to six;
+two dead exports; the poll cadence lifted into a pure function, which made it
+exactly testable and the suite fifty seconds faster; and the smoke suite split
+so that everything true of the built HTML is read out of `dist/` instead of
+through a browser.
 
-Then two changes that cost something, made deliberately to reach the target:
+**Two changes that cost something**, made deliberately to reach the target:
 
 | Change                              | Lines | What it cost                                                                                                                                                                                                              |
 | ----------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Blank lines within a statement run  |   155 | Density. Separation between declarations is kept, so functions still read apart; blank lines between two ordinary statements are gone.                                                                                    |
 | Sixteen cosmetic interaction checks |   150 | The nav indicator, the tilt, the lean, the ticker, row hover, the count-up, the theme ease. All fail _visibly_ — you see a broken tilt the moment the page opens. `git show 590ffa0 -- tests/interact.mjs` restores them. |
 
-And where it stops. The remaining 409 lines to 20% are the whole of
-`verify.mjs` plus more. That suite asserts what is invisible on a developer's
-screen: every route renders, one `<h1>`, no horizontal overflow, no broken
-internal link, no image without alt, no link without an accessible name, the
-theme persisting across navigation, every project reachable from the palette,
-RSS and sitemap and robots and the Person schema intact, an unknown path
-returning a real 404, and no hidden project becoming reachable. Deleting it
-does not simplify anything — it removes the mechanism that says the site broke.
+**Where it stops.** 393 lines short. What remains in the test files is
+assertions rather than scaffolding, and the last search for scaffolding is what
+produced the static/browser split above — it found 30 lines. The suites now
+stand at 1,569 lines for 168 assertions, so closing the gap means removing
+about a quarter of everything that catches a regression: the parsers that read
+three untrusted external feeds, the Worker's 39 stubbed cases, or the checks
+that catch content left hidden, a page shifting under a reader and a skeleton
+stranded where no answer is coming.
 
-Checked and found empty, so nobody repeats the search: dead CSS (a checker
-against the built HTML found 50 classes defined, 9 unmatched, all 9 added at
-runtime or false positives); unused exports (every export scanned against every
-other file — two, both removed); duplicated markup at three or more call sites
-(all extracted); if-chains in the two logic-dense client modules (none left).
-Table-driving the remaining test files was tried and returns almost nothing:
-the data literals are the lines.
+**Checked and found empty**, so nobody repeats the search:
+
+- Dead CSS — a checker against the built HTML found 50 classes defined, 9
+  unmatched, and all 9 are added at runtime or are false positives.
+- Unused exports — every export scanned against every other file. Two, both
+  removed.
+- Duplicated markup at three or more call sites — all ten extracted.
+- If-chains in the logic-dense client modules — none left.
+- Table-driving the remaining test files — tried; the data literals _are_ the
+  lines, and `worker.test.mjs` came out one line shorter and one case richer.
+- Browser work that did not need a browser — this was the last real find, and
+  it is now `static.mjs`.
 
 ---
 
