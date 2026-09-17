@@ -123,7 +123,6 @@ function retryAfter(/** @type {Response} */ res) {
 async function readPlayer(token, diag) {
   const res = await fetch(PLAYER_ENDPOINT, { headers: { Authorization: `Bearer ${token}` } });
   diag.reason = { 200: 'spotify_200', 204: 'spotify_204_nothing_playing' }[res.status] ?? `spotify_${res.status}`;
-
   if (res.status >= 400) {
     diag.failed = true;
     // "Permissions missing" vs "Premium required" — the status cannot say which.
@@ -141,14 +140,12 @@ async function readPlayer(token, diag) {
     return null;
   }
   if (res.status !== 200) return null;
-
   const body = await res.json();
   const item = body?.item;
   if (!item?.name) {
     diag.reason = 'no_item';
     return null;
   }
-
   // Paused still counts: it reports the track and where it stopped.
   const live = Boolean(body.is_playing);
   diag.reason = live ? 'ok' : 'paused';
@@ -196,7 +193,6 @@ async function answer(env) {
   const diag = { playing: false, reason: 'unknown', grantedScopes: '' };
   /** @type {Payload} */
   let payload = { playing: false };
-
   try {
     const { token, status, scope, cached } = await accessToken(env);
     diag.grantedScopes = scope;
@@ -207,7 +203,6 @@ async function answer(env) {
       diag.failed = true;
       return { payload, diag };
     }
-
     payload = (await readPlayer(token, diag)) ?? payload;
     // Nothing on the player. Under a rate limit, another call buys nothing.
     if (!payload.title && !diag.rateLimited) {
@@ -225,13 +220,11 @@ export default {
     const url = new URL(request.url);
     // Explains a false rather than asserting it. Statuses only, never values.
     const debug = url.searchParams.has('debug');
-
     // The root too, for workers.dev. Anything else is the static origin's.
     if (url.pathname !== '/' && !url.pathname.endsWith('/now-playing.json')) return fetch(request);
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
     }
-
     // Missing secrets read as "nothing playing", not as an error.
     const secrets = {
       SPOTIFY_CLIENT_ID: Boolean(env.SPOTIFY_CLIENT_ID),
@@ -242,7 +235,6 @@ export default {
       const body = debug ? { playing: false, reason: 'missing_secrets', secrets } : { playing: false };
       return json(body, debug ? 0 : CACHE_SECONDS_IDLE);
     }
-
     // The edge serves repeat visitors. A debug read must be live.
     const cache = caches.default;
     const cacheKey = new Request(url.toString(), { method: 'GET' });
@@ -250,10 +242,8 @@ export default {
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
     }
-
     let { payload, diag } = await answer(env);
     let maxAge = payload.playing ? CACHE_SECONDS : CACHE_SECONDS_IDLE;
-
     if (payload.title) {
       lastGood = { payload, at: Date.now() };
     } else if (diag.failed && lastGood && Date.now() - lastGood.at < LAST_GOOD_MAX_MS) {
@@ -263,16 +253,13 @@ export default {
       diag.reason = `${diag.reason}_served_last_good`;
       maxAge = Math.max(maxAge, diag.retryAfter || CACHE_SECONDS_IDLE);
     }
-
     if (debug) {
       const { failed: _f, rateLimited: _r, playing: _p, ...rest } = diag;
       const scopeOk = (diag.grantedScopes ?? '').split(' ').includes(REQUIRED_SCOPE);
       return json({ ...payload, ...rest, scopeOk, secrets }, 0);
     }
-
     // Hold for as long as Spotify asked rather than keep asking.
     if (diag.retryAfter) maxAge = Math.max(maxAge, diag.retryAfter);
-
     const response = json(payload, maxAge);
     await cache.put(cacheKey, response.clone());
     return response;

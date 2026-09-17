@@ -6,7 +6,6 @@ export function copyEmail(reset = 2200) {
   const email = document.documentElement.dataset.email;
   if (!button || !email) return;
   const label = button.querySelector('[data-copy-label]');
-
   button.addEventListener('click', async () => {
     if (!label) return;
     label.textContent = await navigator.clipboard

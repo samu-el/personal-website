@@ -28,7 +28,6 @@ function score(entry: Entry, q: string) {
   const label = entry.label.toLowerCase();
   if (label.startsWith(q)) return 1000;
   if (label.includes(q)) return 700;
-
   const haystack = `${label} ${entry.section} ${entry.hint ?? ''} ${entry.keywords ?? ''}`.toLowerCase().trim();
   let i = 0;
   let points = 0;
@@ -53,7 +52,6 @@ export function commandPalette() {
   const list = byId('cmdk-list');
   const tpl = byId<HTMLTemplateElement>('cmdk-row');
   if (!data || !dialog || !input || !list || !tpl || typeof dialog.showModal !== 'function') return;
-
   const { entries, goto, email }: Data = JSON.parse(data.textContent ?? '{}');
   const empty = byId('cmdk-empty');
   let rows: { el: HTMLElement; link: HTMLAnchorElement }[] = [];
@@ -92,11 +90,9 @@ export function commandPalette() {
     // With nothing typed the list keeps its authored order, so the section
     // headings stay contiguous. Ranking only applies to a search.
     if (q) matches.sort((a, b) => b.s - a.s || a.entry.label.localeCompare(b.entry.label));
-
     list!.replaceChildren();
     rows = [];
     let section: string | null = null;
-
     matches.forEach(({ entry }, i) => {
       if (!q && entry.section !== section) {
         section = entry.section;
@@ -106,13 +102,11 @@ export function commandPalette() {
         head.textContent = section;
         list!.append(head);
       }
-
       const node = tpl!.content.firstElementChild!.cloneNode(true) as HTMLElement;
       node.id = `cmdk-row-${i}`;
       const link = node.querySelector('a')!;
       node.querySelector('.cmdk-label')!.textContent = entry.label;
       node.querySelector('.cmdk-hint')!.textContent = entry.hint ?? '';
-
       if (entry.href) {
         link.href = entry.href;
         if (entry.external) {
@@ -123,18 +117,15 @@ export function commandPalette() {
         link.setAttribute('role', 'button');
         link.tabIndex = -1;
       }
-
       link.addEventListener('click', (event) => {
         if (!entry.action) return close();
         event.preventDefault();
         ACTIONS[entry.action]?.();
       });
       node.addEventListener('mousemove', () => select(rows.findIndex((r) => r.el === node)));
-
       list!.append(node);
       rows.push({ el: node, link });
     });
-
     if (empty) empty.hidden = rows.length > 0;
     select(0);
   }
@@ -153,7 +144,6 @@ export function commandPalette() {
   function close() {
     dialog!.close();
   }
-
   dialog.addEventListener('close', () => {
     document.documentElement.style.overflow = '';
     if (lastFocus instanceof HTMLElement) lastFocus.focus();
@@ -176,14 +166,12 @@ export function commandPalette() {
     event.preventDefault();
     move();
   });
-
   byId('cmdk-open')?.addEventListener('click', open);
 
   /* Global keys: ⌘K anywhere, and single letters when nothing else has the
      keyboard. `g` arms a jump for the next keypress. */
   const typing = (el: EventTarget | null) =>
     el instanceof HTMLElement && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
-
   let chord = 0;
   document.addEventListener('keydown', (event) => {
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
@@ -193,7 +181,6 @@ export function commandPalette() {
     if (dialog.open || event.metaKey || event.ctrlKey || event.altKey || typing(event.target)) {
       return;
     }
-
     const key = event.key.toLowerCase();
     if (chord && Date.now() - chord < 1200) {
       chord = 0;
@@ -206,7 +193,6 @@ export function commandPalette() {
     }
     chord = key === 'g' ? Date.now() : 0;
     if (key === 'g') return;
-
     if (key === '/') {
       event.preventDefault();
       open();

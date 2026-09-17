@@ -23,7 +23,6 @@ export function countUp(duration = 1400) {
     };
     requestAnimationFrame(tick);
   };
-
   const io = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {

@@ -24,7 +24,6 @@ export function follow(
     if (active) settle(active);
     active = null;
   };
-
   document.addEventListener(
     'pointermove',
     (event) => {
@@ -41,7 +40,6 @@ export function follow(
     },
     { passive: true },
   );
-
   // Off the document entirely — out of the window, or into devtools.
   document.addEventListener('pointerleave', leave, { passive: true });
 }

@@ -109,16 +109,13 @@ export function nowPlaying() {
        card reads "Paused" over a playing track while the two are out of step. */
     const state: State = data.state ?? (data.playing ? 'playing' : 'paused');
     const live = state === 'playing';
-
     if (el.title) el.title.textContent = data.title ?? '';
     if (el.artist) el.artist.textContent = data.artist ?? '';
     if (el.link && data.url) el.link.href = data.url;
     el.eq?.classList.toggle('is-still', !live);
     if (el.state) el.state.textContent = LABEL[state](data);
-
     paintArt(data);
     paintBar(data, state, live);
-
     lastTitle = data.title ?? '';
     setState('ready');
   }
@@ -151,7 +148,6 @@ export function nowPlaying() {
     // A finished track has no position, so there is no bar to draw. A paused
     // one does, and showing it frozen is the point.
     const drawable = el.bar && el.progress && state !== 'recent' && duration > 0 && Number.isFinite(at);
-
     if (!drawable) {
       total = 0;
       if (el.progress) el.progress.hidden = true;
@@ -163,20 +159,17 @@ export function nowPlaying() {
        subtracts the edge's clock from the visitor's. */
     const stamp = Number(data.fetchedAt);
     const age = live && Number.isFinite(stamp) ? Math.min(Math.max(Date.now() - stamp, 0), MAX_AGE_MS) : 0;
-
     // A new track must not glide backwards out of the old one's position.
     if (data.title !== lastTitle && el.bar) {
       el.bar.style.transition = 'none';
       requestAnimationFrame(() => (el.bar!.style.transition = ''));
     }
-
     base = Math.min(at + age, duration);
     baseAt = Date.now();
     total = duration;
     if (el.duration) el.duration.textContent = clock(duration);
     el.progress!.hidden = false;
     renderProgress();
-
     // A paused bar is rendered once and left alone: ticking it would advance
     // a track that is not moving.
     stopTicker();
@@ -194,7 +187,6 @@ export function nowPlaying() {
     } catch {
       // Offline, blocked, or DNS still catching up.
     }
-
     strikes = data ? 0 : strikes + 1;
     schedule(
       nextPoll({
@@ -205,7 +197,6 @@ export function nowPlaying() {
         failures: strikes,
       }),
     );
-
     // A title is the only requirement: paused and finished both count.
     if (!data?.title) {
       setState('empty');
@@ -223,7 +214,6 @@ export function nowPlaying() {
     else poll();
   });
   window.addEventListener('focus', () => document.hidden || poll());
-
   setState('loading');
   poll();
 }

@@ -20,11 +20,9 @@ const row = (n) => 150 + n * 110;
       'Static site, built in CI, served from Pages behind Cloudflare. One Worker holds the only secret.',
     ),
   );
-
   const content = box(col(0), row(0), W, H, 'src/content\nprojects · posts', { fill: p.PAPER });
   const pages = box(col(0), row(1), W, H, 'src/pages\n11 routes', { fill: p.PAPER });
   const feeds = box(col(1), row(2), W, H, 'src/lib/feeds.ts\nbuild-time reads', { fill: p.PAPER });
-
   const build = box(col(1), row(1), W, H, 'Astro build\ndeploy.yml', {
     fill: p.BLUE_BG,
     color: p.BLUE,
@@ -39,16 +37,13 @@ const row = (n) => 150 + n * 110;
   });
   const cf = box(col(4), row(1), W, H, 'Cloudflare\nsmr.et', { fill: p.GOLD_BG, color: p.GOLD });
   const browser = box(col(4), row(3), W, H, 'Browser', { fill: p.PAPER });
-
   const gh = box(col(2), row(2), W, H, 'GitHub API', { fill: p.PAPER, color: p.MUTED });
   const lb = box(col(0), row(2), W, H, 'Letterboxd RSS', { fill: p.PAPER, color: p.MUTED });
-
   const worker = box(col(3), row(0) - 20, W, H, 'Worker\nsmr.et/api/*', {
     fill: p.GOLD_BG,
     color: p.GOLD,
   });
   const spotify = box(col(4), row(0) - 20, W, H, 'Spotify API', { fill: p.PAPER, color: p.MUTED });
-
   els.push(content, pages, feeds, build, dist, pagesHost, cf, browser, gh, lb, worker, spotify);
   els.push(
     ...arrow(content, build),
@@ -64,7 +59,6 @@ const row = (n) => 150 + n * 110;
     ...arrow(worker, spotify, { dashed: true }),
     ...arrow(browser, cf, { label: 'poll /api/*', dashed: true, offset: 34 }),
   );
-
   els.push(
     text(col(0), row(4) + 40, 'Secrets never reach the browser', { size: 18 }),
     text(
@@ -88,7 +82,6 @@ const row = (n) => 150 + n * 110;
       'One card, three states, and a poll that follows the endpoint rather than a clock.',
     ),
   );
-
   const card = box(col(0), row(0), W, H, 'NowPlaying.astro\nmarkup + skeleton', { fill: p.PAPER });
   const client = box(col(0), row(1), W, H, 'now-playing.ts\npoll · paint', { fill: p.PAPER });
   const edge = box(col(1), row(1), W, H, 'Edge cache\ns-maxage 5s / 10s', {
@@ -106,7 +99,6 @@ const row = (n) => 150 + n * 110;
     fill: p.JADE_BG,
     color: p.JADE,
   });
-
   els.push(card, client, edge, worker, token, player, recent, lastGood);
   els.push(
     ...arrow(card, client),
@@ -117,7 +109,6 @@ const row = (n) => 150 + n * 110;
     ...arrow(worker, recent, { label: '204 / no item', dashed: true }),
     ...arrow(worker, lastGood, { label: 'on failure', dashed: true }),
   );
-
   els.push(
     text(col(0), row(3) + 10, 'Client states', { size: 18 }),
     text(
@@ -141,14 +132,12 @@ const row = (n) => 150 + n * 110;
 {
   const els = [];
   els.push(...heading(60, 40, 'Motion', 'One duration scale, three gates, and two scripts that follow the pointer.'));
-
   const css = box(col(0), row(0), W, H, 'tokens.css\n--t-1 … --t-5', {
     fill: p.GOLD_BG,
     color: p.GOLD,
   });
   const motion = box(col(0), row(1), W, H, 'motion.css\nreveal · VT · tilt', { fill: p.PAPER });
   const touch = box(col(0), row(2), W, H, 'touch.css\n:active · hit areas', { fill: p.PAPER });
-
   const env = box(col(1), row(1), W, H, 'client/env.ts\ncalm · fine · dark', {
     fill: p.JADE_BG,
     color: p.JADE,
@@ -163,7 +152,6 @@ const row = (n) => 150 + n * 110;
     fill: p.JADE_BG,
     color: p.JADE,
   });
-
   els.push(css, motion, touch, env, follow, layout, frame, reveal);
   els.push(
     ...arrow(css, motion),
@@ -173,7 +161,6 @@ const row = (n) => 150 + n * 110;
     ...arrow(follow, frame),
     ...arrow(env, reveal),
   );
-
   els.push(
     text(col(0), row(3) + 20, 'Three gates, every time', { size: 18 }),
     text(
@@ -200,7 +187,6 @@ const row = (n) => 150 + n * 110;
 {
   const els = [];
   els.push(...heading(60, 40, 'Content', 'Collections in, routes out. Two flags decide what is ever rendered.'));
-
   const projects = box(col(0), row(0), W, H, 'content/projects\n*.md + zod schema', {
     fill: p.PAPER,
   });
@@ -209,7 +195,6 @@ const row = (n) => 150 + n * 110;
     fill: p.JADE_BG,
     color: p.JADE,
   });
-
   const work = box(col(2), row(0), W, H, '/work + /work/[id]', { fill: p.BLUE_BG, color: p.BLUE });
   const writing = box(col(2), row(1), W, H, '/writing + /writing/[id]', {
     fill: p.BLUE_BG,
@@ -220,7 +205,6 @@ const row = (n) => 150 + n * 110;
     fill: p.JADE_BG,
     color: p.JADE,
   });
-
   els.push(projects, posts, postsLib, work, writing, feed, assets);
   els.push(
     ...arrow(projects, assets),
@@ -229,7 +213,6 @@ const row = (n) => 150 + n * 110;
     ...arrow(postsLib, writing),
     ...arrow(writing, feed),
   );
-
   els.push(
     text(col(0), row(2) + 20, 'The two flags', { size: 18 }),
     text(
@@ -253,7 +236,6 @@ const row = (n) => 150 + n * 110;
 {
   const els = [];
   els.push(...heading(60, 40, 'Testing', 'Four suites, one shared harness, everything run in CI on every push.'));
-
   const harness = box(col(1), row(0), W, H, 'tests/harness.mjs\nlaunch · proxy · report', {
     fill: p.JADE_BG,
     color: p.JADE,
@@ -270,7 +252,6 @@ const row = (n) => 150 + n * 110;
     fill: p.BLUE_BG,
     color: p.BLUE,
   });
-
   els.push(harness, verify, interact, feedsT, workerT, ci);
   els.push(
     ...arrow(harness, verify),
@@ -280,7 +261,6 @@ const row = (n) => 150 + n * 110;
     ...arrow(feedsT, ci),
     ...arrow(workerT, ci),
   );
-
   els.push(
     text(col(0), row(4) + 20, 'What each one is for', { size: 18 }),
     text(
@@ -304,7 +284,6 @@ const row = (n) => 150 + n * 110;
       'What actually runs in the browser, and what each module is allowed to touch.',
     ),
   );
-
   const theme = box(col(0), row(0), W, H, 'Layout.astro\ntheme, pre-paint', {
     fill: p.GOLD_BG,
     color: p.GOLD,
@@ -321,17 +300,14 @@ const row = (n) => 150 + n * 110;
     fill: p.JADE_BG,
     color: p.JADE,
   });
-
   const header = box(col(2), row(0), W, H, 'header.ts\npanel · indicator', { fill: p.PAPER });
   const np = box(col(2), row(1), W, H, 'now-playing.ts\npoll · paint · progress', { fill: p.PAPER });
   const palette = box(col(2), row(2), W, H, 'palette.ts\nsearch · chords', { fill: p.PAPER });
   const small = box(col(2), row(3), W, H, 'toc · count · copy-email', { fill: p.PAPER });
-
   const data = box(col(3), row(1), W, H, 'DOM as the channel\ndata-* · JSON script tag', {
     fill: p.BLUE_BG,
     color: p.BLUE,
   });
-
   els.push(theme, env, dom, follow, header, np, palette, small, data);
   els.push(
     ...arrow(env, header, { offset: -14 }),
@@ -344,7 +320,6 @@ const row = (n) => 150 + n * 110;
     ...arrow(data, np, { label: 'data-endpoint' }),
     ...arrow(data, palette, { label: 'cmdk-data' }),
   );
-
   els.push(
     text(col(0), row(4) + 20, 'Rules this layout enforces', { size: 18 }),
     text(

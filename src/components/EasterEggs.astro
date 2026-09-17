@@ -41,7 +41,6 @@
     `%cNo software engineering problem is too big to solve.%c
 Built with Astro. No client framework, no analytics, no cookies.
 Reach out:  ${root.dataset.email ?? ''}
-
 Try ⌘K for the command palette. Or the Konami code.`,
     LABEL,
     BODY,
@@ -59,10 +58,8 @@ Try ⌘K for the command palette. Or the Konami code.`,
     at = key === SEQUENCE[at] ? at + 1 : key === SEQUENCE[0] ? 1 : 0;
     if (at < SEQUENCE.length) return;
     at = 0;
-
     const on = !root.hasAttribute('data-debug');
     root.toggleAttribute('data-debug', on);
-
     const badge = byId('debug-badge');
     if (badge) {
       badge.hidden = !on;

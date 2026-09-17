@@ -9,7 +9,6 @@ export function tableOfContents() {
   const links = $$<HTMLAnchorElement>('.toc-link');
   const headings = links.map((l) => document.getElementById(l.dataset.toc!)).filter(Boolean);
   if (!headings.length) return;
-
   const io = new IntersectionObserver(
     (entries) => {
       for (const { isIntersecting, target } of entries) {

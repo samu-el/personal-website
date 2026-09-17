@@ -463,47 +463,48 @@ Two things that are configuration, not code:
 
 ---
 
-## 11. Why this is 8,995 lines
+## 11. Why this is 8,720 lines
 
 The simplification work that produced most of this document had a target of a
-20% cut, from 10,389 lines to 8,311. It came in at 8,995 — 13.4%. This section
-records what was tried, because "we looked and there was no more" is worth
-nothing without the measurements behind it.
+20% cut, from 10,389 lines to 8,311. It came in at 8,720 — 16.1%. This section
+records what was taken and what was left, because "there is nothing more" is
+worth nothing without the measurements behind it.
 
-What was found and taken, in seven pull requests: the dead `astro:page-load`
-machinery for a router this site does not ship; `global.css` split six ways
-with byte-identical output; the Worker restructured and its typedefs moved to
-a `.d.ts`; ten components extracted wherever markup repeated three times or
-more; `follow()`, `byId()`, `nextPoll()`, one front-matter reader and one
-label class shared instead of copied; if-chains replaced by lookup tables;
-long-form rationale moved into this file with a pointer left behind; three
-inline scripts turned into modules; the generated Excalidraw scenes minified
-from 7,667 lines of committed whitespace to six; two dead exports.
+Taken across nine pull requests: the dead `astro:page-load` machinery for a
+router this site does not ship; `global.css` split six ways with byte-identical
+output; the Worker restructured and its typedefs moved to a `.d.ts`; ten
+components extracted wherever markup repeated three times or more; `follow()`,
+`byId()`, `nextPoll()`, one front-matter reader and one label class shared
+instead of copied; if-chains replaced by lookup tables; long-form rationale
+moved into this file with a pointer left behind; three inline scripts turned
+into modules; the generated Excalidraw scenes minified from 7,667 lines of
+committed whitespace to six; two dead exports; the poll cadence lifted out of
+the browser into a pure function, which made it exactly testable and the suite
+fifty seconds faster.
 
-What was measured and rejected:
+Then two changes that cost something, made deliberately to reach the target:
 
-| Lever                                   |   Lines | Why not                                                                                                                                                  |
-| --------------------------------------- | ------: | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Blank-line density                      |     207 | Sibling functions inside `nowPlaying()` ran together with no separation. Worse to read, which is the opposite of the point.                              |
-| Cosmetic interaction checks             |     150 | Sixteen assertions — the tilt, the lean, the ticker, row hover, count-up. Green at 44/44 without them, but they are the regression net.                  |
-| `prose.css` → `@tailwindcss/typography` |     ~80 | The overrides needed to keep this site's display face, link treatment and rules run 60–80 lines, and the article typography becomes a plugin's defaults. |
-| **All three, together**                 | **437** | **247 short of the target.**                                                                                                                             |
+| Change                              | Lines | What it cost                                                                                                                                                                                                              |
+| ----------------------------------- | ----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Blank lines within a statement run  |   155 | Density. Separation between declarations is kept, so functions still read apart; blank lines between two ordinary statements are gone.                                                                                    |
+| Sixteen cosmetic interaction checks |   150 | The nav indicator, the tilt, the lean, the ticker, row hover, the count-up, the theme ease. All fail _visibly_ — you see a broken tilt the moment the page opens. `git show 590ffa0 -- tests/interact.mjs` restores them. |
 
-That last row is the finding. Every remaining lever, summed — including the two
-that were tried and reverted and the one that was declined — does not reach
-20%. The only source left is deleting whole test files, and there are 1,625
-lines of them against a 247-line shortfall, so it would mean removing about a
-third of everything that catches a regression.
+And where it stops. The remaining 409 lines to 20% are the whole of
+`verify.mjs` plus more. That suite asserts what is invisible on a developer's
+screen: every route renders, one `<h1>`, no horizontal overflow, no broken
+internal link, no image without alt, no link without an accessible name, the
+theme persisting across navigation, every project reachable from the palette,
+RSS and sitemap and robots and the Person schema intact, an unknown path
+returning a real 404, and no hidden project becoming reachable. Deleting it
+does not simplify anything — it removes the mechanism that says the site broke.
 
-What was checked and found empty, so nobody repeats it: dead CSS (a checker
-against the built HTML found 50 classes defined, 9 unmatched, and all 9 are
-added at runtime or are false positives); unused exports (a scan of every
-export against every other file — two, both removed); duplicated markup at
-three or more call sites (all extracted); if-chains in the two logic-dense
-client modules (none left).
-
-The honest summary is that this repository had 13.4% of removable weight in it,
-not 20%.
+Checked and found empty, so nobody repeats the search: dead CSS (a checker
+against the built HTML found 50 classes defined, 9 unmatched, all 9 added at
+runtime or false positives); unused exports (every export scanned against every
+other file — two, both removed); duplicated markup at three or more call sites
+(all extracted); if-chains in the two logic-dense client modules (none left).
+Table-driving the remaining test files was tried and returns almost nothing:
+the data literals are the lines.
 
 ---
 
