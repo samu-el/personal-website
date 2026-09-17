@@ -1,9 +1,6 @@
-/* ------------------------------------------------------------------
-   Scroll-reveal (progressive; content is visible without JS)
-   ------------------------------------------------------------------ */
+/* ── Scroll-reveal (progressive; content is visible without JS) ──── */
 @layer utilities {
-  /* Elements are visible by default. JS adds `.reveal-pending` only to the
-     ones it is actively observing, so a failed script can never hide content. */
+  /* Visible by default; JS adds .reveal-pending only to what it observes. */
   [data-reveal].reveal-pending {
     opacity: 0;
     transform: translate3d(0, 14px, 0);
@@ -27,8 +24,7 @@
     background-image: linear-gradient(to right, var(--color-line) 1px, transparent 1px);
     background-size: 25% 100%;
   }
-  /* Twelve columns, for the pages built on them — the debug overlay's grid,
-     made visible on purpose behind a header. */
+  /* Twelve columns, for the pages built on them. */
   .grid-lines-12 {
     background-image: linear-gradient(to right, var(--color-line) 1px, transparent 1px);
     background-size: calc(100% / 12) 100%;
@@ -50,9 +46,8 @@
 }
 
 /* ── View transitions ──────────────────────────────────────────────
-   Cross-document, declared above. Elements sharing a
-   `view-transition-name` morph between documents; only the page-level
-   cross-fade is tuned, so there is nothing per-project to maintain. */
+   Cross-document. A shared `view-transition-name` morphs; only the
+   page-level cross-fade is tuned, so there is nothing per-project. */
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-old(root) {
     animation: vt-leave 0.24s var(--ease-out-quint) both;
@@ -75,8 +70,7 @@
   }
 }
 
-/* The chrome is identical on every page, so naming it holds it still
-   while the content underneath cross-fades. */
+/* Naming the chrome holds it still while the content cross-fades. */
 #site-header {
   view-transition-name: site-header;
 }
@@ -84,9 +78,7 @@
   view-transition-name: site-footer;
 }
 
-/* ------------------------------------------------------------------
-   Micro-interactions
-   ------------------------------------------------------------------ */
+/* ── Micro-interactions ─────────────────────────────────────────── */
 @layer components {
   /* Cards settle upward rather than only gaining a shadow. */
   .card:hover {
@@ -103,8 +95,7 @@
     transform: translateX(2px);
   }
 
-  /* Primary nav: the active page keeps its hairline, and hovering an
-     inactive one draws the same line in from the centre. */
+  /* The active page keeps its hairline; hovering draws one from the centre. */
   .nav-link::after {
     content: '';
     position: absolute;
@@ -121,10 +112,7 @@
   }
 }
 
-/* ------------------------------------------------------------------
-   Layout debug overlay — toggled by the Konami code. Outlines every
-   box so the underlying grid is visible. Costs nothing until used.
-   ------------------------------------------------------------------ */
+/* ── Layout debug overlay, toggled by the Konami code ───────────── */
 @layer utilities {
   html[data-debug] * {
     outline: 1px solid rgb(var(--c-accent) / 0.35);
@@ -137,14 +125,10 @@
 }
 
 /* ── Motion ────────────────────────────────────────────────────────
-   Last in the layer on purpose, so these win their ties with the base
-   rules. Gated three ways: the reveal script opts elements in,
-   `(pointer: fine)` guards anything cursor-driven, and the global
-   reduced-motion rule flattens every duration and delay. */
+   Last in the layer, so these win their ties. The three gates are in
+   docs/architecture.md, "Motion". */
 @layer components {
-  /* Heavy rules draw in from the left as they arrive. Same contract as the
-     reveal: JS adds .draw-pending to a rule it is watching, so without
-     script the rule is simply there. */
+  /* Heavy rules draw in from the left. Same opt-in contract as the reveal. */
   .rule-heavy {
     transform-origin: left center;
   }
@@ -156,9 +140,7 @@
     transform: scaleX(1);
   }
 
-  /* A ledger row answers the pointer: an accent hairline draws along its
-     foot, the index lights, the title nudges right. Nothing moves that
-     would push the text under the cursor away from it. */
+  /* A ledger row answers the pointer, without moving text out from under it. */
   .ledger-row {
     position: relative;
   }
@@ -189,21 +171,17 @@
     transform: translateX(0.5rem);
   }
 
-  /* Entrance for the text around the hero headline, timed to follow the
-     last word in. Gated on .js like the words. */
+  /* The text around the headline, timed to follow the last word in. */
   .js .hero-enter {
     opacity: 0;
     animation: fade-up 0.62s var(--ease-out-quint) forwards;
     animation-delay: var(--enter, 560ms);
   }
 
-  /* Watermark numerals drift against the scroll — slower than the page, so
-     they read as a layer behind it. Scroll-driven and declarative; a
-     browser without the timeline simply leaves them still. */
+  /* Watermarks drift slower than the page, so they read as a layer behind it. */
   @supports (animation-timeline: view()) {
     .rail-index {
-      /* Longhands on purpose: the minifier folds animation-timeline into the
-         animation shorthand when it can, and Chromium rejects that form. */
+      /* Longhands: the minifier folds the shorthand and Chromium drops it. */
       animation-name: drift;
       animation-duration: auto;
       animation-timing-function: linear;
@@ -220,24 +198,20 @@
     }
   }
 
-  /* The frame card lifts and tilts from variables the pointer script sets.
-     Lift and tilt live in one transform so they cannot fight, and the
-     selector outranks .card:hover, which otherwise wins the transform. */
+  /* Lift and tilt in one transform so they cannot fight, from variables the
+     pointer script sets. Outranks .card:hover, which wins otherwise. */
   .card.frame-card,
   .card.frame-card:hover {
     transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--lift, 0px));
-    /* Duration and easing come from variables so the state below can shorten
-       them without restating the whole list. */
+    /* From variables, so the state below shortens them without restating. */
     transition:
       transform var(--tilt-t, var(--t-3)) var(--tilt-e, var(--ease-out-quint)),
       border-color var(--t-2) var(--ease-out-quint),
       box-shadow var(--t-2) var(--ease-out-quint);
     will-change: transform;
   }
-  /* Under the cursor the tilt is a direct reading of where the pointer is,
-     not a destination to ease toward: at 420ms it lagged half a second
-     behind the hand and read as rubber. Linear and short is what makes it
-     feel attached. The long ease returns for the settle. */
+  /* While tracking, the tilt is a reading rather than a destination: 420ms of
+     easing lagged the hand by half a second. The long ease returns to settle. */
   .card.frame-card[data-tracking] {
     --tilt-t: 90ms;
     --tilt-e: linear;
@@ -247,8 +221,7 @@
     --lift: -4px;
   }
 
-  /* Buttons lean a few pixels toward the cursor. Uses the translate
-     property rather than transform so the :active press still lands. */
+  /* Leans by `translate`, not `transform`, so the :active press still lands. */
   .btn {
     transition:
       background-color var(--t-2) var(--ease-out-quint),
@@ -257,15 +230,13 @@
       transform var(--t-2) var(--ease-out-quint),
       translate var(--lean-t, var(--t-3)) var(--lean-e, var(--ease-out-quint));
   }
-  /* Same as the tilt: while the pointer is on the button the lean is a
-     reading, and 420ms of easing put it 250ms behind the cursor. */
+  /* Same as the tilt: 420ms of easing put the lean 250ms behind the cursor. */
   .btn[data-lean] {
     --lean-t: 110ms;
     --lean-e: linear;
   }
 
-  /* A theme change eases rather than snapping. The toggle adds this class
-     for one transition's length and removes it, so nothing else slows. */
+  /* Added by the toggle for one transition, so nothing else is slowed. */
   html.theme-transition,
   html.theme-transition *,
   html.theme-transition *::before,
@@ -278,9 +249,8 @@
   }
 }
 
-/* Hover states that have to beat a utility on the same element. Utilities are
-   the last layer, so a components-layer rule loses to text-subtle or to the
-   animate-marquee shorthand however specific it is. These live here. */
+/* Hover states that have to beat a utility on the same element — utilities are
+   the last layer, so a components-layer rule loses however specific it is. */
 @layer utilities {
   .ledger-row:hover .row-index,
   .ledger-row:focus-within .row-index {

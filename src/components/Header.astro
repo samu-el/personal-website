@@ -23,9 +23,8 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
   Skip to content
 </a>
 
-<!-- Scrim for the mobile menu. Outside the header on purpose: the header
-     carries a backdrop-filter, which would make it the containing block for
-     a fixed child and stop the scrim covering the viewport. -->
+<!-- Outside the header: its backdrop-filter would make it the containing
+     block for a fixed child and stop the scrim covering the viewport. -->
 <div id="menu-scrim" class="menu-scrim md:hidden" aria-hidden="true"></div>
 
 <header
@@ -179,10 +178,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
 </header>
 
 <style>
-  /* ── Compression ──────────────────────────────────────────────────
-     The bar tightens once the page scrolls, inside a height it never
-     changes — animating the height moved everything below it by 8px each
-     time the threshold was crossed. docs/architecture.md, "Motion". */
+  /* ── Compression: inside a height the bar never changes. See "Motion". */
   .wordmark-avatar {
     transition:
       box-shadow var(--t-2) var(--ease-out-quint),
@@ -219,9 +215,8 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     transform: translateY(-4px) rotate(-45deg);
   }
 
-  /* ── Reading progress ─────────────────────────────────────────────
-     Longhands, never the shorthand: the minifier folds animation-timeline
-     in and Chromium then drops the whole declaration. */
+  /* ── Reading progress. Longhands, never the shorthand: the minifier folds
+     animation-timeline in and Chromium then drops the declaration. */
   .scroll-progress {
     position: absolute;
     inset-inline: 0;
@@ -256,9 +251,8 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     transition: opacity var(--t-1) var(--ease-out-quint);
   }
 
-  /* ── Desktop nav indicator ────────────────────────────────────────
-     One hairline slides between the links. Until the script measures
-     them the per-link rules hold, so a scriptless page still shows state. */
+  /* ── Nav indicator. One hairline slides between the links; until the script
+     measures them the per-link rules hold. */
   .nav-indicator {
     position: absolute;
     bottom: -1px;
@@ -288,11 +282,9 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     display: none;
   }
 
-  /* ── Mobile menu ──────────────────────────────────────────────────
-     A grid whose single row grows 0fr → 1fr, so it opens to whatever
-     height its content needs with no magic number. display:grid beats the
-     [hidden] rule, hence the explicit [hidden] below. Absolute, so opening
-     it neither grows the header nor pushes the page. */
+  /* ── Mobile menu. One grid row growing 0fr → 1fr, so it opens to its
+     content's height with no magic number; display:grid beats [hidden], hence
+     the rule below. Absolute, so opening it never pushes the page. */
   .menu-panel {
     position: absolute;
     top: 100%;

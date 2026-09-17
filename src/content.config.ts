@@ -19,31 +19,21 @@ const projects = defineCollection({
       stack: z.array(z.string()).default([]),
       tags: z.array(z.string()).default([]),
       repo: z.url().optional(),
-      /**
-       * The source exists but is not public. Renders as a plain label, so an
-       * absent Source button reads as deliberate rather than an omission.
-       */
+      /** Source exists but is not public; renders as a label, not an omission. */
       repoPrivate: z.boolean().default(false),
       demo: z.url().optional(),
-      /**
-       * What the demo is, so the preview is framed as the right thing. A
-       * mobile app's web build in a 16:10 desktop frame is mostly background.
-       */
+      /** What the demo is, so the preview is framed as the right thing. */
       device: z.enum(['desktop', 'phone']).default('desktop'),
       /** Shown on the home page when true. */
       featured: z.boolean().default(false),
-      /**
-       * Kept out of the showcase entirely. A hidden project with a `repo`
-       * still appears as one line in "Also public" on /work.
-       */
+      /** Out of the showcase; a `repo` still lists it under "Also public". */
       hidden: z.boolean().default(false),
       /** Numeric facts rendered as a small stat row on the detail page. */
       stats: z.array(z.object({ label: z.string(), value: z.string() })).default([]),
       draft: z.boolean().default(false),
     })
-    // Claiming a public URL and a private source at once is a contradiction,
-    // and a stale repo link on a repository that has since been made private
-    // is exactly how a Source button starts 404ing. Fail the build instead.
+    // A public repo URL and a private source at once is how a Source button
+    // starts 404ing. Fail the build instead.
     .refine((d) => !(d.repo && d.repoPrivate), {
       message: 'a project cannot set both repo and repoPrivate',
       path: ['repoPrivate'],
@@ -62,10 +52,7 @@ const posts = defineCollection({
     readingTime: z.number().optional(),
     featured: z.boolean().default(false),
     draft: z.boolean().default(false),
-    /**
-     * Written or drafted by an AI. Treated exactly like `draft` in production,
-     * so the policy is enforced by the build rather than remembered.
-     */
+    /** Written or drafted by an AI. Treated as `draft`, so the build enforces it. */
     aiWritten: z.boolean().default(false),
   }),
 });

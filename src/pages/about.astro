@@ -1,5 +1,6 @@
 ---
 import Chips from '@/components/Chips.astro';
+import Ledger from '@/components/Ledger.astro';
 import Layout from '@/layouts/Layout.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import Section from '@/components/Section.astro';
@@ -15,7 +16,7 @@ const description =
 
 const index = await navIndex('/about');
 
-const glance = [
+const glance: [string, string][] = [
   ['Role', site.role],
   ['Focus', 'Full-stack, web & mobile'],
   ['Based in', 'Addis Ababa, ET'],
@@ -77,16 +78,7 @@ const glance = [
       <aside class="lg:col-span-4 lg:col-start-9">
         <div class="lg:sticky lg:top-24" data-reveal style="--reveal-delay:80ms">
           <h2 class="meta">At a glance</h2>
-          <dl class="ledger mt-4 text-sm">
-            {
-              glance.map(([k, v]) => (
-                <div class="flex justify-between gap-4 py-3">
-                  <dt class="text-subtle">{k}</dt>
-                  <dd class="text-right text-fg">{v}</dd>
-                </div>
-              ))
-            }
-          </dl>
+          <Ledger rows={glance} />
           <SocialLinks
             class="mt-6 space-y-3"
             rowClass="flex items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-fg"

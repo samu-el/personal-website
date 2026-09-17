@@ -1,28 +1,12 @@
 /**
- * End-to-end smoke suite. Drives a real browser over every built route and
- * asserts the things that silently break on a static site:
+ * End-to-end smoke suite: a real browser over every built route, asserting
+ * what silently breaks on a static site. The numbered blocks below say what
+ * each covers. BASE_URL points it at a deployed site instead of the preview.
  *
- *   1. Every route renders — no console errors, no horizontal overflow,
- *      exactly one <h1>, no image without alt, no link without a name.
- *   2. No broken internal links (each is actually fetched).
- *   3. The theme toggle cycles system → light → dark and persists across pages.
- *   4. The mobile menu opens and closes on Escape.
- *   5. The showcase invariants hold, and the reveal animation fires.
- *   6. RSS, sitemap, robots.txt, OG tags and the Person schema are intact.
- *   7. The keyboard layer — palette, shortcuts, Konami — works.
- *
- * Usage:
- *   npm run build && npm run preview &
- *   npm run verify
- *
- * Set BASE_URL to point at a deployed site instead of the local preview.
+ *   npm run build && npm run preview & npm run verify
  */
 import fs from 'node:fs';
-import { mkdir } from 'node:fs/promises';
 import { BASE, BASE_PATH, ORIGIN, issues as makeIssues, launch, visit } from './harness.mjs';
-
-const OUT = process.env.SHOT_DIR ?? '.screenshots';
-await mkdir(OUT, { recursive: true });
 
 const issues = makeIssues();
 /** Records `msg` when `bad` is true. Most of this suite is that shape. */
@@ -157,24 +141,9 @@ for (const [width, height, tag] of [
   await close();
 }
 
-// 3. Mobile menu opens, is keyboard-dismissable, and links out.
-{
-  const { page, close } = await visit(browser, '/', { viewport: { width: 375, height: 812 }, wait: 'load' });
-  await page.click('#menu-toggle');
-  // The panel animates open, then animates shut before it is hidden again, so
-  // both states are read after the transition has had its time.
-  await page.waitForTimeout(600);
-  flag(!(await page.isVisible('#mobile-menu')), 'mobile menu did not open');
-  await page.screenshot({ path: `${OUT}/mobile-menu-open.png` });
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(700);
-  flag(await page.isVisible('#mobile-menu'), 'mobile menu did not close on Escape');
-  flag(
-    (await page.getAttribute('#menu-toggle', 'aria-expanded')) !== 'false',
-    'mobile menu trigger still reports itself expanded after Escape',
-  );
-  await close();
-}
+/* The mobile menu is not checked here: interact.mjs drives it far harder — it
+   opens, three ways of closing it, the focus walk, the panel's own geometry —
+   and both suites run in the same CI job. */
 
 // 3b. Writing policy: nothing an AI wrote may be published, and the section
 //     only exists when there is something in it.
@@ -192,9 +161,8 @@ for (const [width, height, tag] of [
   await close();
 }
 
-// 4. Showcase invariants: exactly the showcased projects have detail pages,
-//    nothing marked hidden is reachable, and client work carries no outbound
-//    link.
+// 4. Showcase invariants: detail pages exist for exactly the showcased
+//    projects, nothing hidden is reachable, client work links nowhere out.
 {
   const { page, close } = await visit(browser, `/work${SLASH}`, { ...DESKTOP, wait: 'load' });
 
@@ -267,10 +235,9 @@ for (const [width, height, tag] of [
   flag(!meta.desc, 'missing meta description');
   flag(!meta.og?.endsWith('/og.png'), `og:image wrong: ${meta.og}`);
 
-  /* The canonical points at the configured production origin, not wherever
-     this run happens to be served from, so check its shape rather than its
-     host: absolute, https, and the path this page actually lives at. og:image
-     must be absolute too, or scrapers cannot fetch it. */
+  /* The canonical names the production origin, not wherever this run is
+     served from — so check its shape, not its host. og:image must be absolute
+     too, or scrapers cannot fetch it. */
   const absolute = (raw, what, path) => {
     try {
       const u = new URL(raw);
@@ -365,9 +332,8 @@ for (const [width, height, tag] of [
 //    the browser morphs one into the other instead of cross-fading.
 {
   const { page, close } = await visit(browser, `/work${SLASH}`, { wait: 'load' });
-  // Any heading level: /work has one h1, so its project titles are h2, while
-  // the home page nests them under a section heading and uses h3. The level is
-  // the page's business; carrying the name is what this checks.
+  // Any heading level: the level is the page's business, carrying the name
+  // is what this checks.
   const cardNames = await page.$$eval(':is(h1, h2, h3, h4)[style*="view-transition-name"]', (n) =>
     n.map((e) => e.style.viewTransitionName),
   );

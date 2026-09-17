@@ -135,26 +135,7 @@ const routes = [
   </footer>
 </Layout>
 
-<script is:inline define:vars={{ email: site.email }}>
-  (() => {
-    function init() {
-      const btn = document.getElementById('copy-email');
-      if (!btn || btn.dataset.bound === '1') return;
-      btn.dataset.bound = '1';
-      const label = btn.querySelector('[data-copy-label]');
-      btn.addEventListener('click', async () => {
-        try {
-          await navigator.clipboard.writeText(email);
-          if (label) label.textContent = 'Copied';
-        } catch {
-          if (label) label.textContent = email;
-        }
-        window.setTimeout(() => {
-          if (label) label.textContent = 'Copy address';
-        }, 2200);
-      });
-    }
-    init();
-    document.addEventListener('astro:page-load', init);
-  })();
+<script>
+  import { copyEmail } from '@/lib/client/copy-email';
+  copyEmail();
 </script>

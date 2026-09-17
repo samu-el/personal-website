@@ -1,10 +1,8 @@
 /**
- * Build-time feeds: public GitHub activity and recent Letterboxd diary
- * entries.
- *
- * Both are fetched once per build and both are allowed to fail — a personal
- * site is not worth a red deploy. Nothing is cached to disk: a stale
- * "recently pushed" list is worse than none. See docs/architecture.md.
+ * Build-time feeds: GitHub activity, Letterboxd diary, Spotify history. Each
+ * is fetched once per build and each is allowed to fail — a personal site is
+ * not worth a red deploy, and nothing is cached to disk because a stale
+ * "recently pushed" list is worse than none. docs/architecture.md, "Content".
  */
 
 const GITHUB_USER = 'samu-el';
@@ -14,11 +12,7 @@ const TIMEOUT_MS = 8000;
 /** Old coursework and throwaways: activity by the API's reckoning, not a signal. */
 const HIDDEN_REPOS = new Set(['CRM', 'Expense-Tracking', 'Simple-Blog']);
 
-/**
- * Cap the age rather than the count. A fixed-length list backfills from
- * further down the history every time something is excluded, which is how a
- * five-year-old repository ends up presented as recent activity.
- */
+/** Cap the age, not the count: a fixed-length list backfills from history. */
 const MAX_REPO_AGE_DAYS = 730;
 
 export type Repo = {
@@ -78,10 +72,7 @@ async function get(url: string, headers: Record<string, string> = {}, body?: Bod
   return null;
 }
 
-/**
- * Reads a response body and hands it to `shape`, which returns null when the
- * payload is not what it claims to be. Every feed below fails the same way.
- */
+/** Reads a body through `shape`, which returns null for a payload that lies. */
 async function read<T>(res: Response | null, what: string, shape: (body: any) => T | null): Promise<T | null> {
   if (!res) return null;
   try {
@@ -124,10 +115,7 @@ async function fetchGitHub(): Promise<GitHubActivity | null> {
   return user && repos ? normalizeGitHub(user, repos) : null;
 }
 
-/**
- * Split out from the fetch so it can be tested against a fixture — the
- * sandbox this is developed in cannot reach the user-level endpoints.
- */
+/** Split from the fetch so it can be tested against a fixture. */
 export function normalizeGitHub(user: { public_repos: number }, repos: Array<Record<string, unknown>>): GitHubActivity {
   // Archived repositories are not activity, and private ones are not public.
   const own = repos.filter((r) => !r.fork && !r.archived && !r.private && !HIDDEN_REPOS.has(String(r.name)));
@@ -165,10 +153,9 @@ async function fetchFilms(): Promise<Film[] | null> {
 }
 
 /**
- * Letterboxd's RSS carries namespaced fields alongside the standard ones:
- * the <title> bakes the rating in as star glyphs, while
- * `letterboxd:memberRating` is a plain number, so read those and ignore the
- * title. Only items with a watched date are diary entries.
+ * The <title> bakes the rating in as star glyphs; `letterboxd:memberRating` is
+ * a number, so read the namespaced fields. Only a watched date means a diary
+ * entry — lists and reviews come through the same feed.
  */
 export function parseLetterboxd(xml: string): Film[] {
   const field = (item: string, tag: string) =>
@@ -205,11 +192,9 @@ function decodeEntities(s: string): string {
 }
 
 /**
- * Three secrets, none of which may reach the browser, read from the
- * environment at build time only — Astro inlines nothing into client JS
- * except `PUBLIC_*`. Absent on a fresh clone, which is expected; partially
- * set is a misconfiguration, so that warns. The refresh token expires after
- * 180 days, after which the section disappears until it is minted again.
+ * Three secrets, build-time only — Astro inlines nothing into client JS but
+ * `PUBLIC_*`. All absent is a fresh clone; some absent is a misconfiguration,
+ * so that warns. The refresh token expires after 180 days.
  */
 async function fetchTracks(): Promise<Track[] | null> {
   const id = process.env.SPOTIFY_CLIENT_ID;
@@ -223,9 +208,8 @@ async function fetchTracks(): Promise<Track[] | null> {
     return null;
   }
 
-  /* The refresh token is long-lived; the access token it mints lasts an hour,
-     which is far longer than a build. A 400 here almost always means the
-     refresh token has expired or been revoked. */
+  /* An access token lasts an hour, far longer than a build. A 400 here is
+     almost always an expired or revoked refresh token. */
   const tokenRes = await get(
     'https://accounts.spotify.com/api/token',
     {
@@ -247,9 +231,8 @@ async function fetchTracks(): Promise<Track[] | null> {
 }
 
 /**
- * Split out from the fetch so it can be tested without credentials. The
- * history returns one entry per play, so collapse by track and keep the most
- * recent, or a repeat listen becomes one song six times over.
+ * Split from the fetch so it can be tested without credentials. One entry per
+ * play, so collapse by track or a repeat listen fills the list.
  */
 export function normalizeSpotify(items: Array<Record<string, unknown>>): Track[] {
   const seen = new Set<string>();

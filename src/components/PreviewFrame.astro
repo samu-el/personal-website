@@ -1,13 +1,9 @@
 ---
 /**
- * A framed screenshot of a project actually running. Used by the /work rows
- * and again at the top of each project's detail page, so the two agree.
- *
- * Assets are matched by project id rather than named in frontmatter, so
- * dropping a file in is all it takes and a missing one degrades to the
- * fallback below. The frame follows the project's `device`: a phone gets a
- * bezel, because a mobile app in a 16:10 window is a column in a field of
- * background. Screenshots come from scripts/shots.mjs.
+ * A framed screenshot of a project actually running, shared by the /work rows
+ * and each detail page. Assets are matched by project id, so dropping a file
+ * in is all it takes and a missing one degrades to the fallback below. The
+ * frame follows the project's `device`. docs/architecture.md, "Screenshots".
  */
 import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
@@ -33,11 +29,7 @@ const phone = device === 'phone';
 
 /** Hostname only. A full URL is noise at this type size. */
 const host = demo ? new URL(demo).host : null;
-/**
- * Only a link when there is somewhere else to go. Falling back to the detail
- * page would make this frame link to the page it is already on, and a
- * screenshot that navigates nowhere is better than one that pretends to.
- */
+/** Only a link when there is somewhere else to go — never to this same page. */
 const Tag = demo ? 'a' : 'div';
 const linkAttrs = demo
   ? {
@@ -53,10 +45,7 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
 ---
 
 <div class:list={['group/frame relative', phone && 'mx-auto w-full max-w-[19rem]', className]}>
-  <!--
-    Warmth behind the frame, positioned from the cursor. Same radial idiom as
-    the now-playing card, so the two read as one system.
-  -->
+  <!-- Warmth behind the frame, positioned from the cursor. -->
   <div
     class="pointer-events-none absolute -inset-6 opacity-0 blur-3xl transition-opacity duration-700 group-hover/frame:opacity-100 group-hover/row:opacity-100"
     style="background:radial-gradient(45% 45% at var(--mx,50%) var(--my,40%),rgb(var(--c-accent)/0.3),transparent 70%)"
@@ -79,9 +68,7 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
            glance without pretending to be a specific one. */
         <span class="mx-auto mb-2 block h-1 w-12 rounded-full bg-line-strong" aria-hidden="true" />
       ) : (
-        /* Browser chrome, and the hostname in it is the real one. The frame
-           says "this is a running site" without the screenshot having to
-           carry that on its own. */
+        /* Browser chrome, with the real hostname in it. */
         <div class="flex items-center gap-2.5 border-b border-line bg-surface-2 px-3.5 py-2.5 sm:px-4">
           <span class="flex shrink-0 gap-1.5" aria-hidden="true">
             <span class="size-2 rounded-full bg-line-strong" />
@@ -118,9 +105,8 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
             class="size-full object-cover object-top transition-transform duration-[900ms] ease-out-quint group-hover/frame:scale-[1.035] group-hover/row:scale-[1.035]"
           />
         ) : (
-          /* No screenshot committed yet. The site's own grid texture and the
-             title, rather than a fake window or a stock image — nothing here
-             pretends to be a picture of the product. */
+          /* No screenshot yet: grid texture and the title, never a stand-in
+             that pretends to be a picture of the product. */
           <div class="absolute inset-0 grid place-items-center">
             <div class="absolute inset-0 grid-lines opacity-60" aria-hidden="true" />
             <p class="display relative px-6 text-center text-[clamp(1.5rem,4vw,2.5rem)] text-subtle">{title}</p>
@@ -141,10 +127,8 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
   import { $ } from '@/lib/client/dom';
   import { follow } from '@/lib/client/follow';
 
-  /* Points the glow at the cursor and tilts the card under it. Purely
-     additive: the gradient already has a sensible default position, so with
-     no JS, no pointer, or reduced motion the frame still lights up on hover —
-     just centred. */
+  /* Purely additive: with no JS, no pointer or reduced motion the frame still
+     lights up on hover, just centred. */
 
   /** Degrees of tilt at the frame's edge. Enough to feel held, not to warp. */
   const TILT = 4;
@@ -158,8 +142,7 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
         glow.style.setProperty('--my', `${y * 100}%`);
       }
       // Right of centre turns the right edge away; below centre tips the top
-      // forward. data-tracking shortens the transition so the tilt reads as
-      // attached to the cursor rather than chasing it.
+      // forward. data-tracking shortens the transition (see motion.css).
       const card = $('.frame-card', frame);
       if (card) {
         card.setAttribute('data-tracking', '');

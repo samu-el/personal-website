@@ -4,7 +4,8 @@ import Layout from '@/layouts/Layout.astro';
 import Section from '@/components/Section.astro';
 import ProjectFigure from '@/components/ProjectFigure.astro';
 import PostCard from '@/components/PostCard.astro';
-import { site, socials } from '@/lib/site';
+import Ledger from '@/components/Ledger.astro';
+import { site } from '@/lib/site';
 import { publishedPosts } from '@/lib/posts';
 import { href } from '@/lib/paths';
 import { metrics } from '@/data/experience';
@@ -19,12 +20,8 @@ const projects = (await getCollection('projects', ({ data }) => isPublished(data
   .filter((p) => p.data.featured && !p.data.hidden)
   .sort((a, b) => b.data.weight - a.data.weight);
 
-/**
- * The spread: desktop frames stack in the wide column, phones stand in the
- * narrow one. Two shapes of screenshot laid out by shape rather than forced
- * into equal cells, which would leave a 16:10 frame beside a portrait one
- * with half a column of nothing under it.
- */
+/** Laid out by shape: a 16:10 frame beside a portrait one leaves half a
+ *  column of nothing under it. */
 const wide = projects.filter((p) => p.data.device !== 'phone');
 const tall = projects.filter((p) => p.data.device === 'phone');
 
@@ -37,12 +34,8 @@ const liveMetrics = github
   ? metrics.map((m) => (m.label === 'Public repositories' ? { ...m, value: String(github.publicRepos) } : m))
   : metrics;
 
-/**
- * The tagline, word by word, so each can enter on its own beat. Split here
- * rather than in the browser so the markup is the words — copy, search and a
- * screen reader all get "No software engineering problem is too big to
- * solve." — and nothing depends on a script having run.
- */
+/** Split here, not in the browser, so the markup is the words: copy, search
+ *  and a screen reader all get the sentence. */
 const line1 = ['No', 'software', 'engineering', 'problem'];
 const line2 = ['is', 'too', 'big', 'to', 'solve.'];
 
@@ -62,7 +55,7 @@ const marquee = [
 ];
 
 /** The Currently table: the same facts as the intro, as a ruled ledger. */
-const currently = [
+const currently: [string, string][] = [
   ['Role', 'Software Engineer'],
   ['Based in', 'Addis Ababa, Ethiopia'],
   ['Focus', 'Full-stack web and mobile — TypeScript, Python, React, PostgreSQL.'],
@@ -72,9 +65,7 @@ const currently = [
 
 <Layout title={site.title} description={site.description} path="/" type="profile">
   <!-- ── Hero: an ink field, edge to edge ─────────────────────────── -->
-  <!-- Full-width rather than in .wrap on purpose: the headline is sized to
-       the viewport, and a poster runs to the edge of the sheet. Everything
-       below returns to the centred column. -->
+  <!-- Full-width, not .wrap: the headline is sized to the viewport. -->
   <section class="field-ink relative overflow-hidden" style="view-transition-name:field">
     <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true"></div>
 
@@ -141,16 +132,7 @@ const currently = [
         <!-- Currently: the same facts, as a ruled table. -->
         <aside class="hero-enter lg:col-span-4 lg:col-start-9" style="--enter:670ms">
           <h2 class="meta">Currently</h2>
-          <dl class="ledger mt-4 text-sm">
-            {
-              currently.map(([term, value]) => (
-                <div class="grid grid-cols-[6.5rem_1fr] gap-4 py-3.5">
-                  <dt class="text-subtle">{term}</dt>
-                  <dd class="leading-snug text-fg">{value}</dd>
-                </div>
-              ))
-            }
-          </dl>
+          <Ledger rows={currently} align="columns" />
           <a
             href={href('/contact')}
             class="hit group mt-5 inline-flex items-center gap-2 text-sm text-fg transition-colors hover:text-accent"

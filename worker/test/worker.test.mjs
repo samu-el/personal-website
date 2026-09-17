@@ -1,91 +1,38 @@
 /**
  * Exercises the Worker's fetch handler against stubbed Spotify responses.
- *
  * Run with: npm test  (from worker/)
+ *
+ * Each test gets a fresh module instance: the access token and the last-good
+ * payload live in module scope on purpose, and that persistence would
+ * otherwise leak between tests the way it is meant to persist between
+ * requests. See docs/architecture.md, "Testing".
  */
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 
-/**
- * A fresh copy of the module per test. The Worker holds the access token and
- * the last good payload in module scope on purpose — an isolate is reused
- * across requests — and that persistence leaks between tests the way it is
- * meant to persist between them in production.
- *
- * @type {typeof import('../src/index.js').default}
- */
+/** @type {typeof import('../src/index.js').default} */
 let worker;
 let load = 0;
 beforeEach(async () => {
   worker = (await import(`../src/index.js?fresh=${load++}`)).default;
 });
 
-// Minimal Workers runtime surface. The Cache API is a no-op so every call is
-// a live read; `btoa` exists in Workers but not in Node's global scope.
+// Minimal Workers runtime surface. The Cache API is a no-op so every call is a
+// live read; `btoa` exists in Workers but not in Node's global scope.
 globalThis.caches = { default: { match: async () => undefined, put: async () => {} } };
 globalThis.btoa ??= (v) => Buffer.from(v, 'binary').toString('base64');
 
-const ENV = {
-  SPOTIFY_CLIENT_ID: 'id',
-  SPOTIFY_CLIENT_SECRET: 'secret',
-  SPOTIFY_REFRESH_TOKEN: 'refresh',
+const ENV = { SPOTIFY_CLIENT_ID: 'id', SPOTIFY_CLIENT_SECRET: 'secret', SPOTIFY_REFRESH_TOKEN: 'refresh' };
+const SCOPES = 'user-read-recently-played user-read-currently-playing';
+
+const TRACK = {
+  name: 'Yèkèrmo Sèw',
+  duration_ms: 200000,
+  artists: [{ name: 'Mulatu Astatke' }],
+  album: { name: 'Mulatu of Ethiopia', images: [{ url: 'https://i.scdn.co/x' }] },
+  external_urls: { spotify: 'https://open.spotify.com/x' },
 };
-
-/** Replaces global fetch with canned Spotify answers. */
-/** Tallies the calls the Worker made, per test. */
-let calls;
-
-function stub({
-  tokenStatus = 200,
-  playStatus = 200,
-  playBody = null,
-  errorBody = null,
-  tokenScope = 'user-read-recently-played user-read-currently-playing',
-  // The recently-played fallback, reached whenever the player has no track.
-  // Defaults to failing, so a test only sees it when it asks for it.
-  recentStatus = 404,
-  recentBody = null,
-  /** Seconds in the Retry-After of a 429, when the test wants one. */
-  retryAfter = null,
-  /** Seconds the token is said to be good for. */
-  expiresIn = 3600,
-} = {}) {
-  calls = { token: 0, play: 0, recent: 0 };
-  globalThis.fetch = async (input) => {
-    const url = typeof input === 'string' ? input : input.url;
-    if (url.includes('accounts.spotify.com')) {
-      calls.token++;
-      return new Response(
-        tokenStatus === 200 ? JSON.stringify({ access_token: 'tok', scope: tokenScope, expires_in: expiresIn }) : 'no',
-        {
-          status: tokenStatus,
-        },
-      );
-    }
-    // Checked first: both endpoints live on api.spotify.com.
-    if (url.includes('recently-played')) {
-      calls.recent++;
-      return new Response(recentStatus === 200 ? JSON.stringify(recentBody ?? RECENT) : 'no', {
-        status: recentStatus,
-      });
-    }
-    if (url.includes('api.spotify.com')) {
-      calls.play++;
-      if (playStatus >= 400) {
-        return new Response(errorBody ?? JSON.stringify({ error: { status: playStatus } }), {
-          status: playStatus,
-          headers: retryAfter === null ? {} : { 'Retry-After': String(retryAfter) },
-        });
-      }
-      return new Response(playStatus === 204 ? null : JSON.stringify(playBody ?? {}), {
-        status: playStatus,
-      });
-    }
-    // Anything else is the pass-through to the static origin.
-    return new Response('origin', { status: 200 });
-  };
-}
-
+const PLAYING = { playBody: { is_playing: true, progress_ms: 1000, item: TRACK } };
 const RECENT = {
   items: [
     {
@@ -101,43 +48,75 @@ const RECENT = {
   ],
 };
 
+/** Calls the Worker made, per test. */
+let calls;
+
+/**
+ * Replaces global fetch with canned Spotify answers. `recentStatus` defaults
+ * to failing, so a test only reaches the history endpoint when it asks to.
+ */
+function stub({
+  tokenStatus = 200,
+  playStatus = 200,
+  playBody = null,
+  errorBody = null,
+  tokenScope = SCOPES,
+  recentStatus = 404,
+  recentBody = null,
+  retryAfter = null,
+  expiresIn = 3600,
+} = {}) {
+  calls = { token: 0, play: 0, recent: 0 };
+  globalThis.fetch = async (input) => {
+    const url = typeof input === 'string' ? input : input.url;
+    if (url.includes('accounts.spotify.com')) {
+      calls.token++;
+      const ok = JSON.stringify({ access_token: 'tok', scope: tokenScope, expires_in: expiresIn });
+      return new Response(tokenStatus === 200 ? ok : 'no', { status: tokenStatus });
+    }
+    // Checked first: both endpoints live on api.spotify.com.
+    if (url.includes('recently-played')) {
+      calls.recent++;
+      const body = recentStatus === 200 ? JSON.stringify(recentBody ?? RECENT) : 'no';
+      return new Response(body, { status: recentStatus });
+    }
+    if (url.includes('api.spotify.com')) {
+      calls.play++;
+      if (playStatus >= 400) {
+        return new Response(errorBody ?? JSON.stringify({ error: { status: playStatus } }), {
+          status: playStatus,
+          headers: retryAfter === null ? {} : { 'Retry-After': String(retryAfter) },
+        });
+      }
+      return new Response(playStatus === 204 ? null : JSON.stringify(playBody ?? {}), { status: playStatus });
+    }
+    return new Response('origin', { status: 200 }); // the pass-through
+  };
+}
+
 const get = (path, env = ENV) => worker.fetch(new Request(`https://w.example${path}`, { method: 'GET' }), env);
-
-const reasonOf = async (opts, env = ENV, path = '/?debug=1') => {
+/** Stub, ask, and hand back the parsed body. */
+const body = async (opts, path = '/now-playing.json', env = ENV) => {
   stub(opts);
-  return (await (await get(path, env)).json()).reason;
+  return (await get(path, env)).json();
 };
-
-const PLAYING = {
-  playBody: {
-    is_playing: true,
-    progress_ms: 1000,
-    item: {
-      name: 'Yèkèrmo Sèw',
-      duration_ms: 200000,
-      artists: [{ name: 'Mulatu Astatke' }],
-      album: { name: 'Mulatu of Ethiopia', images: [{ url: 'https://i.scdn.co/x' }] },
-      external_urls: { spotify: 'https://open.spotify.com/x' },
-    },
-  },
-};
+const debug = (opts, env = ENV) => body(opts, '/?debug=1', env);
 
 test('debug reports missing secrets without revealing values', async () => {
-  stub();
-  const body = await (await get('/?debug=1', {})).json();
-  assert.equal(body.reason, 'missing_secrets');
-  assert.deepEqual(body.secrets, {
+  const out = await debug({}, {});
+  assert.equal(out.reason, 'missing_secrets');
+  assert.deepEqual(out.secrets, {
     SPOTIFY_CLIENT_ID: false,
     SPOTIFY_CLIENT_SECRET: false,
     SPOTIFY_REFRESH_TOKEN: false,
   });
   // Booleans only — a value here would be a credential leak.
-  for (const v of Object.values(body.secrets)) assert.equal(typeof v, 'boolean');
+  for (const v of Object.values(out.secrets)) assert.equal(typeof v, 'boolean');
 });
 
-/* Each of these answers an identical `{ playing: false }` in normal
-   operation. The debug reason is the only thing that tells them apart, and
-   telling them apart by hand cost two rounds of guessing — so each is pinned. */
+/* Each of these answers an identical `{ playing: false }` in normal operation.
+   The debug reason is the only thing that tells them apart, and telling them
+   apart by hand cost two rounds of guessing — so each is pinned. */
 for (const [what, opts, reason] of [
   ['an expired refresh token', { tokenStatus: 400 }, 'token_exchange_failed_400'],
   ['nothing playing, which proves token and scope are good', { playStatus: 204 }, 'spotify_204_nothing_playing'],
@@ -150,180 +129,142 @@ for (const [what, opts, reason] of [
     'paused',
   ],
 ]) {
-  test(`debug distinguishes ${what}`, async () => {
-    assert.equal(await reasonOf(opts), reason);
-  });
+  test(`debug distinguishes ${what}`, async () => assert.equal((await debug(opts)).reason, reason));
 }
 
 test('a playing track is reported in full', async () => {
-  stub(PLAYING);
-  const body = await (await get('/now-playing.json')).json();
-  assert.equal(body.playing, true);
-  assert.equal(body.title, 'Yèkèrmo Sèw');
-  assert.equal(body.artist, 'Mulatu Astatke');
-  assert.equal(body.album, 'Mulatu of Ethiopia');
-  assert.equal(body.art, 'https://i.scdn.co/x');
-  assert.equal(body.progressMs, 1000);
-  assert.equal(body.durationMs, 200000);
+  const out = await body(PLAYING);
+  assert.partialDeepStrictEqual(out, {
+    playing: true,
+    title: 'Yèkèrmo Sèw',
+    artist: 'Mulatu Astatke',
+    album: 'Mulatu of Ethiopia',
+    art: 'https://i.scdn.co/x',
+    progressMs: 1000,
+    durationMs: 200000,
+  });
 });
 
 test('a playing track is stamped so the page can correct for cache age', async () => {
-  // progressMs is a reading taken when the Worker ran, and the edge may serve
-  // that same reading for up to CACHE_SECONDS afterwards. Without the stamp
-  // the page cannot tell a fresh reading from a stale one, and every visitor
-  // gets a bar sitting up to half a minute behind the music.
+  // Without the stamp the page cannot tell a fresh reading from one the edge
+  // has been serving for half a minute.
   stub(PLAYING);
   const before = Date.now();
-  const body = await (await get('/now-playing.json')).json();
-  assert.equal(typeof body.fetchedAt, 'number');
-  assert.ok(body.fetchedAt >= before && body.fetchedAt <= Date.now());
+  const out = await (await get('/now-playing.json')).json();
+  assert.equal(typeof out.fetchedAt, 'number');
+  assert.ok(out.fetchedAt >= before && out.fetchedAt <= Date.now());
 });
 
 test('a payload that is not advancing carries no stamp to correct against', async () => {
-  // The stamp exists so the page can add cache age to progressMs. Neither a
-  // paused nor a finished track is advancing, so applying it there would walk
-  // the bar forward through music nobody is listening to.
-  stub({ playBody: { is_playing: false, progress_ms: 5000, item: { name: 'x', duration_ms: 9 } } });
-  assert.equal((await (await get('/now-playing.json')).json()).fetchedAt, undefined);
-
-  stub({ playStatus: 204, recentStatus: 200 });
-  assert.equal((await (await get('/now-playing.json')).json()).fetchedAt, undefined);
+  // Neither a paused nor a finished track is advancing, so applying the stamp
+  // would walk the bar forward through music nobody is listening to.
+  const paused = { playBody: { is_playing: false, progress_ms: 5000, item: { name: 'x', duration_ms: 9 } } };
+  assert.equal((await body(paused)).fetchedAt, undefined);
+  assert.equal((await body({ playStatus: 204, recentStatus: 200 })).fetchedAt, undefined);
 });
 
 test('a paused track is reported with its position, not hidden', async () => {
-  stub({
-    playBody: {
-      is_playing: false,
-      progress_ms: 61234,
-      item: {
-        name: 'Yèkèrmo Sèw',
-        duration_ms: 200000,
-        artists: [{ name: 'Mulatu Astatke' }],
-        album: { name: 'Mulatu of Ethiopia', images: [{ url: 'https://i.scdn.co/x' }] },
-      },
-    },
-  });
-  const body = await (await get('/now-playing.json')).json();
-  assert.equal(body.state, 'paused');
-  assert.equal(body.playing, false);
-  assert.equal(body.title, 'Yèkèrmo Sèw');
+  const out = await body({ playBody: { is_playing: false, progress_ms: 61234, item: TRACK } });
   // The position is what makes paused worth showing over the history endpoint.
-  assert.equal(body.progressMs, 61234);
-  assert.equal(body.durationMs, 200000);
+  assert.partialDeepStrictEqual(out, {
+    state: 'paused',
+    playing: false,
+    title: 'Yèkèrmo Sèw',
+    progressMs: 61234,
+    durationMs: 200000,
+  });
 });
 
 test('an empty player falls back to the last track played', async () => {
-  stub({ playStatus: 204, recentStatus: 200 });
-  const body = await (await get('/now-playing.json')).json();
-  assert.equal(body.state, 'recent');
-  assert.equal(body.playing, false);
-  assert.equal(body.title, 'Tezeta');
-  assert.equal(body.artist, 'Mulatu Astatke');
-  assert.equal(body.art, 'https://i.scdn.co/t');
-  assert.equal(body.url, 'https://open.spotify.com/t');
-  assert.equal(body.playedAt, '2026-09-07T10:00:00.000Z');
+  const out = await body({ playStatus: 204, recentStatus: 200 });
+  assert.partialDeepStrictEqual(out, {
+    state: 'recent',
+    playing: false,
+    title: 'Tezeta',
+    artist: 'Mulatu Astatke',
+    art: 'https://i.scdn.co/t',
+    url: 'https://open.spotify.com/t',
+    playedAt: '2026-09-07T10:00:00.000Z',
+  });
   // A finished track has no position, so the page must not draw a bar for it.
-  assert.equal(body.progressMs, undefined);
+  assert.equal(out.progressMs, undefined);
 });
 
 test('a token holding only the history scope still fills the card', async () => {
-  // This is the shape of the bug that cost two rounds of guessing: scopes are
-  // bound at authorisation time, so such a token answers 401 on the player
-  // forever. It can still answer this, which beats a blank card.
-  stub({ tokenScope: 'user-read-recently-played', playStatus: 401, recentStatus: 200 });
-  const body = await (await get('/now-playing.json')).json();
-  assert.equal(body.state, 'recent');
-  assert.equal(body.title, 'Tezeta');
-
-  const dbg = await (await get('/?debug=1')).json();
+  // The shape of the bug that cost two rounds of guessing: scopes are bound at
+  // authorisation time, so such a token answers 401 on the player forever.
+  const opts = { tokenScope: 'user-read-recently-played', playStatus: 401, recentStatus: 200 };
+  assert.partialDeepStrictEqual(await body(opts), { state: 'recent', title: 'Tezeta' });
   // The underlying problem stays visible rather than being papered over.
-  assert.equal(dbg.reason, 'spotify_401');
-  assert.equal(dbg.scopeOk, false);
-  assert.equal(dbg.recentReason, 'recent_200');
+  assert.partialDeepStrictEqual(await debug(opts), {
+    reason: 'spotify_401',
+    scopeOk: false,
+    recentReason: 'recent_200',
+  });
 });
 
 test('the fallback reports its own failure separately', async () => {
-  stub({ playStatus: 204, recentStatus: 403 });
-  const body = await (await get('/?debug=1')).json();
-  assert.equal(body.reason, 'spotify_204_nothing_playing');
-  assert.equal(body.recentReason, 'recent_403');
-  assert.equal(body.playing, false);
+  assert.partialDeepStrictEqual(await debug({ playStatus: 204, recentStatus: 403 }), {
+    reason: 'spotify_204_nothing_playing',
+    recentReason: 'recent_403',
+    playing: false,
+  });
 });
 
 test('the fallback is not consulted while something is playing', async () => {
-  // An extra Spotify call per request against a rate limit, for an answer
-  // that would be discarded.
+  // An extra Spotify call per request against a rate limit, for an answer that
+  // would be discarded.
   stub(PLAYING);
-  const asked = [];
-  const inner = globalThis.fetch;
-  globalThis.fetch = (input, init) => {
-    asked.push(typeof input === 'string' ? input : input.url);
-    return inner(input, init);
-  };
   await get('/now-playing.json');
-  assert.equal(asked.filter((u) => u.includes('recently-played')).length, 0);
+  assert.equal(calls.recent, 0);
 });
 
 test('an empty history is not mistaken for a track', async () => {
-  stub({ playStatus: 204, recentStatus: 200, recentBody: { items: [] } });
-  const body = await (await get('/?debug=1')).json();
-  assert.equal(body.recentReason, 'recent_empty');
-  assert.equal(body.playing, false);
-  assert.equal(body.title, undefined);
+  const out = await debug({ playStatus: 204, recentStatus: 200, recentBody: { items: [] } });
+  assert.partialDeepStrictEqual(out, { recentReason: 'recent_empty', playing: false });
+  assert.equal(out.title, undefined);
 });
 
 test("debug relays Spotify's own message on a rejection", async () => {
-  // 401 alone cannot distinguish a missing scope from a non-Premium account;
-  // Spotify says which in the body.
-  stub({
-    playStatus: 401,
-    errorBody: JSON.stringify({ error: { status: 401, message: 'Permissions missing' } }),
-  });
-  const body = await (await get('/?debug=1')).json();
-  assert.equal(body.reason, 'spotify_401');
-  assert.match(body.spotifyMessage, /Permissions missing/);
+  // 401 alone cannot distinguish a missing scope from a non-Premium account.
+  const errorBody = JSON.stringify({ error: { status: 401, message: 'Permissions missing' } });
+  const out = await debug({ playStatus: 401, errorBody });
+  assert.equal(out.reason, 'spotify_401');
+  assert.match(out.spotifyMessage, /Permissions missing/);
 });
 
 test('no spotifyMessage is attached when nothing was rejected', async () => {
-  stub({ playStatus: 204 });
-  const body = await (await get('/?debug=1')).json();
-  assert.equal(body.reason, 'spotify_204_nothing_playing');
-  assert.equal(body.spotifyMessage, undefined);
+  const out = await debug({ playStatus: 204 });
+  assert.equal(out.reason, 'spotify_204_nothing_playing');
+  assert.equal(out.spotifyMessage, undefined);
 });
 
 test('debug reports the scopes the refresh token actually carries', async () => {
-  // Scopes are bound at authorisation time, so a token granted without
-  // user-read-currently-playing can never acquire it by being refreshed. This
-  // makes that visible without waiting for a 401.
-  stub({ tokenScope: 'user-read-recently-played', playStatus: 401 });
-  const bad = await (await get('/?debug=1')).json();
-  assert.equal(bad.grantedScopes, 'user-read-recently-played');
-  assert.equal(bad.scopeOk, false);
+  // A token granted without user-read-currently-playing can never acquire it by
+  // being refreshed. This makes that visible without waiting for a 401.
+  const bad = await debug({ tokenScope: 'user-read-recently-played', playStatus: 401 });
+  assert.partialDeepStrictEqual(bad, { grantedScopes: 'user-read-recently-played', scopeOk: false });
 
-  stub({ playStatus: 204 });
-  const good = await (await get('/?debug=1')).json();
+  const good = await debug({ playStatus: 204 });
   assert.match(good.grantedScopes, /user-read-currently-playing/);
   assert.equal(good.scopeOk, true);
 });
 
 test('the normal payload carries no diagnostics', async () => {
   // reason and secrets are debug-only; the public endpoint stays minimal.
-  stub({ playStatus: 403, recentStatus: 403 });
-  const body = await (await get('/now-playing.json')).json();
-  assert.deepEqual(Object.keys(body), ['playing']);
+  assert.deepEqual(Object.keys(await body({ playStatus: 403, recentStatus: 403 })), ['playing']);
 });
 
 test('a debug response is never cached, a normal one is', async () => {
   stub({ playStatus: 204 });
   assert.equal((await get('/?debug=1')).headers.get('cache-control'), 'no-store');
-  const normal = (await get('/now-playing.json')).headers.get('cache-control');
-  assert.match(normal, /max-age=10/);
+  assert.match((await get('/now-playing.json')).headers.get('cache-control'), /max-age=10/);
+
   stub(PLAYING);
   const playing = (await get('/now-playing.json')).headers.get('cache-control');
   assert.match(playing, /max-age=5/);
-  // No stale-while-revalidate: it would let the edge serve a known-stale
-  // answer past the TTL, which is the staleness the short TTL exists to
-  // remove. This is the regression that made the card look frozen.
+  // No stale-while-revalidate: it would let the edge serve a known-stale answer
+  // past the TTL, which is the staleness the short TTL exists to remove.
   assert.doesNotMatch(playing, /stale-while-revalidate/);
 });
 
@@ -338,18 +279,16 @@ test('the endpoint answers on the root as well as the json path', async () => {
 
 test('any other path is passed through to the origin', async () => {
   stub();
-  const res = await get('/api/something-else');
-  assert.equal(await res.text(), 'origin');
+  assert.equal(await (await get('/api/something-else')).text(), 'origin');
 });
 
 test('a write method is rejected, HEAD is not', async () => {
   stub(PLAYING);
-  const post = await worker.fetch(new Request('https://w.example/now-playing.json', { method: 'POST' }), ENV);
+  const call = (method) => worker.fetch(new Request('https://w.example/now-playing.json', { method }), ENV);
+  const post = await call('POST');
   assert.equal(post.status, 405);
   assert.equal(post.headers.get('allow'), 'GET, HEAD');
-
-  const head = await worker.fetch(new Request('https://w.example/now-playing.json', { method: 'HEAD' }), ENV);
-  assert.equal(head.status, 200);
+  assert.equal((await call('HEAD')).status, 200);
 });
 
 test('a Spotify outage is reported as not playing, never as an error', async () => {
@@ -362,9 +301,8 @@ test('a Spotify outage is reported as not playing, never as an error', async () 
 });
 
 /* ------------------------------------------------------------------
-   Rate limiting
-   The endpoint is polled, so the cost of a miss and the behaviour
-   under a 429 are the whole of whether Spotify keeps answering.
+   Rate limiting. The endpoint is polled, so the cost of a miss and the
+   behaviour under a 429 are the whole of whether Spotify keeps answering.
    ------------------------------------------------------------------ */
 
 test('the access token is exchanged once and then reused', async () => {
@@ -383,20 +321,18 @@ test('debug reports whether the token was reused', async () => {
   assert.equal((await (await get('/?debug=1')).json()).tokenCached, true);
 });
 
-test('a token about to expire is exchanged again rather than presented', async () => {
-  // Inside the skew window, so it must not be trusted for the next request.
-  stub({ ...PLAYING, expiresIn: 30 });
-  await get('/');
-  await get('/');
-  assert.equal(calls.token, 2);
-});
-
-test('a rejected token is not held on to', async () => {
-  stub({ ...PLAYING, playStatus: 401 });
-  await get('/');
-  await get('/');
-  assert.equal(calls.token, 2, '401 clears the cached token so the next request re-exchanges');
-});
+/** Two requests, and how many token exchanges they should cost between them. */
+for (const [what, opts, exchanges] of [
+  ['a token about to expire is exchanged again rather than presented', { ...PLAYING, expiresIn: 30 }, 2],
+  ['a rejected token is not held on to', { ...PLAYING, playStatus: 401 }, 2],
+]) {
+  test(what, async () => {
+    stub(opts);
+    await get('/');
+    await get('/');
+    assert.equal(calls.token, exchanges);
+  });
+}
 
 test('a rate limit does not spend another call on the history endpoint', async () => {
   stub({ playStatus: 429, recentStatus: 200 });
@@ -404,62 +340,51 @@ test('a rate limit does not spend another call on the history endpoint', async (
   assert.equal(calls.recent, 0);
 });
 
-test('a rate limit is held for as long as Spotify asked', async () => {
-  stub({ playStatus: 429, retryAfter: 45 });
-  const res = await get('/');
-  assert.match(res.headers.get('Cache-Control'), /s-maxage=45/);
-  assert.equal((await (await get('/?debug=1')).json()).retryAfter, 45);
-});
+/** What a 429 asks for, and how long the answer is then held at the edge. */
+for (const [what, retryAfter, maxAge] of [
+  ['is held for as long as Spotify asked', 45, 45],
+  ['with an implausible Retry-After is clamped rather than obeyed', 99999, 300],
+  ['without a Retry-After falls back to the idle window', null, 10],
+]) {
+  test(`a rate limit ${what}`, async () => {
+    stub({ playStatus: 429, retryAfter });
+    assert.match((await get('/')).headers.get('Cache-Control'), new RegExp(`s-maxage=${maxAge}`));
+  });
+}
 
-test('an implausible Retry-After is clamped rather than obeyed', async () => {
-  stub({ playStatus: 429, retryAfter: 99999 });
-  const res = await get('/');
-  assert.match(res.headers.get('Cache-Control'), /s-maxage=300/);
-});
-
-test('a 429 without a Retry-After still falls back to the idle window', async () => {
-  stub({ playStatus: 429 });
-  const res = await get('/');
-  assert.match(res.headers.get('Cache-Control'), /s-maxage=10/);
+test('the Retry-After Spotify sent is reported to debug', async () => {
+  assert.equal((await debug({ playStatus: 429, retryAfter: 45 })).retryAfter, 45);
 });
 
 test('a rate limit serves the last good answer rather than blanking the card', async () => {
-  stub(PLAYING);
-  const good = await (await get('/')).json();
+  const good = await body(PLAYING, '/');
   assert.equal(good.title, 'Yèkèrmo Sèw');
   assert.equal(good.stale, undefined, 'a live answer is not marked stale');
 
-  stub({ playStatus: 429 });
-  const under = await (await get('/')).json();
+  const under = await body({ playStatus: 429 }, '/');
   assert.equal(under.title, 'Yèkèrmo Sèw', 'the card keeps its title');
   assert.equal(under.stale, true, 'and says the answer is remembered');
   assert.equal(under.fetchedAt, undefined, 'with no stamp to correct a stale position against');
 });
 
 test('an outage serves the last good answer too', async () => {
-  stub(PLAYING);
-  await get('/');
+  await body(PLAYING, '/');
   globalThis.fetch = async () => {
     throw new Error('network');
   };
   const out = await (await get('/')).json();
-  assert.equal(out.title, 'Yèkèrmo Sèw');
-  assert.equal(out.stale, true);
+  assert.partialDeepStrictEqual(out, { title: 'Yèkèrmo Sèw', stale: true });
 });
 
 test('an empty player is reported as empty, not as a remembered track', async () => {
-  stub(PLAYING);
-  await get('/');
+  await body(PLAYING, '/');
   // 204 with no history is Spotify telling the truth: nothing is playing.
-  stub({ playStatus: 204, recentStatus: 404 });
-  const empty = await (await get('/')).json();
+  const empty = await body({ playStatus: 204, recentStatus: 404 }, '/');
   assert.equal(empty.title, undefined, 'the card hides rather than showing a stale track');
   assert.equal(empty.playing, false);
 });
 
 test('debug names the substitution so it cannot be mistaken for a live read', async () => {
-  stub(PLAYING);
-  await get('/');
-  stub({ playStatus: 429 });
-  assert.match((await (await get('/?debug=1')).json()).reason, /served_last_good$/);
+  await body(PLAYING, '/');
+  assert.match((await debug({ playStatus: 429 })).reason, /served_last_good$/);
 });

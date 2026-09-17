@@ -4,10 +4,9 @@
  *   npm run shots            # every project with a demo URL
  *   npm run shots jeopardy   # just these ids
  *
- * Run deliberately rather than at build time: it needs a Chromium and reach
- * to the sites themselves, which a sandbox may refuse. previews.yml runs it
- * on a GitHub runner. Writes nothing unless a capture succeeds, so a failure
- * leaves the previous screenshot in place.
+ * Run deliberately, not at build time; previews.yml runs it on a GitHub
+ * runner. Nothing is written unless a capture succeeds, so a failure leaves
+ * the previous screenshot alone. docs/architecture.md, "Screenshots".
  */
 import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -16,9 +15,7 @@ import sharp from 'sharp';
 import { chromium } from 'playwright';
 import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
 
-// Node's global fetch ignores HTTPS_PROXY, so a project that publishes its own
-// screenshot could not be read from behind an egress proxy. Same treatment as
-// tests/verify.mjs.
+// Node's global fetch ignores HTTPS_PROXY, as in tests/harness.mjs.
 if (process.env.HTTPS_PROXY || process.env.https_proxy) {
   setGlobalDispatcher(new EnvHttpProxyAgent());
 }
@@ -26,11 +23,7 @@ if (process.env.HTTPS_PROXY || process.env.https_proxy) {
 const CONTENT = 'src/content/projects';
 const OUT = 'src/assets/previews';
 
-/**
- * Per device, matching the frame the showcase draws around the result.
- * `phone` exists because not every project is a website: a 1440-wide capture
- * of a phone-shaped app is a narrow column in a field of background.
- */
+/** Per device, matching the frame the showcase draws around the result. */
 const DEVICES = {
   desktop: { viewport: { width: 1440, height: 900 }, outWidth: 1600 },
   phone: { viewport: { width: 440, height: 936 }, outWidth: 880 },
@@ -38,16 +31,10 @@ const DEVICES = {
 /** Retina capture, downscaled on save: text stays crisp, the file stays small. */
 const SCALE = 2;
 
-/**
- * How long to let a site settle after load. These are client-rendered apps;
- * `networkidle` fires before React has painted anything worth looking at.
- */
+/** These are client-rendered apps; `networkidle` fires before React paints. */
 const SETTLE_MS = 2500;
 
-/**
- * Frontmatter read with a line matcher rather than a YAML parser: the two
- * fields needed here are plain scalars, and this has to work without a build.
- */
+/** A line matcher, not a YAML parser: plain scalars, and no build to rely on. */
 function field(source, name) {
   const line = source.match(new RegExp(`^${name}:\\s*(.+)$`, 'm'));
   if (!line) return undefined;
@@ -80,10 +67,7 @@ if (wanted.length === 0) {
 
 await mkdir(OUT, { recursive: true });
 
-/**
- * Launched on first use: a project that publishes its own screenshot needs no
- * browser, and `npm run shots monee` should not require one installed.
- */
+/** Launched on first use: a published screenshot needs no browser at all. */
 let browser;
 async function browserFor() {
   browser ??= await chromium.launch({
@@ -102,9 +86,8 @@ async function contextFor(device) {
   const context = await browser.newContext({
     viewport: DEVICES[device].viewport,
     deviceScaleFactor: SCALE,
-    // Screenshots are for a light-background page; ask for the light theme so
-    // a site that honours the preference does not come back inverted. A site
-    // that is dark by design stays dark, which is its own look.
+    // These sit on a light page, so ask for light; a site that is dark by
+    // design stays dark, which is its own look.
     colorScheme: 'light',
     reducedMotion: 'reduce',
     isMobile: device === 'phone',
@@ -115,10 +98,8 @@ async function contextFor(device) {
 }
 
 /**
- * A project may ship scripts/seeds/<id>.mjs to change how it is captured:
- * `image` (a published screenshot to use instead of photographing a page),
- * `prepare(page)` (runs before navigation, to reach a state worth
- * photographing) and `path` (where to land, if not the site root).
+ * scripts/seeds/<id>.mjs may export `image` (a published screenshot to use
+ * instead), `prepare(page)` (run before navigation) and `path`.
  */
 async function seedFor(id) {
   const file = new URL(`./seeds/${id}.mjs`, import.meta.url);
@@ -126,16 +107,9 @@ async function seedFor(id) {
   return import(file.href);
 }
 
-/**
- * The PNG bytes to save for a project, and a word for the log about where
- * they came from.
- *
- * @returns {Promise<{ bytes: Buffer, from: string, how: string }>}
- */
+/** @returns {Promise<{ bytes: Buffer, from: string, how: string }>} */
 async function capture(project, seed) {
-  // A project that publishes its own screenshot: take it at the source. It is
-  // the product's own picture of itself, it stays current as they replace it,
-  // and it does not depend on the app being reachable without an account.
+  // The product's own picture of itself: current, and needs no account.
   if (seed?.image) {
     const url = new URL(seed.image, project.demo).toString();
     const response = await fetch(url);

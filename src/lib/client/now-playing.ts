@@ -2,12 +2,9 @@ import { byId } from './dom';
 import { clock, since } from './time';
 
 /**
- * Fills the "currently listening" card from the Worker at `endpoint`.
- *
- * The card holds its own shape as a skeleton until the first answer, then
- * shows one of three things: the track playing now with a live bar, a paused
- * track frozen where it stopped, or the last one that finished. An answer
- * that names no track at all hides the card.
+ * Fills the "currently listening" card from the Worker at `endpoint`: playing
+ * with a live bar, paused where it stopped, or the last track that finished.
+ * No track hides the card. docs/architecture.md, "Now playing".
  */
 
 type State = 'playing' | 'paused' | 'recent';
@@ -29,9 +26,8 @@ interface Payload {
   stale?: boolean;
 }
 
-/* The poll follows the endpoint rather than a clock: the Worker says how
-   long its answer holds and how much of that is already spent, so asking
-   earlier re-reads a byte-identical body. See docs/architecture.md. */
+/* The poll follows the endpoint rather than a clock — asking earlier
+   re-reads a byte-identical body. docs/architecture.md, "Now playing". */
 const MIN_MS = 4000;
 const FALLBACK_MS = 10000;
 /** A paused or finished track is not about to change on its own. */
@@ -108,11 +104,7 @@ export function nowPlaying() {
     if (ms >= total) stopTicker();
   }
 
-  /**
-   * How long the answer just received stays true, in ms. s-maxage is what the
-   * edge honours, max-age what a browser would; Age is what this copy has
-   * already spent.
-   */
+  /** How long this answer stays true, in ms: its TTL less the Age it has spent. */
   function freshnessLeft(res: Response) {
     const cc = res.headers.get('Cache-Control') ?? '';
     const ttl = Number((cc.match(/s-maxage=(\d+)/) ?? cc.match(/max-age=(\d+)/) ?? [])[1]);
@@ -185,10 +177,8 @@ export function nowPlaying() {
       return;
     }
 
-    /* Add back however long the reading sat in the edge cache, so the bar
-       starts where the track actually is. Clamped: this subtracts the edge's
-       clock from the visitor's, and losing the correction costs only the few
-       seconds it was worth. */
+    /* Add back the time the reading sat at the edge. Clamped, because this
+       subtracts the edge's clock from the visitor's. */
     const stamp = Number(data.fetchedAt);
     const age = live && Number.isFinite(stamp) ? Math.min(Math.max(Date.now() - stamp, 0), MAX_AGE_MS) : 0;
 
@@ -215,9 +205,8 @@ export function nowPlaying() {
     let data: Payload | null = null;
     let res: Response | null = null;
     try {
-      /* no-store bypasses the browser's HTTP cache, which Cloudflare's
-         zone-level Browser Cache TTL would otherwise pin for four hours.
-         s-maxage survives that rewrite, so the edge still shields Spotify. */
+      /* no-store, or Cloudflare's Browser Cache TTL pins this for four hours.
+         s-maxage survives that, so the edge still shields Spotify. */
       res = await fetch(endpoint!, { headers: { Accept: 'application/json' }, cache: 'no-store' });
       if (res.ok) data = await res.json();
     } catch {
@@ -237,9 +226,7 @@ export function nowPlaying() {
       schedule(Math.min(BACKOFF_MS * 2 ** (strikes - 1), BACKOFF_MAX_MS));
     }
 
-    // A title is the only requirement. Paused counts, and so does the last
-    // thing that finished — the card is about what he is listening to, not
-    // whether a play button happens to be down.
+    // A title is the only requirement: paused and finished both count.
     if (!data?.title) {
       setState('empty');
       total = 0;
@@ -249,10 +236,8 @@ export function nowPlaying() {
     paint(data);
   }
 
-  /* Both events, because they do not fire interchangeably: switching tabs
-     gives visibilitychange, returning from another application gives only
-     focus. Going away cancels the pending poll rather than letting it fire
-     into a background tab. */
+  /* Both events: switching tabs gives visibilitychange, returning from
+     another application gives only focus. Going away cancels the poll. */
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) clearTimeout(timer);
     else poll();

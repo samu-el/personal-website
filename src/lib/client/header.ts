@@ -1,10 +1,7 @@
 import { $, $$, byId } from './dom';
 import { calm } from './env';
 
-/**
- * The mobile disclosure panel: the button, the scrim behind it, the focus
- * trap, and the scroll that dismisses it.
- */
+/** The mobile disclosure panel: button, scrim, focus trap, dismissing scroll. */
 export function mobileMenu() {
   const btn = byId('menu-toggle');
   const menu = byId('mobile-menu');
@@ -15,11 +12,8 @@ export function mobileMenu() {
   const isOpen = () => btn.getAttribute('aria-expanded') === 'true';
 
   let closing = 0;
-  /* Where the page was when the panel opened. The panel rides the sticky
-     header, so the page is left scrollable — locking it with overflow:hidden
-     stops sticky resolving and takes the header off screen. A deliberate
-     scroll closes the panel instead; a drag on the scrim never scrolls at all
-     (touch-action). */
+  /* The page stays scrollable: overflow:hidden stops sticky resolving and
+     takes the header off screen. A deliberate scroll closes the panel. */
   let openedAt: number | null = null;
 
   function setOpen(open: boolean) {
@@ -34,10 +28,8 @@ export function mobileMenu() {
       // One frame between display and the class, or the row never animates
       // from its closed height.
       requestAnimationFrame(() => menu!.classList.add('is-open'));
-      /* Focus stays on the trigger: this is a disclosure, not a dialog, and
-         the panel follows the button in source order, so Tab walks straight
-         into it. Moving focus here painted a focus ring on the first link for
-         anyone who opened the menu by tapping. */
+      /* A disclosure, not a dialog: focus stays on the trigger and Tab walks
+         into the panel, which follows it in source order. */
     } else {
       menu!.classList.remove('is-open');
       closing = window.setTimeout(() => (menu!.hidden = true), calm.matches ? 0 : 450);
@@ -78,10 +70,7 @@ export function mobileMenu() {
   window.addEventListener('scroll', onScroll, { passive: true });
 }
 
-/**
- * One hairline that slides between the primary links and returns to the
- * current page, replacing the per-link rules once it has measured them.
- */
+/** One hairline sliding between the links, replacing the per-link rules. */
 export function navIndicator() {
   const rail = byId('primary-nav');
   const bar = rail && $('.nav-indicator', rail);

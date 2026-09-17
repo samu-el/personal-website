@@ -1,11 +1,8 @@
 /**
- * What both browser suites need before they can assert anything: a browser,
- * a base URL, the egress proxy, viewport presets, and a way to report.
- *
- * Node's global fetch ignores HTTPS_PROXY, so checking a deployed site from
- * behind one fails with a 403 from the proxy rather than a real response.
- * Routing fetch through it and handing the browser the same proxy is the only
- * setup either suite needs, and it was written twice.
+ * What both browser suites need: a browser, a base URL, the egress proxy,
+ * viewport presets, a page to drive and a way to report. Node's global fetch
+ * ignores HTTPS_PROXY, so a deployed site checked from behind one answers 403
+ * from the proxy rather than anything real — hence the dispatcher below.
  */
 import { chromium } from 'playwright';
 import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
@@ -25,10 +22,7 @@ export const launch = () => chromium.launch({ executablePath: process.env.CHROMI
 
 export const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-/**
- * A context and a page on it, with page errors collected. `close()` disposes
- * the context. Every block in both suites starts this way.
- */
+/** A context and a page on it; `close()` disposes it. Every block starts here. */
 export async function visit(browser, at, { wait = 'networkidle', watch = false, route, init, ...opts } = {}) {
   const ctx = await browser.newContext(opts);
   if (route) await ctx.route('**/api/now-playing.json*', route);
@@ -51,12 +45,7 @@ export const scrollBy = (page, top) => page.evaluate((y) => window.scrollBy({ to
 export const DESKTOP = { viewport: { width: 1440, height: 900 } };
 export const MOBILE = { viewport: { width: 390, height: 780 }, hasTouch: true, isMobile: true };
 
-/**
- * Collects pass/fail lines and prints them at the end.
- *
- * `check(name, ok, info)` records one; `report()` prints the lot and sets a
- * non-zero exit code if any failed.
- */
+/** `check(name, ok, info)` records one; `report()` prints the lot and exits. */
 export function results() {
   const all = [];
   return {
@@ -74,10 +63,7 @@ export function results() {
   };
 }
 
-/**
- * The smoke suite's shape instead: a flat list of problems, deduped, with
- * silence meaning success.
- */
+/** The smoke suite's shape: a deduped list of problems, silence meaning pass. */
 export function issues() {
   const all = [];
   return {

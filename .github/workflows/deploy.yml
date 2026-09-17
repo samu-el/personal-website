@@ -47,24 +47,18 @@ jobs:
           # Lifts the build's GitHub API calls off the runner's shared
           # anonymous rate limit. Read-only; the build never writes.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Spotify. Absent until the three repository secrets are set, and the
-          # feed is simply not rendered until then. Never exposed to the
-          # browser: Astro inlines only PUBLIC_* variables into client code.
+          # Spotify. Absent until the three secrets are set; the feed is then
+          # simply not rendered. Astro inlines only PUBLIC_* into client code.
           SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
           SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
           SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
-          # Only needed when the now-playing Worker is on its own hostname
-          # rather than a smr.et/api/* route. A URL, not a secret, so it lives
-          # in repository variables.
+          # Only for a Worker on its own hostname. A URL, not a secret.
           PUBLIC_NOW_PLAYING_URL: ${{ vars.PUBLIC_NOW_PLAYING_URL }}
 
       - uses: actions/configure-pages@v5
         with:
-          # Only effective where the caller's credentials can create a Pages
-          # site. The default GITHUB_TOKEN cannot, whatever its permissions —
-          # so Pages must be switched on once by hand:
-          #   Settings → Pages → Build and deployment → Source: GitHub Actions
-          # After that this step just reads the existing config and passes.
+          # The default GITHUB_TOKEN cannot create a Pages site, so switch it
+          # on once by hand: Settings → Pages → Source: GitHub Actions.
           enablement: true
 
       - uses: actions/upload-pages-artifact@v3
