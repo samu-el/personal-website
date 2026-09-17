@@ -1,11 +1,8 @@
 /**
- * Interaction suite. verify.mjs proves every page renders; this drives what
- * only exists once a pointer, a key or a scroll is involved — the mobile
- * panel, the hero entrance, the header, hover and press states, the tilt and
- * the lean, the now-playing skeleton and poll cadence, and that under
- * prefers-reduced-motion none of it moves and nothing is left hidden.
+ * Interaction suite: what only exists once a pointer, a key or a scroll is
+ * involved. verify.mjs proves every page renders. What each block covers, and
+ * the two rules learned writing it, are in docs/architecture.md, "Testing".
  *
- * Usage:
  *   npm run build && npm run preview & npm run verify:interact
  */
 import { BASE, DESKTOP, MOBILE, launch, results, scroll, scrollBy, sleep, visit } from './harness.mjs';
@@ -75,10 +72,8 @@ const opacityOf = (els) => els.map((e) => Number(getComputedStyle(e).opacity));
   );
   check('menu: Tab stays inside the open panel', wrapped, `stops=${stops}`);
 
-  /* Opening must not shift the page under the reader. The click is dispatched
-     inside the page rather than driven by the harness: Playwright scrolls a
-     sticky element into view before clicking it, and that scroll would be
-     measured here as a jump of the site's own. */
+  /* Clicked in-page, not through the harness: Playwright scrolls a sticky
+     element into view first, which would be measured as the site's own jump. */
   await page.keyboard.press('Escape');
   await sleep(700);
   await scroll(page, 600);
@@ -148,10 +143,8 @@ const barTall = await barHeight();
 await scroll(page, 400);
 await sleep(500);
 const barShort = await barHeight();
-/* The bar compresses inside a height it never changes. It used to animate its
-   own height, which moved every following element up by 8px each time the
-   threshold was crossed — so the assertions are that the compression happened
-   AND that the page did not move. */
+/* Two assertions, because the bug was the second one: the compression
+   happened, and nothing below the header moved by it. */
 const compressed = await page.evaluate(() => {
   const sub = getComputedStyle(document.querySelector('.wordmark-sub'));
   return {
@@ -221,11 +214,9 @@ await page.mouse.move(700, 500);
 await sleep(500);
 check('nav: indicator returns to the current page', (await indicatorX()) === restX || !navHome);
 
-/* Metric numerals count up on arrival — on a page of its own. The animation is
-   one-shot and unobserves itself, so any earlier check that scrolls past the
-   metrics consumes it and this one then measures a number that has already
-   finished. That is not hypothetical: the counter sits 40% into view at the
-   scroll position the header check uses, which is exactly the threshold. */
+/* On a page of its own: the animation is one-shot and unobserves itself, and
+   the counter sits at exactly the observer's threshold at the scroll position
+   the header check above uses. */
 {
   const own = await visit(browser, '/', DESKTOP);
   await sleep(ENTRANCE);
@@ -432,10 +423,8 @@ await close();
 }
 
 // ── 5. Now-playing poll cadence ─────────────────────────────────────────
-/* The endpoint is stubbed so the headers can be controlled exactly. What is
-   under test is that the page follows the freshness the Worker advertises
-   instead of a fixed interval, backs off when it cannot reach it, and does
-   not poll a tab nobody is looking at. */
+/* Stubbed so the headers can be controlled exactly: the page must follow the
+   freshness advertised, back off on failure, and not poll a hidden tab. */
 {
   const hits = [];
   let mode = 'playing';
@@ -498,9 +487,7 @@ await close();
     paused,
   );
 
-  /* Reloaded so the backoff is measured from its first step: left running, it
-     had already doubled past the width of any reasonable test window — which
-     is the behaviour under test working, not failing. */
+  /* Reloaded so the backoff is measured from its first step. */
   mode = 'down';
   await page.reload({ waitUntil: 'commit' });
   const down = await gapsFor(20000);
@@ -525,10 +512,8 @@ await close();
 }
 
 // ── 6. Now-playing skeleton ─────────────────────────────────────────────
-/* The card is filled entirely in the browser, so before this it appeared out
-   of nothing when the fetch resolved. What is under test is that it holds its
-   own shape first, that the swap costs no layout shift, and that a skeleton is
-   never left standing where no answer is coming. */
+/* The card holds its own shape first, the swap costs no layout shift, and no
+   skeleton is left standing where no answer is coming. */
 {
   const track = {
     playing: true,

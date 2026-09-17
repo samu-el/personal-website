@@ -22,11 +22,7 @@ interface Props {
 
 const { bareFooter = false, ...head } = Astro.props;
 
-/**
- * Running head for the vertical rail: the section this page belongs to. A
- * project or post page takes its section's name; the home page takes the
- * role, since "Home" says nothing.
- */
+/** The rail's running head: this page's section, or the role for the home page. */
 const path = head.path ?? '/';
 const section =
   path === '/' ? site.role : (nav.find((n) => n.href !== '/' && path.startsWith(n.href))?.label ?? site.role);
@@ -68,9 +64,8 @@ const section =
       import { mayMove } from '@/lib/client/env';
       import { follow } from '@/lib/client/follow';
 
-      /* Progressive scroll reveal. Content is visible by default; this opts
-         individual below-the-fold elements into the animation, so a failed or
-         blocked script can never leave content hidden. */
+      /* Visible by default; this opts below-the-fold elements in, so a failed
+         script can never leave content hidden. */
       if (mayMove() && 'IntersectionObserver' in window) {
         const io = new IntersectionObserver(
           (entries) => {
@@ -98,9 +93,8 @@ const section =
         window.addEventListener('resize', arm, { passive: true });
       }
 
-      /* Buttons lean toward the cursor and settle back when it leaves.
-         data-lean shortens the transition while the pointer is on the button;
-         without it the lean trailed the cursor by 250ms. */
+      /* data-lean shortens the transition while tracking; without it the lean
+         trailed the cursor by 250ms. */
       const REACH = 5; // px, at the button's edge
       follow(
         '.btn',

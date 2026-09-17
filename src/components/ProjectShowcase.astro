@@ -1,11 +1,8 @@
 ---
 /**
- * The /work treatment: one generous, alternating row per project, led by a
- * screenshot of the thing actually running.
- *
- * Assets are matched by project id rather than named in frontmatter, so
- * dropping a file in is all it takes and a missing one degrades to the
- * fallback below. Screenshots come from scripts/shots.mjs.
+ * The /work treatment: one alternating row per project, led by a screenshot of
+ * the thing running. Assets are matched by project id, so dropping a file in
+ * is all it takes. docs/architecture.md, "Screenshots".
  */
 import Chips from '@/components/Chips.astro';
 import type { CollectionEntry } from 'astro:content';
@@ -32,11 +29,7 @@ const logo = pickAsset(logos, project.id);
 /** Rows alternate, so the page reads as a column rather than a stack. */
 const flip = index % 2 === 1;
 
-/**
- * Stands in for a missing logo: the project's own initial in the display face.
- * Typographic rather than invented — it says nothing that is not already the
- * title, which is the point.
- */
+/** Stands in for a missing logo: the initial, saying nothing the title does not. */
 const monogram = (title.replace(/[^A-Za-z]/g, '')[0] ?? '·').toUpperCase();
 
 const detail = href(`/work/${project.id}`);
@@ -69,29 +62,21 @@ const detail = href(`/work/${project.id}`);
       </div>
 
       <div class="mt-5 flex items-center gap-3.5">
-        <!--
-          The project's own mark where one exists, otherwise its initial set in
-          the site's display face. The initial is styled to read as chosen
-          typography rather than a picture that failed to load: accent ink on a
-          tinted tile, optically centred.
-        -->
+        <!-- The project's mark, or its initial styled as chosen typography
+             rather than a picture that failed to load. -->
         <span
           class:list={[
             'grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border',
-            // A logo gets a light plate in both themes, not the surface colour.
-            // These marks come from favicons with transparent backgrounds and
-            // were drawn for a light ground: fantasy.et's is dark purple, and
-            // on the dark theme's near-black surface it disappeared entirely.
-            // An icon well is also just how an app icon is normally presented.
+            // A light plate in both themes: these marks were drawn for a light
+            // ground, and fantasy.et's dark purple vanished on the dark one.
             logo ? 'border-line bg-[rgb(250_248_245)]' : 'border-accent/25 bg-accent/[0.07]',
           ]}
           aria-hidden="true"
         >
           {
             logo ? (
-              /* Emitted at its own size rather than a fixed 88: these come
-                 from favicons, and asking for more pixels than the source has
-                 just upscales it before the browser scales it again. */
+              /* Its own size: these are favicons, and asking for more pixels
+                 than the source has upscales it twice. */
               <Image src={logo} alt="" width={logo.width} height={logo.height} class="size-full object-contain" />
             ) : (
               <span class="display text-xl leading-none text-accent">{monogram}</span>

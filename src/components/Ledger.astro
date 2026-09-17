@@ -1,0 +1,21 @@
+---
+/** A ruled key/value table: the Currently, At a glance and project-fact rows. */
+interface Props {
+  rows: readonly (readonly [string, string])[];
+  class?: string;
+  align?: 'between' | 'columns';
+}
+const { rows, class: cls = 'mt-4 text-sm', align = 'between' } = Astro.props as Props;
+const row = align === 'columns' ? 'grid grid-cols-[6.5rem_1fr] gap-4 py-3.5' : 'flex justify-between gap-4 py-3';
+---
+
+<dl class:list={['ledger', cls]}>
+  {
+    rows.map(([term, value]) => (
+      <div class={row}>
+        <dt class="text-subtle">{term}</dt>
+        <dd class:list={['leading-snug text-fg', align === 'between' && 'text-right']}>{value}</dd>
+      </div>
+    ))
+  }
+</dl>

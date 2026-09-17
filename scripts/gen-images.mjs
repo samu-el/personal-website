@@ -1,13 +1,7 @@
 /**
- * Renders the social card and app icons.
- *
- * Chromium rather than an SVG rasteriser, so the output uses the same
- * self-hosted webfonts as the site — a card set in a fallback serif is a
- * different design from the one people actually land on.
- *
- *   npm run images
- *
- * Set CHROMIUM_PATH when a browser is already installed on the machine.
+ * Renders the social card and app icons: `npm run images`. Chromium rather
+ * than an SVG rasteriser, so the output uses the site's own webfonts. Set
+ * CHROMIUM_PATH when a browser is already installed.
  */
 import { mkdir, readFile, rm } from 'node:fs/promises';
 import { statSync } from 'node:fs';
@@ -25,11 +19,8 @@ await mkdir(publicDir, { recursive: true });
 
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined });
 
-/**
- * The card is a standalone HTML file, so it cannot import from site.ts. Rather
- * than keep a second copy of the address that silently goes stale, read it out
- * of site.ts and write it into the page before the screenshot.
- */
+/** The card is standalone HTML, so the address is read out of site.ts here
+ *  rather than kept as a second copy that goes stale. */
 const siteTs = await readFile(resolve(root, 'src/lib/site.ts'), 'utf8');
 const email = siteTs.match(/email:\s*'([^']+)'/)?.[1];
 if (!email) throw new Error('could not read site.email from src/lib/site.ts');
@@ -50,9 +41,8 @@ async function shoot(template, width, height, target) {
   console.log(`✓ ${target.replace(`${root}/`, '')} (${width}×${height})`);
 }
 
-// Social card — 1200×630 is the Open Graph / Twitter summary_large_image size.
-// Screenshot first, then requantise: a straight PNG of a gradient is ~250 KB,
-// and platforms refetch this on every share.
+// 1200×630 is the Open Graph summary_large_image size. Requantised after:
+// a straight PNG of a gradient is ~250 KB, refetched on every share.
 await shoot('og.html', 1200, 630, out('og.raw.png'));
 await sharp(out('og.raw.png'))
   .png({ compressionLevel: 9, palette: true, quality: 92, dither: 1 })

@@ -412,6 +412,11 @@ Each worker test gets a fresh module instance: the access token and the
 last-good payload live in module scope on purpose, and that persistence leaks
 between tests the way it is meant to persist between requests.
 
+Where two suites asserted the same thing, the weaker one goes. `verify.mjs` no
+longer opens the mobile menu: `interact.mjs` drives it far harder — thirteen
+checks against one — and both suites run in the same CI job, so the second
+copy bought nothing but lines.
+
 ---
 
 ## 10. Deployment

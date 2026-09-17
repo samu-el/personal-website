@@ -5,12 +5,9 @@ import { hasWriting } from '@/lib/posts';
 import '@/styles/global.css';
 
 /**
- * The three faces the top of every page is set in. Declared with
- * `font-display: swap`, so without a preload the first paint uses the
- * fallback and the page reflows when the real face lands — measured as a
- * 14px shift and the site's only layout shift worth naming (CLS 0.0166).
- * Vite resolves each to its content-hashed URL, so these stay correct
- * across builds.
+ * The three faces the top of every page is set in. Preloaded because
+ * `font-display: swap` without one reflowed the page by 14px when the real
+ * face landed — the site's only layout shift worth naming (CLS 0.0166).
  */
 import geistSans from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
 import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';

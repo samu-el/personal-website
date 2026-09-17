@@ -1,27 +1,15 @@
 ---
 /**
  * Live "currently listening" card, filled in the browser from the Worker in
- * worker/ — same-origin, so the Spotify credentials stay server-side.
- *
- * Shows the track playing now with a live bar, a paused track frozen where it
- * stopped, or the last one that finished. A Worker that can name no track at
- * all leaves the card hidden.
- *
- * Until the first answer the card holds its shape as a skeleton. The
- * placeholder bars live *inside* the elements the script fills, so each
- * inherits that element's line-height and the swap costs no layout shift —
- * and every fill is a `textContent` assignment, which clears its own
- * placeholder. See docs/architecture.md.
+ * worker/. Playing with a live bar, paused where it stopped, or the last track
+ * that finished; no track at all leaves the card hidden. It holds its shape as
+ * a skeleton until the first answer — why that costs no layout shift is in
+ * docs/architecture.md, "Now playing".
  */
 import { Icon } from 'astro-icon/components';
 import { href } from '@/lib/paths';
 
-/**
- * Where to read the payload from. A same-origin path by default: the Worker
- * sits on a route in front of the static origin, so there is no second DNS
- * lookup, no extra handshake and no CORS preflight to fail. Set
- * PUBLIC_NOW_PLAYING_URL to an absolute URL to put it on its own hostname.
- */
+/** Same-origin by default; PUBLIC_NOW_PLAYING_URL puts it on its own host. */
 const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playing.json');
 ---
 
@@ -60,15 +48,11 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
             <span class="sk sk-artist"></span>
           </p>
 
-          <!-- Hidden by the script unless the track reports a duration —
-               podcast episodes and local files do not always, and a bar with
-               no end is worse than no bar. It starts *shown*, empty, so the
-               skeleton reserves the row: every path through the render sets
-               this either way on the first answer. -->
+          <!-- Starts shown and empty so the skeleton reserves the row; the
+               script hides it when the track reports no duration. -->
           <div id="np-progress" class="mt-5 max-w-md">
             <div class="h-[3px] overflow-hidden rounded-full bg-line" aria-hidden="true">
-              <!-- Width is set from JS every second; the matching linear
-                   transition turns those steps into continuous movement. -->
+              <!-- Width set each second; the linear transition smooths the steps. -->
               <div
                 id="np-bar"
                 class="h-full rounded-full bg-jade transition-[width] duration-1000 ease-linear motion-reduce:transition-none"
@@ -76,9 +60,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
               >
               </div>
             </div>
-            <!-- The times, not the bar, carry this to a screen reader: the bar
-                 is decoration, and a progressbar role rewritten every second
-                 is chatter. -->
+            <!-- The times carry this to a screen reader; the bar is decoration. -->
             <p class="mt-2 flex justify-between font-mono text-2xs tabular-nums text-subtle">
               <span id="np-elapsed"><span class="sk sk-time"></span></span>
               <span id="np-duration"><span class="sk sk-time"></span></span>
@@ -117,11 +99,9 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
 </section>
 
 <style>
-  /* Skeleton bars, sized in `em` so each scales with whatever it sits inside
-     — the title's font-size is a clamp. Height stays under 1em so the line
-     box is unchanged and the element measures exactly what it will with one
-     line of text in it, which is what makes the swap shift-free. The pulse
-     rests at full opacity, so reduced motion leaves a plain bar. */
+  /* Sized in `em` and under 1em tall, so the line box is unchanged and the
+     element measures what it will with one line of text in it. The pulse rests
+     at full opacity, so reduced motion leaves a plain bar. */
   .sk {
     display: inline-block;
     vertical-align: middle;
@@ -168,11 +148,8 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     animation-delay: 0.16s;
   }
 
-  /* The sleeve's placeholder is the one that cannot clear itself: it has no
-     text to overwrite it, and the state changing is not the moment it should
-     go — the art fades in over 500ms after that, and removing the placeholder
-     any earlier just swaps a grey box for an emptier one. It waits for the
-     image, and stops pulsing as soon as there is an answer. */
+  /* The one placeholder that cannot clear itself: it waits for the image
+     rather than the state, and stops pulsing as soon as there is an answer. */
   #np-sleeve[data-art='ready'] .sk-art,
   #np-sleeve[data-art='none'] .sk-art {
     opacity: 0;
@@ -192,12 +169,9 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     pointer-events: none;
   }
 
-  /* Four bars, each on its own duration as well as its own offset, so it
-     reads as a level meter rather than four things blinking in step.
-
-     Sized in rem rather than em on purpose: the label around it is 11px, and
-     at 0.85em the bars came out 9px tall and 2px wide, animating over about
-     six pixels. Technically moving, practically invisible. */
+  /* Four bars on four durations, so it reads as a level meter rather than
+     four things blinking in step. rem, not em: at 0.85em of an 11px label the
+     bars animated over six pixels — technically moving, practically not. */
   .eq {
     display: inline-flex;
     align-items: flex-end;
@@ -215,9 +189,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
        its cycle and some renderers drop it entirely, which reads as a gap. */
     will-change: transform;
   }
-  /* --h is the height each bar freezes at. Declared alongside its timing so
-     the two ways of stopping the meter — paused, and a visitor who asked for
-     less motion — share one set of numbers instead of drifting apart. */
+  /* --h is where each bar freezes, shared by both ways of stopping the meter. */
   .eq > span:nth-child(1) {
     --h: 45%;
     animation-duration: 1.05s;
@@ -248,9 +220,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     }
   }
 
-  /* Stopped: nothing is playing, or the visitor asked for less motion. Static
-     bars at four different heights still read as a level meter — a stopped
-     one. A meter dancing above the word "Paused" would just be a lie. */
+  /* Stopped, but still four heights: a meter dancing over "Paused" is a lie. */
   .eq.is-still > span {
     animation: none;
     height: var(--h);

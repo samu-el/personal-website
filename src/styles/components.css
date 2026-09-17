@@ -1,6 +1,4 @@
-/* ------------------------------------------------------------------
-   Components
-   ------------------------------------------------------------------ */
+/* ── Components ─────────────────────────────────────────────────── */
 @layer components {
   .wrap {
     width: 100%;
@@ -37,36 +35,28 @@
     background-color: var(--color-line-strong);
   }
 
-  .display {
+  /* Three cuts of one face. -hero is tighter still, so a two-line headline
+     reads as one shape; .numeral aligns a row of figures. */
+  .display,
+  .display-hero,
+  .numeral {
     font-family: var(--font-display);
     font-weight: 400;
     letter-spacing: -0.015em;
     line-height: 0.98;
   }
-
-  /* The headline cut: tighter still, so a two-line hero reads as one shape
-     rather than two stacked lines. Only for the largest sizes. */
   .display-hero {
-    font-family: var(--font-display);
-    font-weight: 400;
     letter-spacing: -0.035em;
     line-height: 0.9;
   }
-
-  /* Big figures. Lining, tabular numerals so a row of them aligns, and the
-     serif's natural swing kept for everything that is not a digit. */
   .numeral {
-    font-family: var(--font-display);
-    font-weight: 400;
     font-variant-numeric: lining-nums tabular-nums;
     letter-spacing: -0.03em;
     line-height: 0.9;
   }
 
-  /* Watermark numeral behind a section header — the index the eyebrow
-     already carries, set at a size where it becomes texture. Faint enough
-     never to compete with text laid over it; it is there for the rhythm of
-     the page when scrolling, not to be read. */
+  /* The eyebrow's index again, at a size where it becomes texture. There for
+     the rhythm of the page when scrolling, not to be read. */
   .rail-index {
     position: absolute;
     right: -0.04em;
@@ -95,9 +85,8 @@
     bottom: -0.18em;
   }
 
-  /* Ledger: rows separated by hairlines. Replaces the boxed grids — the
-     divider carries the structure, and nothing paints a background that
-     shows through while its content is still revealing. */
+  /* Rows separated by hairlines: the divider carries the structure, and
+     nothing paints a background that shows through mid-reveal. */
   .ledger {
     border-top: 1px solid var(--color-line);
   }
@@ -107,11 +96,9 @@
 
   /* ── Colour as a field ─────────────────────────────────────────────
      Redefining the --c-* channels on a subtree recolours every token-based
-     utility inside it — bg-bg, text-fg, border-line, the lot — so a whole
-     section can go to ink or gold without any child knowing. The
-     --color-* aliases are re-declared here too: they are computed where
-     they are declared, so the :root copies would otherwise carry the page's
-     channels into the field. */
+     utility inside it. The --color-* aliases must be re-declared here: a
+     custom property is computed where it is declared, not where it is used.
+     docs/architecture.md, "The design system". */
   .field-ink,
   .field-gold {
     --color-bg: rgb(var(--c-bg));
@@ -154,8 +141,7 @@
     --c-surface-2: 20 20 23;
   }
 
-  /* Gold: the bright accent as ground, ink on it. The brighter of the two
-     golds in both themes, because ink on it clears 8:1 where ink on the
+  /* The brighter gold in both themes: ink on it clears 8:1, where ink on the
      light theme's darker gold would not clear 4.5. */
   .field-gold {
     --c-bg: 233 162 59;
@@ -182,9 +168,8 @@
     background-color: var(--color-fg);
   }
 
-  /* Word-by-word entrance for the hero headline. Gated on .js so a page
-     without script shows the words, and defeated wholesale by the global
-     reduced-motion rule, whose 0.01ms duration lands on the final frame. */
+  /* Word-by-word entrance, gated on .js so a scriptless page shows the words
+     and the global reduced-motion rule lands them on the final frame. */
   .w {
     display: inline-block;
   }
@@ -201,9 +186,8 @@
     }
   }
 
-  /* The vertical rail: page name and author, set on their side in the right
-     gutter. Fixed, so it is the one thing that does not move as you scroll —
-     a running head, as a printed book has. */
+  /* Page name and author on their side in the right gutter, fixed: a running
+     head, as a printed book has. */
   .rail-vertical {
     position: fixed;
     right: 1rem;

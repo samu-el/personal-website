@@ -1,9 +1,7 @@
 name: Capture project previews
 
-# Manual only. Screenshots change whenever the projects change, not whenever
-# this repository does, so tying this to a push would churn binaries for no
-# reason — and a scheduled run would commit a screenshot of whatever a site
-# happened to be doing at 5am, including an error page.
+# Manual only: screenshots change when the projects do, and a scheduled run
+# would commit whatever a site was doing at 5am, error page included.
 on:
   workflow_dispatch:
     inputs:
@@ -12,9 +10,8 @@ on:
         required: false
         default: ''
 
-# Pushes the captured images to a dedicated branch. Never to the branch this
-# was dispatched from: generated binaries should arrive by pull request, where
-# they can be looked at, not appear in the deploy branch unreviewed.
+# To a dedicated branch, never the one dispatched from: generated binaries
+# should arrive by pull request, where they can be looked at.
 permissions:
   contents: write
 
@@ -42,9 +39,7 @@ jobs:
       - name: Capture
         run: node scripts/shots.mjs ${{ inputs.projects }}
 
-      # Verify the screenshots actually build into the site before proposing
-      # them. An unreadable or absurdly large image should fail here, in a job
-      # nobody is waiting on, rather than in the deploy.
+      # An unreadable or absurd image should fail here, not in the deploy.
       - name: Build with the new screenshots
         run: npm run build:fast
 
@@ -54,19 +49,16 @@ jobs:
           git config user.name  'github-actions[bot]'
           git config user.email 'github-actions[bot]@users.noreply.github.com'
 
-          # Stage first, then compare against the index. `git diff` alone
-          # ignores untracked files, so the very first capture — every file
-          # brand new — looked like no change at all and skipped the push.
+          # Staged first: `git diff` alone ignores untracked files, so the
+          # first capture looked like no change and skipped the push.
           git add src/assets/previews
           if git diff --cached --quiet -- src/assets/previews; then
             echo "The captured screenshots are identical to the committed ones."
             exit 0
           fi
 
-          # A single-commit branch, recreated each run: this carries generated
-          # output, so its history is noise and a stale branch would conflict
-          # with the next capture. Staged changes survive the checkout, since
-          # the new branch starts at the commit they were staged against.
+          # Recreated each run: this carries generated output, so its history
+          # is noise. Staged changes survive the checkout.
           git checkout -B previews/auto
           git commit -m 'Capture project previews' \
                      -m "Produced by scripts/shots.mjs on run ${{ github.run_id }}, from ${{ github.sha }}."

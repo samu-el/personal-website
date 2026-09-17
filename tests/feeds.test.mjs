@@ -2,11 +2,10 @@
  * Unit tests for the build-time feed parsers.
  *
  * These matter more than usual: the GitHub half cannot be exercised from the
- * sandbox this was written in (the user-level endpoints are blocked there), so
- * the transform is tested against a fixture instead of a live response. Both
- * parsers also have to survive payloads that are merely plausible — a missing
- * field, an entry that is not a diary entry, a repository that is somebody
- * else's fork.
+ * sandbox this was written in, so the transform is tested against a fixture
+ * rather than a live response. All three parsers also have to survive payloads
+ * that are merely plausible — a missing field, an entry that is not a diary
+ * entry, a repository that is somebody else's fork.
  *
  * Run with: npm run test:unit
  */
@@ -14,8 +13,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { normalizeGitHub, normalizeSpotify, parseLetterboxd } from '../src/lib/feeds.ts';
 
-/** The repository names a call kept, in the order it kept them. */
-const names = (out) => out.recent.map((r) => r.name);
+// --- GitHub ---------------------------------------------------------------
 
 const repo = (over = {}) => ({
   name: 'thing',
@@ -29,98 +27,86 @@ const repo = (over = {}) => ({
   private: false,
   ...over,
 });
+const github = (repos) => normalizeGitHub({ public_repos: repos.length }, repos);
+const names = (out) => out.recent.map((r) => r.name);
+const daysAgo = (n) => new Date(Date.now() - n * 86_400_000).toISOString();
 
-test('normalizeGitHub keeps the account repo count verbatim', () => {
-  const out = normalizeGitHub({ public_repos: 34 }, [repo()]);
-  assert.equal(out.publicRepos, 34);
-});
+/** Which repositories survive the filters, and in what order. */
+for (const [what, repos, kept] of [
+  [
+    'drops forks, archived and private repositories',
+    [
+      repo({ name: 'mine' }),
+      repo({ name: 'someone-elses', fork: true }),
+      repo({ name: 'retired', archived: true }),
+      repo({ name: 'secret', private: true }),
+    ],
+    ['mine'],
+  ],
+  [
+    'drops repositories on the exclude list',
+    ['CRM', 'Expense-Tracking', 'Simple-Blog', 'telemed'].map((name) => repo({ name })),
+    ['telemed'],
+  ],
+  [
+    'skips repositories with no push date',
+    [repo({ name: 'ok' }), repo({ name: 'never-pushed', pushed_at: null })],
+    ['ok'],
+  ],
+  [
+    'drops repositories older than the age cap',
+    [
+      repo({ name: 'current', pushed_at: daysAgo(10) }),
+      repo({ name: 'still-recent', pushed_at: daysAgo(700) }),
+      repo({ name: 'ancient', pushed_at: daysAgo(1800) }),
+    ],
+    ['current', 'still-recent'],
+  ],
+  ['returns an empty list rather than throwing on no repos', [], []],
+]) {
+  test(`normalizeGitHub ${what}`, () => assert.deepEqual(names(github(repos)), kept));
+}
 
-test('normalizeGitHub drops forks, archived and private repositories', () => {
-  const out = normalizeGitHub({ public_repos: 4 }, [
-    repo({ name: 'mine' }),
-    repo({ name: 'someone-elses', fork: true }),
-    repo({ name: 'retired', archived: true }),
-    repo({ name: 'secret', private: true }),
-  ]);
-  assert.deepEqual(names(out), ['mine']);
-});
-
-test('normalizeGitHub drops repositories on the exclude list', () => {
-  const out = normalizeGitHub({ public_repos: 3 }, [
-    repo({ name: 'CRM' }),
-    repo({ name: 'Expense-Tracking' }),
-    repo({ name: 'Simple-Blog' }),
-    repo({ name: 'telemed' }),
-  ]);
-  assert.deepEqual(names(out), ['telemed']);
-});
+/** The language summary is about all public work, not just the recent list. */
+for (const [what, repos, languages] of [
+  ['dedupes and sorts, ignoring empty ones', ['TypeScript', 'Python', 'TypeScript', null], ['Python', 'TypeScript']],
+  ['excludes a repository that the recent list excluded', ['CSS', 'TypeScript'], ['CSS', 'TypeScript']],
+]) {
+  test(`normalizeGitHub ${what}`, () => {
+    const out = github(repos.map((language, i) => repo({ name: `r${i}`, language })));
+    assert.deepEqual(out.languages, languages);
+  });
+}
 
 test('an excluded repository does not contribute a language either', () => {
-  const out = normalizeGitHub({ public_repos: 2 }, [
-    repo({ name: 'CRM', language: 'CSS' }),
-    repo({ name: 'telemed', language: 'TypeScript' }),
-  ]);
+  const out = github([repo({ name: 'CRM', language: 'CSS' }), repo({ name: 'telemed', language: 'TypeScript' })]);
   assert.deepEqual(out.languages, ['TypeScript']);
 });
 
+test('an aged-out repository still counts towards the language summary', () => {
+  // The list is about recent activity; the language line is about all of it.
+  const out = github([repo({ name: 'ancient', language: 'Swift', pushed_at: new Date(0).toISOString() })]);
+  assert.deepEqual(names(out), []);
+  assert.deepEqual(out.languages, ['Swift']);
+});
+
+test('normalizeGitHub keeps the account repo count verbatim', () => {
+  assert.equal(normalizeGitHub({ public_repos: 34 }, [repo()]).publicRepos, 34);
+});
+
 test('normalizeGitHub sorts by push date, newest first, and caps at six', () => {
-  const repos = Array.from({ length: 9 }, (_, i) =>
-    repo({ name: `r${i}`, pushed_at: `2026-0${(i % 9) + 1}-01T00:00:00Z` }),
+  const out = github(
+    Array.from({ length: 9 }, (_, i) => repo({ name: `r${i}`, pushed_at: `2026-0${(i % 9) + 1}-01T00:00:00Z` })),
   );
-  const out = normalizeGitHub({ public_repos: 9 }, repos);
   assert.equal(out.recent.length, 6);
   assert.equal(out.recent[0].name, 'r8');
   const dates = out.recent.map((r) => r.pushedAt);
   assert.deepEqual(dates, [...dates].sort().reverse());
 });
 
-test('normalizeGitHub skips repositories with no push date', () => {
-  const out = normalizeGitHub({ public_repos: 2 }, [
-    repo({ name: 'ok' }),
-    repo({ name: 'never-pushed', pushed_at: null }),
-  ]);
-  assert.deepEqual(names(out), ['ok']);
-});
-
-test('normalizeGitHub dedupes and sorts languages, ignoring empty ones', () => {
-  const out = normalizeGitHub({ public_repos: 4 }, [
-    repo({ name: 'a', language: 'TypeScript' }),
-    repo({ name: 'b', language: 'Python' }),
-    repo({ name: 'c', language: 'TypeScript' }),
-    repo({ name: 'd', language: null }),
-  ]);
-  assert.deepEqual(out.languages, ['Python', 'TypeScript']);
-});
-
 test('normalizeGitHub tolerates a missing description and star count', () => {
-  const out = normalizeGitHub({ public_repos: 1 }, [repo({ description: null, stargazers_count: undefined })]);
-  assert.equal(out.recent[0].description, null);
-  assert.equal(out.recent[0].stars, 0);
-});
-
-test('normalizeGitHub returns an empty list rather than throwing on no repos', () => {
-  const out = normalizeGitHub({ public_repos: 0 }, []);
-  assert.deepEqual(names(out), []);
-  assert.deepEqual(out.languages, []);
-});
-
-test('normalizeGitHub drops repositories older than the age cap', () => {
-  const days = (n) => new Date(Date.now() - n * 86_400_000).toISOString();
-  const out = normalizeGitHub({ public_repos: 3 }, [
-    repo({ name: 'current', pushed_at: days(10) }),
-    repo({ name: 'still-recent', pushed_at: days(700) }),
-    repo({ name: 'ancient', pushed_at: days(1800) }),
-  ]);
-  assert.deepEqual(names(out), ['current', 'still-recent']);
-});
-
-test('an aged-out repository still counts towards the language summary', () => {
-  // The list is about recent activity; the language line is about all of it.
-  const out = normalizeGitHub({ public_repos: 1 }, [
-    repo({ name: 'ancient', language: 'Swift', pushed_at: new Date(0).toISOString() }),
-  ]);
-  assert.deepEqual(names(out), []);
-  assert.deepEqual(out.languages, ['Swift']);
+  const out = github([repo({ description: null, stargazers_count: undefined })]);
+  assert.partialDeepStrictEqual(out.recent[0], { description: null, stars: 0 });
 });
 
 // --- Spotify --------------------------------------------------------------
@@ -135,19 +121,27 @@ const play = (over = {}) => ({
     external_urls: { spotify: over.url ?? 'https://open.spotify.com/track/t1' },
   },
 });
+const titles = (tracks) => tracks.map((t) => t.title);
 
 test('normalizeSpotify reads title, artist, album and url', () => {
   const [track] = normalizeSpotify([play()]);
-  assert.equal(track.title, 'Ye Vinger');
-  assert.equal(track.artist, 'Mulatu Astatke');
-  assert.equal(track.album, 'Mulatu of Ethiopia');
+  assert.partialDeepStrictEqual(track, {
+    title: 'Ye Vinger',
+    artist: 'Mulatu Astatke',
+    album: 'Mulatu of Ethiopia',
+    playedAt: '2026-09-07T10:00:00.000Z',
+  });
   assert.match(track.url, /open\.spotify\.com/);
-  assert.equal(track.playedAt, '2026-09-07T10:00:00.000Z');
 });
 
 test('normalizeSpotify joins multiple artists', () => {
   const [track] = normalizeSpotify([play({ artists: [{ name: 'Rophnan' }, { name: 'Aster Aweke' }] })]);
   assert.equal(track.artist, 'Rophnan, Aster Aweke');
+});
+
+test('normalizeSpotify tolerates a missing album and artist list', () => {
+  const [track] = normalizeSpotify([play({ album: undefined, artists: undefined })]);
+  assert.partialDeepStrictEqual(track, { album: null, artist: '' });
 });
 
 test('normalizeSpotify collapses a repeated track to its most recent play', () => {
@@ -163,10 +157,9 @@ test('normalizeSpotify collapses a repeated track to its most recent play', () =
 });
 
 test('normalizeSpotify sorts by play time, newest first, and caps at six', () => {
-  const items = Array.from({ length: 10 }, (_, i) =>
-    play({ id: `t${i}`, played_at: `2026-09-0${(i % 9) + 1}T10:00:00.000Z` }),
+  const tracks = normalizeSpotify(
+    Array.from({ length: 10 }, (_, i) => play({ id: `t${i}`, played_at: `2026-09-0${(i % 9) + 1}T10:00:00.000Z` })),
   );
-  const tracks = normalizeSpotify(items);
   assert.equal(tracks.length, 6);
   const times = tracks.map((t) => t.playedAt);
   assert.deepEqual(times, [...times].sort().reverse());
@@ -178,16 +171,7 @@ test('normalizeSpotify skips rows with no track or no timestamp', () => {
     { track: { name: 'No timestamp', artists: [] } },
     play({ id: 'ok', name: 'Kept' }),
   ]);
-  assert.deepEqual(
-    tracks.map((t) => t.title),
-    ['Kept'],
-  );
-});
-
-test('normalizeSpotify tolerates a missing album and artist list', () => {
-  const [track] = normalizeSpotify([play({ album: undefined, artists: undefined })]);
-  assert.equal(track.album, null);
-  assert.equal(track.artist, '');
+  assert.deepEqual(titles(tracks), ['Kept']);
 });
 
 test('normalizeSpotify returns an empty list for an empty history', () => {
@@ -207,51 +191,48 @@ const diaryItem = (over = {}) => {
     link: 'https://letterboxd.com/rocin4nte/film/interstellar/',
     ...over,
   };
+  const field = (name, value) => (value ? `<letterboxd:${name}>${value}</letterboxd:${name}>` : '');
   return `<item>
     <title>${f.filmTitle}, ${f.filmYear} - ★★★★★</title>
     <link>${f.link}</link>
-    ${f.watchedDate ? `<letterboxd:watchedDate>${f.watchedDate}</letterboxd:watchedDate>` : ''}
-    ${f.rewatch ? `<letterboxd:rewatch>${f.rewatch}</letterboxd:rewatch>` : ''}
-    ${f.filmTitle ? `<letterboxd:filmTitle>${f.filmTitle}</letterboxd:filmTitle>` : ''}
-    ${f.filmYear ? `<letterboxd:filmYear>${f.filmYear}</letterboxd:filmYear>` : ''}
-    ${f.memberRating ? `<letterboxd:memberRating>${f.memberRating}</letterboxd:memberRating>` : ''}
+    ${field('watchedDate', f.watchedDate)}${field('rewatch', f.rewatch)}${field('filmTitle', f.filmTitle)}
+    ${field('filmYear', f.filmYear)}${field('memberRating', f.memberRating)}
   </item>`;
 };
-
 const feed = (...items) => `<?xml version='1.0' encoding='utf-8'?>
 <rss version="2.0"><channel><title>Letterboxd - rocin4nte</title>${items.join('')}</channel></rss>`;
+const one = (over) => parseLetterboxd(feed(diaryItem(over)))[0];
 
 test('parseLetterboxd reads the namespaced fields, not the star glyphs in the title', () => {
-  const [film] = parseLetterboxd(feed(diaryItem()));
-  assert.equal(film.title, 'Interstellar');
-  assert.equal(film.year, '2014');
-  assert.equal(film.rating, 5);
-  assert.equal(film.rewatch, true);
-  assert.equal(film.watchedAt, '2026-09-07');
+  const film = one();
+  assert.partialDeepStrictEqual(film, {
+    title: 'Interstellar',
+    year: '2014',
+    rating: 5,
+    rewatch: true,
+    watchedAt: '2026-09-07',
+  });
   assert.match(film.url, /letterboxd\.com/);
 });
 
-test('parseLetterboxd keeps half-star ratings as decimals', () => {
-  const [film] = parseLetterboxd(feed(diaryItem({ memberRating: '3.5' })));
-  assert.equal(film.rating, 3.5);
-});
-
-test('parseLetterboxd reports an unrated entry as null, not zero', () => {
-  const [film] = parseLetterboxd(feed(diaryItem({ memberRating: null })));
-  assert.equal(film.rating, null);
-});
-
-test('parseLetterboxd treats a missing rewatch field as a first watch', () => {
-  const [film] = parseLetterboxd(feed(diaryItem({ rewatch: null })));
-  assert.equal(film.rewatch, false);
-});
+/** One field at a time, since each has its own way of being absent or odd. */
+for (const [what, over, field, expected] of [
+  ['keeps half-star ratings as decimals', { memberRating: '3.5' }, 'rating', 3.5],
+  ['reports an unrated entry as null, not zero', { memberRating: null }, 'rating', null],
+  ['treats a missing rewatch field as a first watch', { rewatch: null }, 'rewatch', false],
+  ['decodes escaped characters in a title', { filmTitle: 'Vito &amp; Sons' }, 'title', 'Vito & Sons'],
+]) {
+  test(`parseLetterboxd ${what}`, () => assert.equal(one(over)[field], expected));
+}
 
 test('parseLetterboxd ignores items that are not diary entries', () => {
   // Lists and reviews come through the same feed without a watched date.
   const listItem = `<item><title>My list</title><link>https://letterboxd.com/rocin4nte/list/x/</link></item>`;
   const films = parseLetterboxd(feed(listItem, diaryItem()));
-  assert.equal(films.length, 1);
-  assert.equal(films[0].title, 'Interstellar');
+  assert.deepEqual(
+    films.map((f) => f.title),
+    ['Interstellar'],
+  );
 });
 
 test('parseLetterboxd sorts by watched date, newest first', () => {
@@ -273,11 +254,6 @@ test('parseLetterboxd caps the list at six', () => {
     diaryItem({ filmTitle: `Film ${i}`, watchedDate: `2026-01-${String(i + 1).padStart(2, '0')}` }),
   );
   assert.equal(parseLetterboxd(feed(...items)).length, 6);
-});
-
-test('parseLetterboxd decodes escaped characters in a title', () => {
-  const [film] = parseLetterboxd(feed(diaryItem({ filmTitle: 'Vito &amp; Sons' })));
-  assert.equal(film.title, 'Vito & Sons');
 });
 
 test('parseLetterboxd returns an empty list for an empty or junk feed', () => {
