@@ -7,9 +7,10 @@ the component API it publishes, and the encryption its collaboration rests on.
 
 Written against the current `master` of
 [github.com/excalidraw/excalidraw](https://github.com/excalidraw/excalidraw) —
-the element type definitions in `packages/element/src/types.ts`, the encryption
-module in `packages/excalidraw/data/encryption.ts`, the component props
-documentation and the project README. The scene-file notes at the end come from
+the element type definitions in `packages/element/src/types.ts`, the tool,
+font and export constants in `packages/common/src/constants.ts`, the encryption
+module in `packages/excalidraw/data/encryption.ts`, the component props and
+`UIOptions` documentation, and the project README. The scene-file notes at the end come from
 generating and round-tripping scenes here rather than from their source.
 
 ---
@@ -27,6 +28,47 @@ The split matters when reading the source. Everything about _what a drawing is_
 lives in the packages; everything about rooms, sharing links and persistence is
 the application around them. The collaboration server is a separate project
 again.
+
+---
+
+## What it actually gives you
+
+The editor is one infinite canvas and a palette of eighteen tools, which
+`TOOL_TYPE` enumerates: selection and lasso, the shapes (rectangle, diamond,
+ellipse), arrow and line, freedraw, text, image, eraser, hand, frame and magic
+frame, sticky note, embeddable, laser pointer, autoshape and bucket fill. Most
+of them map to an element type; a few — hand, laser, eraser — are modes rather
+than things that end up in the scene.
+
+**Text is where the hand-drawn look is decided.** The bundled families are
+Excalifont (the default), Virgil, Nunito, Lilita One, Comic Shanns, Helvetica,
+Cascadia, Liberation Sans and Assistant, each with a generic fallback. Choosing
+one is choosing how finished the drawing looks, which is why the sketch
+families lead.
+
+**Dark mode is a filter, not a second palette.** The dark theme applies
+`invert(93%) hue-rotate(180deg)` across the canvas. That is worth knowing
+before you fight it: every stroke colour a scene stores is a light-theme colour,
+and the dark rendering is derived. It also explains why the aesthetic survives
+theming at all — there is no second set of hand-drawn tokens to keep in step.
+
+**Export** covers `application/vnd.excalidraw+json` for the scene itself,
+`image/svg+xml` and `image/png` for pictures, with JPEG, GIF and WebP available
+through the same path. The JSON is the only lossless one; the rest are
+renderings.
+
+**The library** is the shape-reuse system, and it is the sidebar's default tab.
+It docks beside the canvas above a `dockedSidebarBreakpoint` width and overlays
+below it, which is the whole of its responsive behaviour.
+
+**What the component gives you versus what the hosted app adds** is visible in
+`UIOptions`. The component's canvas actions are local: background colour, clear
+canvas, load scene, save to the current file, theme toggle, save as image. The
+shareable-link button appears _only_ when a host passes an `onExportToBackend`
+callback — so sharing, rooms and the persistence behind them are the
+application's, not the component's. Real-time collaboration, end-to-end
+encrypted sessions, read-only links, local-first autosave to the browser and
+offline use as a PWA all sit on that side of the line.
 
 ---
 
