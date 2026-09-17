@@ -5,7 +5,7 @@ import Section from '@/components/Section.astro';
 import ProjectFigure from '@/components/ProjectFigure.astro';
 import PostCard from '@/components/PostCard.astro';
 import Ledger from '@/components/Ledger.astro';
-import { site, socials } from '@/lib/site';
+import { site } from '@/lib/site';
 import { publishedPosts } from '@/lib/posts';
 import { href } from '@/lib/paths';
 import { metrics } from '@/data/experience';
@@ -55,7 +55,7 @@ const marquee = [
 ];
 
 /** The Currently table: the same facts as the intro, as a ruled ledger. */
-const currently = [
+const currently: [string, string][] = [
   ['Role', 'Software Engineer'],
   ['Based in', 'Addis Ababa, Ethiopia'],
   ['Focus', 'Full-stack web and mobile — TypeScript, Python, React, PostgreSQL.'],
