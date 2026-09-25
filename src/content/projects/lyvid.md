@@ -1,5 +1,5 @@
 ---
-title: 'LyVid'
+title: 'LYVID'
 blurb: 'Turns a Spotify or YouTube link into a word-synced lyrics video: lyrics aligned to every word, a style you can edit, and an MP4 rendered on the server. Every step is also an MCP tool.'
 period: '2026'
 weight: 97
