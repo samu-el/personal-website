@@ -20,10 +20,12 @@ const projects = (await getCollection('projects', ({ data }) => isPublished(data
   .filter((p) => p.data.featured && !p.data.hidden)
   .sort((a, b) => b.data.weight - a.data.weight);
 
-/** Laid out by shape: a 16:10 frame beside a portrait one leaves half a
- *  column of nothing under it. */
+/** Two equal columns split on the centre line. The lead screenshot sits
+ *  beside the phone, whose height it can meet; the rest pair up by shape, so
+ *  no row puts a portrait frame beside a 16:10 one with half a column empty. */
 const wide = projects.filter((p) => p.data.device !== 'phone');
 const tall = projects.filter((p) => p.data.device === 'phone');
+const ordered = [...wide.slice(0, 1), ...tall.slice(0, 1), ...wide.slice(1), ...tall.slice(1)];
 
 const posts = (await publishedPosts()).slice(0, 3);
 
@@ -231,19 +233,16 @@ const currently: [string, string][] = [
     lede="Client work ships under other names. These are the public ones."
     id="work"
   >
-    <div class="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-8">
-      <div class="grid gap-10 lg:col-span-7 lg:gap-14">
-        {wide.map((p, i) => <ProjectFigure project={p} delay={i * 80} eager={i === 0} />)}
-      </div>
-
+    <div class="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-x-12 lg:gap-y-16">
       {
-        tall.length > 0 && (
-          <div class="grid gap-10 lg:col-span-4 lg:col-start-9 lg:gap-14">
-            {tall.map((p, i) => (
-              <ProjectFigure project={p} delay={(wide.length + i) * 80} captionClass="mx-auto max-w-[19rem]" />
-            ))}
-          </div>
-        )
+        ordered.map((p, i) => (
+          <ProjectFigure
+            project={p}
+            delay={i * 80}
+            eager={i === 0}
+            captionClass={p.data.device === 'phone' ? 'mx-auto max-w-[19rem]' : ''}
+          />
+        ))
       }
     </div>
 
