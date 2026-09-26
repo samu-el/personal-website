@@ -27,6 +27,14 @@ const TOKEN_SKEW_MS = 60_000;
 /** How long a remembered payload may still be served after a failure. */
 const LAST_GOOD_MAX_MS = 10 * 60_000;
 
+/** Read-only and credential-free, so any origin may ask. */
+const CORS = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+  'Access-Control-Allow-Headers': 'Accept',
+  'Access-Control-Max-Age': '86400',
+};
+
 /** Isolate-local, never the edge cache. @type {{ token: string, scope: string, expires: number } | null} */
 let cachedToken = null;
 /** The last payload that named a track. @type {{ payload: Payload, at: number } | null} */
@@ -63,7 +71,7 @@ function json(body, maxAge) {
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
       'Cache-Control': maxAge === 0 ? 'no-store' : `public, max-age=${maxAge}, s-maxage=${maxAge}`,
-      'Access-Control-Allow-Origin': '*',
+      ...CORS,
       'X-Content-Type-Options': 'nosniff',
     },
   });
@@ -117,7 +125,7 @@ function retryAfter(/** @type {Response} */ res) {
  * What is on now. 204 means nothing is playing — a success, and proof the token
  * and its scope are good. 401 bad token, 403 missing scope, 429 rate limit.
  *
- * @param {string} token @param {Diag} diag Mutated for `?debug=1`.
+ * @param {string} token @param {Diag} diag Mutated for `?debug`.
  * @returns {Promise<Payload | null>}
  */
 async function readPlayer(token, diag) {
@@ -215,15 +223,22 @@ async function answer(env) {
 }
 
 export default {
-  /** @param {Request} request @param {Env} env @returns {Promise<Response>} */
-  async fetch(request, env) {
+  /**
+   * @param {Request} request @param {Env} env
+   * @param {{ waitUntil(p: Promise<unknown>): void }} [ctx] Absent in tests.
+   * @returns {Promise<Response>}
+   */
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    // Explains a false rather than asserting it. Statuses only, never values.
-    const debug = url.searchParams.has('debug');
+    // Explains a false rather than asserting it. Statuses only, never values —
+    // and only for whoever holds DEBUG_KEY, so strangers cannot force live reads.
+    const debug = Boolean(env.DEBUG_KEY) && url.searchParams.get('debug') === env.DEBUG_KEY;
     // The root too, for workers.dev. Anything else is the static origin's.
     if (url.pathname !== '/' && !url.pathname.endsWith('/now-playing.json')) return fetch(request);
+    // A cross-origin preflight, for a page served from another host.
+    if (request.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
     if (request.method !== 'GET' && request.method !== 'HEAD') {
-      return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD' } });
+      return new Response('Method not allowed', { status: 405, headers: { Allow: 'GET, HEAD, OPTIONS' } });
     }
     // Missing secrets read as "nothing playing", not as an error.
     const secrets = {
@@ -235,9 +250,10 @@ export default {
       const body = debug ? { playing: false, reason: 'missing_secrets', secrets } : { playing: false };
       return json(body, debug ? 0 : CACHE_SECONDS_IDLE);
     }
-    // The edge serves repeat visitors. A debug read must be live.
+    // The edge serves repeat visitors. A debug read must be live. Keyed on the
+    // path alone, so a query string cannot mint a fresh miss per request.
     const cache = caches.default;
-    const cacheKey = new Request(url.toString(), { method: 'GET' });
+    const cacheKey = new Request(`${url.origin}${url.pathname}`, { method: 'GET' });
     if (!debug) {
       const hit = await cache.match(cacheKey);
       if (hit) return hit;
@@ -248,8 +264,10 @@ export default {
       lastGood = { payload, at: Date.now() };
     } else if (diag.failed && lastGood && Date.now() - lastGood.at < LAST_GOOD_MAX_MS) {
       // Marked `stale`, stamp dropped: a remembered position is not corrected.
+      // Never "playing" either — nobody knows it still is.
       const { fetchedAt: _drop, ...rest } = lastGood.payload;
-      payload = { ...rest, stale: true };
+      const state = rest.state === 'recent' ? 'recent' : 'paused';
+      payload = { ...rest, playing: false, state, stale: true };
       diag.reason = `${diag.reason}_served_last_good`;
       maxAge = Math.max(maxAge, diag.retryAfter || CACHE_SECONDS_IDLE);
     }
@@ -261,7 +279,10 @@ export default {
     // Hold for as long as Spotify asked rather than keep asking.
     if (diag.retryAfter) maxAge = Math.max(maxAge, diag.retryAfter);
     const response = json(payload, maxAge);
-    await cache.put(cacheKey, response.clone());
+    // Off the response path: the visitor need not wait on the cache write.
+    const stored = cache.put(cacheKey, response.clone());
+    if (ctx) ctx.waitUntil(stored);
+    else await stored;
     return response;
   },
 };

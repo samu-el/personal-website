@@ -59,6 +59,8 @@ const routes = [
         <Icon name="lucide:copy" class="size-4" aria-hidden="true" />
         <span data-copy-label>Copy address</span>
       </button>
+      <!-- The label change is visual; this is what a screen reader hears. -->
+      <span id="copy-email-status" class="sr-only" role="status" aria-live="polite"></span>
     </div>
   </PageHeader>
 
