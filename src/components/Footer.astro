@@ -10,7 +10,7 @@ const writing = await hasWriting();
 const items = await visibleNav();
 ---
 
-<footer id="site-footer" class="mt-12 border-t border-line bg-sunken lg:mt-36">
+<footer id="site-footer" class="mt-8 border-t border-line bg-sunken lg:mt-12">
   <div class="wrap py-12 lg:py-20">
     <!-- Call to action: the one line, at the size it deserves. -->
     <div class="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-8">
@@ -31,7 +31,8 @@ const items = await visibleNav();
     <div
       class="mt-12 grid grid-cols-2 gap-x-6 gap-y-10 border-t border-line pt-10 lg:mt-16 lg:grid-cols-12 lg:gap-8 lg:pt-12"
     >
-      <div class="lg:col-span-3 lg:col-start-5">
+      <!-- Columns end on the twelfth, flush with the buttons above them. -->
+      <div class="lg:col-span-3 lg:col-start-6">
         <h3 class="meta">Pages</h3>
         <ul class="mt-5 space-y-2.5">
           {
@@ -79,7 +80,7 @@ const items = await visibleNav();
               <li>
                 <a
                   href={href('/rss.xml')}
-                  class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+                  class="hit inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
                 >
                   <Icon name="lucide:rss" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
                   RSS feed
@@ -90,7 +91,7 @@ const items = await visibleNav();
           <li>
             <a
               href={href('/stack')}
-              class="inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+              class="hit inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
             >
               <Icon name="lucide:layers" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
               Built with

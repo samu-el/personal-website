@@ -75,16 +75,17 @@ const glance: [string, string][] = [
       </div>
 
       <!-- At a glance: a ruled table, sticky beside the prose. -->
-      <aside class="lg:col-span-4 lg:col-start-9">
+      <!-- A div: an aside inside main is not a top-level landmark. -->
+      <div class="lg:col-span-4 lg:col-start-9">
         <div class="lg:sticky lg:top-24" data-reveal style="--reveal-delay:80ms">
           <h2 class="meta">At a glance</h2>
           <Ledger rows={glance} />
           <SocialLinks
             class="mt-6 space-y-3"
-            rowClass="flex items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-fg"
+            rowClass="hit flex items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-fg"
           />
         </div>
-      </aside>
+      </div>
     </div>
   </div>
 
@@ -96,11 +97,11 @@ const glance: [string, string][] = [
       {
         roles.map((role, i) => (
           <li
-            class="ledger-row relative grid gap-5 py-9 lg:grid-cols-12 lg:gap-8 lg:py-12"
+            class="ledger-row relative grid gap-5 py-9 lg:grid-cols-12 lg:items-baseline lg:gap-8 lg:py-12"
             data-reveal
             style={`--reveal-delay:${i * 80}ms`}
           >
-            {/* Period column */}
+            {/* Period column, its years on the role title's baseline */}
             <div class="lg:col-span-4">
               <p class="row-index numeral flex items-baseline gap-3 text-[clamp(1.75rem,3.4vw,2.5rem)] text-fg">
                 {role.from ? (
@@ -141,8 +142,10 @@ const glance: [string, string][] = [
               {role.highlights.length > 0 && (
                 <ul class="mt-6 space-y-2.5">
                   {role.highlights.map((h) => (
-                    <li class="relative max-w-2xl pl-5 text-[0.9375rem] leading-relaxed text-muted">
-                      <span class="absolute left-0 top-[0.72em] h-px w-2.5 bg-accent" aria-hidden="true" />
+                    <li class="relative max-w-2xl pl-5 text-[0.9375rem] leading-6 text-muted">
+                      {/* Whole pixels: a hairline at 0.72em landed between rows and
+                          each dash antialiased to a different shade. */}
+                      <span class="absolute left-0 top-3 h-px w-2.5 bg-accent" aria-hidden="true" />
                       {h}
                     </li>
                   ))}
