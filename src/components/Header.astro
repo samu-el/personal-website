@@ -31,7 +31,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
   id="site-header"
   class="sticky top-0 z-50 border-b border-line bg-bg/80 backdrop-blur-xl transition-shadow duration-300 data-[scrolled]:shadow-[0_1px_0_0_var(--color-line)]"
 >
-  <div class="header-bar wrap flex h-16 items-center justify-between gap-4">
+  <div class="header-bar wrap flex h-16 items-center justify-between gap-4 max-[22.5rem]:gap-2">
     <!-- Wordmark -->
     <a
       href={href('/')}
@@ -47,7 +47,9 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
         class="wordmark-avatar size-8 shrink-0 rounded-full object-cover ring-1 ring-line-strong group-hover:ring-accent"
       />
       <span class="flex flex-col leading-none">
-        <span class="display text-[1.2rem] tracking-tight">{site.name}</span>
+        <span class="display whitespace-nowrap text-[1.2rem] tracking-tight max-[22.5rem]:text-[1.1rem]"
+          >{site.name}</span
+        >
         <span class="wordmark-sub hidden whitespace-nowrap font-mono text-2xs tracking-wider text-subtle lg:block"
           >{site.role} · {site.locationShort}</span
         >
@@ -82,10 +84,11 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
       }
     </nav>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 max-[22.5rem]:gap-1.5">
       <button
         type="button"
         id="cmdk-open"
+        data-cmdk-open
         class="hidden h-9 items-center gap-2 rounded-full border border-line pl-3 pr-2 text-subtle transition-colors hover:border-line-strong hover:text-fg md:inline-flex"
         aria-label="Search and jump to a page"
       >
@@ -99,7 +102,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
             aria-current={nowActive ? 'page' : undefined}
             title="What I have pushed and watched lately"
             class:list={[
-              'meta inline-flex h-9 items-center gap-2 rounded-full border pl-2.5 pr-3 transition-colors',
+              'meta inline-flex h-9 items-center pointer-coarse:h-11 gap-2 rounded-full border pl-2.5 pr-3 transition-colors',
               nowActive ? 'border-jade/60 text-fg' : 'border-line text-subtle hover:border-line-strong hover:text-fg',
             ]}
           >
@@ -123,7 +126,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
       <button
         type="button"
         id="menu-toggle"
-        class="grid size-9 place-items-center rounded-full border border-line text-muted transition-colors hover:border-line-strong hover:text-fg md:hidden"
+        class="grid size-9 place-items-center rounded-full border border-line text-muted pointer-coarse:size-11 transition-colors hover:border-line-strong hover:text-fg md:hidden"
         aria-label="Open menu"
         aria-expanded="false"
         aria-controls="mobile-menu"
@@ -166,7 +169,17 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
           );
         })
       }
-      <a href={`mailto:${site.email}`} style={`--i:${items.length}`} class="menu-row btn btn-primary my-4 w-full"
+      <!-- The palette's own trigger is desktop-only; this is its way in on a phone. -->
+      <button
+        type="button"
+        data-cmdk-open
+        style={`--i:${items.length}`}
+        class="menu-row hidden w-full items-center gap-3 border-b border-line py-3.5 text-left text-lg tracking-tight text-fg transition-colors [.js_&]:flex"
+      >
+        <Icon name="lucide:search" class="size-3.5 text-subtle" aria-hidden="true" />
+        Search
+      </button>
+      <a href={`mailto:${site.email}`} style={`--i:${items.length + 1}`} class="menu-row btn btn-primary my-4 w-full"
         >{site.email}</a
       >
     </nav>
@@ -301,9 +314,13 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
   .menu-panel.is-open {
     grid-template-rows: 1fr;
   }
+  /* A landscape phone is shorter than the menu: the panel scrolls within
+     the viewport, and never hands that scroll on to the page. */
   .menu-panel-inner {
-    overflow: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     min-height: 0;
+    max-height: calc(100dvh - 4rem);
   }
 
   /* Rows arrive one after another once the panel is on its way open. */

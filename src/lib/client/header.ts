@@ -34,6 +34,25 @@ export function mobileMenu() {
   }
   btn.addEventListener('click', () => setOpen(!isOpen()));
   scrim?.addEventListener('click', () => setOpen(false));
+  /* The palette entry inside the panel. Capture phase, so the panel is shut
+     and focus is back on the trigger before the palette notes where to
+     return focus — the row itself is about to be hidden. */
+  for (const entry of $$('[data-cmdk-open]', menu)) {
+    entry.addEventListener(
+      'click',
+      () => {
+        setOpen(false);
+        btn.focus();
+      },
+      { capture: true },
+    );
+  }
+  /* Scrolling the panel itself is not a scroll of the page. The panel
+     contains its overscroll, but a scroll that still reaches the page from
+     inside it re-anchors instead of closing. */
+  let touchedAt = 0;
+  const touched = () => (touchedAt = Date.now());
+  for (const type of ['wheel', 'touchmove'] as const) menu.addEventListener(type, touched, { passive: true });
   document.addEventListener('keydown', (event) => {
     if (!isOpen()) return;
     if (event.key === 'Escape') {
@@ -57,7 +76,9 @@ export function mobileMenu() {
   if (!header) return;
   const onScroll = () => {
     header.toggleAttribute('data-scrolled', window.scrollY > 8);
-    if (openedAt !== null && Math.abs(window.scrollY - openedAt) > 48) setOpen(false);
+    if (openedAt === null) return;
+    if (Date.now() - touchedAt < 250) openedAt = window.scrollY;
+    else if (Math.abs(window.scrollY - openedAt) > 48) setOpen(false);
   };
   onScroll();
   window.addEventListener('scroll', onScroll, { passive: true });

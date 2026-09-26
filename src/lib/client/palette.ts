@@ -1,4 +1,4 @@
-import { byId } from './dom';
+import { $$, byId, dialogOpen, isEditable, mayShortcut } from './dom';
 
 /** One row: a link, or an action the palette performs itself. */
 interface Entry {
@@ -54,17 +54,29 @@ export function commandPalette() {
   if (!data || !dialog || !input || !list || !tpl || typeof dialog.showModal !== 'function') return;
   const { entries, goto, email }: Data = JSON.parse(data.textContent ?? '{}');
   const empty = byId('cmdk-empty');
-  let rows: { el: HTMLElement; link: HTMLAnchorElement }[] = [];
+  const status = byId('cmdk-status');
+  let rows: { el: HTMLElement; entry: Entry }[] = [];
   let cursor = 0;
   let lastFocus: Element | null = null;
 
+  /* One polite message at a time, a beat after typing stops, so a screen
+     reader is not handed a count for every keystroke. */
+  let saying = 0;
+  function say(message: string, wait = 0) {
+    clearTimeout(saying);
+    saying = window.setTimeout(() => status && (status.textContent = message), wait);
+  }
+
   function select(next: number) {
-    if (!rows.length) return;
+    if (!rows.length) {
+      input!.removeAttribute('aria-activedescendant');
+      return;
+    }
     cursor = (next + rows.length) % rows.length;
     rows.forEach((row, i) => row.el.setAttribute('aria-selected', String(i === cursor)));
     const el = rows[cursor].el;
     el.scrollIntoView({ block: 'nearest' });
-    if (el.id) input!.setAttribute('aria-activedescendant', el.id);
+    input!.setAttribute('aria-activedescendant', el.id);
   }
 
   /** What the palette can do besides navigate. */
@@ -80,9 +92,29 @@ export function commandPalette() {
       }
       const hint = rows[cursor]?.el.querySelector('.cmdk-hint');
       if (hint) hint.textContent = ok ? 'Copied' : email;
-      setTimeout(close, 550);
+      say(ok ? 'Email address copied' : `Could not copy. The address is ${email}`);
+      // On a failure the address stays up to be read or copied by hand.
+      if (ok) setTimeout(close, 550);
     },
   };
+
+  /**
+   * Rows are not links (see the template), so opening one is done here. A
+   * modifier or the middle button opens a new tab, as a link would.
+   */
+  function activate(entry: Entry, event?: MouseEvent | KeyboardEvent) {
+    if (entry.action) return ACTIONS[entry.action]?.();
+    if (!entry.href) return;
+    const newTab = !!event && (event.metaKey || event.ctrlKey || ('button' in event && event.button === 1));
+    if (newTab || entry.external) {
+      window.open(entry.href, '_blank', 'noopener,noreferrer');
+      // A background tab leaves the palette where it was.
+      if (!newTab) close();
+      return;
+    }
+    close();
+    location.href = entry.href;
+  }
 
   function render() {
     const q = input!.value.trim().toLowerCase();
@@ -93,38 +125,33 @@ export function commandPalette() {
     list!.replaceChildren();
     rows = [];
     let section: string | null = null;
+    let parent: HTMLElement = list!;
     matches.forEach(({ entry }, i) => {
       if (!q && entry.section !== section) {
         section = entry.section;
-        const head = document.createElement('li');
+        // A group named by its heading, so the section is read with the option.
+        const group = document.createElement('div');
+        group.setAttribute('role', 'group');
+        const head = document.createElement('div');
         head.className = 'cmdk-group';
-        head.setAttribute('role', 'presentation');
+        head.id = `cmdk-group-${i}`;
         head.textContent = section;
-        list!.append(head);
+        group.setAttribute('aria-labelledby', head.id);
+        group.append(head);
+        list!.append(group);
+        parent = group;
       }
       const node = tpl!.content.firstElementChild!.cloneNode(true) as HTMLElement;
       node.id = `cmdk-row-${i}`;
-      const link = node.querySelector('a')!;
       node.querySelector('.cmdk-label')!.textContent = entry.label;
       node.querySelector('.cmdk-hint')!.textContent = entry.hint ?? '';
-      if (entry.href) {
-        link.href = entry.href;
-        if (entry.external) {
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-        }
-      } else {
-        link.setAttribute('role', 'button');
-        link.tabIndex = -1;
-      }
-      link.addEventListener('click', (event) => {
-        if (!entry.action) return close();
-        event.preventDefault();
-        ACTIONS[entry.action]?.();
-      });
+      node.addEventListener('click', (event) => activate(entry, event));
+      node.addEventListener('auxclick', (event) => event.button === 1 && activate(entry, event));
+      // Keeps the middle button from starting autoscroll instead.
+      node.addEventListener('mousedown', (event) => event.button === 1 && event.preventDefault());
       node.addEventListener('mousemove', () => select(rows.findIndex((r) => r.el === node)));
-      list!.append(node);
-      rows.push({ el: node, link });
+      parent.append(node);
+      rows.push({ el: node, entry });
     });
     if (empty) empty.hidden = rows.length > 0;
     select(0);
@@ -134,6 +161,7 @@ export function commandPalette() {
     if (dialog!.open) return;
     lastFocus = document.activeElement;
     input!.value = '';
+    say('');
     render();
     dialog!.showModal();
     // Locking the root keeps the page behind from scrolling on iOS.
@@ -142,6 +170,7 @@ export function commandPalette() {
   }
 
   function close() {
+    clearTimeout(saying);
     dialog!.close();
   }
   dialog.addEventListener('close', () => {
@@ -150,37 +179,39 @@ export function commandPalette() {
   });
   // Clicking the backdrop lands on the dialog itself, never on its content.
   dialog.addEventListener('click', (event) => event.target === dialog && close());
-  input.addEventListener('input', render);
+  input.addEventListener('input', () => {
+    render();
+    say(rows.length ? `${rows.length} result${rows.length === 1 ? '' : 's'}` : 'Nothing matches that.', 400);
+  });
 
   /** Arrow keys and Enter, as a table rather than a ladder of comparisons. */
-  const MOVES: Record<string, () => void> = {
+  const MOVES: Record<string, (event: KeyboardEvent) => void> = {
     ArrowDown: () => select(cursor + 1),
     ArrowUp: () => select(cursor - 1),
     Home: () => select(0),
     End: () => select(rows.length - 1),
-    Enter: () => rows[cursor]?.link.click(),
+    Enter: (event) => rows[cursor] && activate(rows[cursor].entry, event),
   };
   input.addEventListener('keydown', (event) => {
     const move = MOVES[event.key];
-    if (!move) return;
+    if (!move || event.isComposing) return;
     event.preventDefault();
-    move();
+    move(event);
   });
-  byId('cmdk-open')?.addEventListener('click', open);
+  for (const trigger of $$('[data-cmdk-open]')) trigger.addEventListener('click', open);
 
-  /* Global keys: ⌘K anywhere, and single letters when nothing else has the
-     keyboard. `g` arms a jump for the next keypress. */
-  const typing = (el: EventTarget | null) =>
-    el instanceof HTMLElement && (['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) || el.isContentEditable);
+  /* Global keys: ⌘K anywhere but another field or dialog, and single letters
+     only when focus is on the page itself (WCAG 2.1.4). `g` arms a jump for
+     the next keypress. */
   let chord = 0;
   document.addEventListener('keydown', (event) => {
-    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+    if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === 'k') {
+      if (event.repeat || dialogOpen(dialog) || (isEditable(event.target) && event.target !== input)) return;
       event.preventDefault();
       return dialog.open ? close() : open();
     }
-    if (dialog.open || event.metaKey || event.ctrlKey || event.altKey || typing(event.target)) {
-      return;
-    }
+    // `/` sits behind Shift on some layouts; letters never do.
+    if (!mayShortcut(event, { shift: event.key === '/' })) return;
     const key = event.key.toLowerCase();
     if (chord && Date.now() - chord < 1200) {
       chord = 0;

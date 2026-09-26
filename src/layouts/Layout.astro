@@ -46,6 +46,12 @@ const section =
         document.documentElement.classList.toggle('dark', isDark);
         document.documentElement.dataset.theme = pref;
         document.documentElement.classList.add('js');
+        // The browser chrome follows a chosen theme. Each tag keeps its own
+        // colour in data-tint, so the toggle can hand back to `system`.
+        const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
+        for (const m of metas) m.dataset.tint = m.content;
+        const chosen = metas.find((m) => m.media.includes(pref));
+        if (pref !== 'system' && chosen) for (const m of metas) m.content = chosen.dataset.tint;
       })();
     </script>
   </head>
