@@ -1,9 +1,17 @@
 name: CI
 
+# pull_request only: with `push: branches-ignore` as well, every push to a PR branch ran this
+# twice. Deploys (deploy.yml) build the site again on master, so nothing is lost there either.
 on:
   pull_request:
-  push:
-    branches-ignore: [master, main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+      - "LICENSE"
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   verify:
