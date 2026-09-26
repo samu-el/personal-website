@@ -1,5 +1,8 @@
 ---
-/** Album art or a poster, hotlinked, with a placeholder when there is none. */
+/**
+ * Album art or a poster, hotlinked, over a placeholder that shows while it
+ * loads, when there is none, and when the host refuses it.
+ */
 interface Props {
   src: string | null;
   width: number;
@@ -12,16 +15,20 @@ const box = `${cls} shrink-0 rounded border border-line`;
 
 {
   src ? (
-    <img
-      {src}
-      alt=""
-      {width}
-      {height}
-      loading="lazy"
-      decoding="async"
-      referrerpolicy="no-referrer"
-      class:list={[box, 'object-cover']}
-    />
+    <span class:list={[box, 'block overflow-hidden bg-surface-2']} aria-hidden="true">
+      {/* A hotlink can vanish; a broken-image icon is worse than the plain box. */}
+      <img
+        {src}
+        alt=""
+        {width}
+        {height}
+        loading="lazy"
+        decoding="async"
+        referrerpolicy="no-referrer"
+        onerror="this.remove()"
+        class="size-full object-cover"
+      />
+    </span>
   ) : (
     <span class:list={[box, 'bg-surface-2']} aria-hidden="true" />
   )

@@ -1,11 +1,12 @@
 import { byId } from './dom';
-import { nextPoll } from './schedule';
+import { MIN_MS, nextPoll } from './schedule';
 import { clock, since } from './time';
 
 /**
  * Fills the "currently listening" card from the Worker at `endpoint`: playing
  * with a live bar, paused where it stopped, or the last track that finished.
- * No track hides the card. docs/architecture.md, "Now playing".
+ * No track hides the card; a failed read keeps what is on it. docs/architecture.md,
+ * "Now playing".
  */
 
 type State = 'playing' | 'paused' | 'recent';
@@ -29,6 +30,12 @@ interface Payload {
 
 /** Bound on the staleness correction, so a badly set clock cannot peg the bar. */
 const MAX_AGE_MS = 60000;
+/** How long a good answer outlives failed reads — the Worker's own last-good window. */
+const KEEP_MS = 10 * 60000;
+/** A request that has not answered by now is abandoned and counted as a failure. */
+const TIMEOUT_MS = 10000;
+/** Remembers an empty answer, so the next visit does not reserve a card for nothing. */
+const EMPTY_KEY = 'np-empty';
 
 /** What the eyebrow says. A table, so adding a state is one line. */
 const LABEL: Record<State, (data: Payload) => string> = {
@@ -70,8 +77,18 @@ export function nowPlaying() {
   let timer = 0;
   let strikes = 0;
   let lastTitle = '';
+  /** When the card last got an answer naming a track; 0 when it has none. */
+  let goodAt = 0;
+  /** The request on the wire, if any, and a counter that retires stale ones. */
+  let inflight: AbortController | null = null;
+  let seq = 0;
+  /** When the last request went out, and when the schedule next wants one. */
+  let askedAt = 0;
+  let dueAt = 0;
 
-  /** `loading` is entered before the first paint; `empty` removes the card. */
+  /* `loading` is entered before the first paint, and the inline script beside
+     the markup has already decided whether the skeleton is showing. `empty`
+     removes the card. */
   function setState(next: 'loading' | 'ready' | 'empty') {
     section!.dataset.state = next;
     if (next !== 'loading') section!.removeAttribute('aria-busy');
@@ -79,7 +96,24 @@ export function nowPlaying() {
       el.link?.removeAttribute('aria-hidden');
       el.link?.removeAttribute('tabindex');
     }
-    section!.hidden = next === 'empty';
+    if (next !== 'loading') section!.hidden = next === 'empty';
+    if (next !== 'loading') remember(next === 'empty');
+  }
+
+  function remember(empty: boolean) {
+    try {
+      if (empty) localStorage.setItem(EMPTY_KEY, '1');
+      else localStorage.removeItem(EMPTY_KEY);
+    } catch {
+      // Storage blocked: every visit reserves the card, which is the safe default.
+    }
+  }
+
+  function clear() {
+    setState('empty');
+    goodAt = 0;
+    total = 0;
+    stopTicker();
   }
 
   function stopTicker() {
@@ -100,6 +134,7 @@ export function nowPlaying() {
   /** Replaces any pending poll. Jittered, so open tabs do not line up. */
   function schedule(ms: number) {
     clearTimeout(timer);
+    dueAt = Date.now() + ms;
     if (document.hidden) return;
     timer = window.setTimeout(poll, ms + Math.random() * 400);
   }
@@ -107,7 +142,10 @@ export function nowPlaying() {
   function paint(data: Payload) {
     /* An older deployed Worker sends no state, so infer it — otherwise the
        card reads "Paused" over a playing track while the two are out of step. */
-    const state: State = data.state ?? (data.playing ? 'playing' : 'paused');
+    const reported: State = data.state ?? (data.playing ? 'playing' : 'paused');
+    // A remembered answer is not live, whatever it says: nobody knows the
+    // track is still going, so no meter, no ticking bar, no "Currently".
+    const state: State = data.stale && reported === 'playing' ? 'paused' : reported;
     const live = state === 'playing';
     if (el.title) el.title.textContent = data.title ?? '';
     if (el.artist) el.artist.textContent = data.artist ?? '';
@@ -160,16 +198,20 @@ export function nowPlaying() {
     const stamp = Number(data.fetchedAt);
     const age = live && Number.isFinite(stamp) ? Math.min(Math.max(Date.now() - stamp, 0), MAX_AGE_MS) : 0;
     // A new track must not glide backwards out of the old one's position.
-    if (data.title !== lastTitle && el.bar) {
-      el.bar.style.transition = 'none';
-      requestAnimationFrame(() => (el.bar!.style.transition = ''));
-    }
+    const jump = data.title !== lastTitle && el.bar;
+    if (jump) el.bar!.style.transition = 'none';
     base = Math.min(at + age, duration);
     baseAt = Date.now();
     total = duration;
     if (el.duration) el.duration.textContent = clock(duration);
     el.progress!.hidden = false;
     renderProgress();
+    if (jump) {
+      // Commit the new width with no transition before handing it back, or
+      // both land in one style pass and the bar animates the jump anyway.
+      void el.bar!.offsetWidth;
+      el.bar!.style.transition = '';
+    }
     // A paused bar is rendered once and left alone: ticking it would advance
     // a track that is not moving.
     stopTicker();
@@ -177,16 +219,32 @@ export function nowPlaying() {
   }
 
   async function poll() {
+    // One at a time: a nudge while a request is out waits for its answer.
+    if (inflight) return;
+    clearTimeout(timer);
+    const id = ++seq;
+    const ctrl = (inflight = new AbortController());
+    const limit = window.setTimeout(() => ctrl.abort(), TIMEOUT_MS);
+    askedAt = Date.now();
     let data: Payload | null = null;
     let res: Response | null = null;
     try {
       /* no-store, or Cloudflare's Browser Cache TTL pins this for four hours.
          s-maxage survives that, so the edge still shields Spotify. */
-      res = await fetch(endpoint!, { headers: { Accept: 'application/json' }, cache: 'no-store' });
+      res = await fetch(endpoint!, {
+        headers: { Accept: 'application/json' },
+        cache: 'no-store',
+        signal: ctrl.signal,
+      });
       if (res.ok) data = await res.json();
     } catch {
-      // Offline, blocked, or DNS still catching up.
+      // Offline, blocked, timed out, or DNS still catching up.
+    } finally {
+      clearTimeout(limit);
+      if (inflight === ctrl) inflight = null;
     }
+    // Retired while out — the tab was hidden — so its answer is out of date.
+    if (id !== seq) return;
     strikes = data ? 0 : strikes + 1;
     schedule(
       nextPoll({
@@ -197,23 +255,41 @@ export function nowPlaying() {
         failures: strikes,
       }),
     );
-    // A title is the only requirement: paused and finished both count.
-    if (!data?.title) {
-      setState('empty');
-      total = 0;
-      stopTicker();
+    // A failed read says nothing about the music: keep the last good card
+    // until it has aged out, and only give up on one that never had an answer.
+    if (!data) {
+      if (!goodAt || Date.now() - goodAt > KEEP_MS) clear();
       return;
     }
+    // A title is the only requirement: paused and finished both count.
+    if (!data.title) {
+      clear();
+      return;
+    }
+    goodAt = Date.now();
     paint(data);
   }
 
+  /** Coming back asks now, unless the last ask was moments ago or it is backing off. */
+  function nudge() {
+    if (document.hidden || inflight) return;
+    const now = Date.now();
+    const soonest = Math.max(askedAt + MIN_MS, strikes ? dueAt : 0);
+    if (now >= soonest) poll();
+    else schedule(soonest - now);
+  }
+
   /* Both events: switching tabs gives visibilitychange, returning from
-     another application gives only focus. Going away cancels the poll. */
+     another application gives only focus. Going away cancels the poll and
+     retires any request still out. */
   document.addEventListener('visibilitychange', () => {
-    if (document.hidden) clearTimeout(timer);
-    else poll();
+    if (!document.hidden) return nudge();
+    clearTimeout(timer);
+    seq++;
+    inflight?.abort();
+    inflight = null;
   });
-  window.addEventListener('focus', () => document.hidden || poll());
+  window.addEventListener('focus', nudge);
   setState('loading');
   poll();
 }

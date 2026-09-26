@@ -22,7 +22,12 @@ beforeEach(async () => {
 globalThis.caches = { default: { match: async () => undefined, put: async () => {} } };
 globalThis.btoa ??= (v) => Buffer.from(v, 'binary').toString('base64');
 
-const ENV = { SPOTIFY_CLIENT_ID: 'id', SPOTIFY_CLIENT_SECRET: 'secret', SPOTIFY_REFRESH_TOKEN: 'refresh' };
+const ENV = {
+  SPOTIFY_CLIENT_ID: 'id',
+  SPOTIFY_CLIENT_SECRET: 'secret',
+  SPOTIFY_REFRESH_TOKEN: 'refresh',
+  DEBUG_KEY: 'k',
+};
 const SCOPES = 'user-read-recently-played user-read-currently-playing';
 
 const TRACK = {
@@ -100,10 +105,10 @@ const body = async (opts, path = '/now-playing.json', env = ENV) => {
   stub(opts);
   return (await get(path, env)).json();
 };
-const debug = (opts, env = ENV) => body(opts, '/?debug=1', env);
+const debug = (opts, env = ENV) => body(opts, '/?debug=k', env);
 
 test('debug reports missing secrets without revealing values', async () => {
-  const out = await debug({}, {});
+  const out = await debug({}, { DEBUG_KEY: 'k' });
   assert.equal(out.reason, 'missing_secrets');
   assert.deepEqual(out.secrets, {
     SPOTIFY_CLIENT_ID: false,
@@ -258,7 +263,7 @@ test('the normal payload carries no diagnostics', async () => {
 
 test('a debug response is never cached, a normal one is', async () => {
   stub({ playStatus: 204 });
-  assert.equal((await get('/?debug=1')).headers.get('cache-control'), 'no-store');
+  assert.equal((await get('/?debug=k')).headers.get('cache-control'), 'no-store');
   assert.match((await get('/now-playing.json')).headers.get('cache-control'), /max-age=10/);
   stub(PLAYING);
   const playing = (await get('/now-playing.json')).headers.get('cache-control');
@@ -287,7 +292,7 @@ test('a write method is rejected, HEAD is not', async () => {
   const call = (method) => worker.fetch(new Request('https://w.example/now-playing.json', { method }), ENV);
   const post = await call('POST');
   assert.equal(post.status, 405);
-  assert.equal(post.headers.get('allow'), 'GET, HEAD');
+  assert.equal(post.headers.get('allow'), 'GET, HEAD, OPTIONS');
   assert.equal((await call('HEAD')).status, 200);
 });
 
@@ -317,8 +322,8 @@ test('the access token is exchanged once and then reused', async () => {
 
 test('debug reports whether the token was reused', async () => {
   stub(PLAYING);
-  assert.equal((await (await get('/?debug=1')).json()).tokenCached, false);
-  assert.equal((await (await get('/?debug=1')).json()).tokenCached, true);
+  assert.equal((await (await get('/?debug=k')).json()).tokenCached, false);
+  assert.equal((await (await get('/?debug=k')).json()).tokenCached, true);
 });
 
 /** Two requests, and how many token exchanges they should cost between them. */
@@ -364,6 +369,8 @@ test('a rate limit serves the last good answer rather than blanking the card', a
   assert.equal(under.title, 'Yèkèrmo Sèw', 'the card keeps its title');
   assert.equal(under.stale, true, 'and says the answer is remembered');
   assert.equal(under.fetchedAt, undefined, 'with no stamp to correct a stale position against');
+  assert.equal(under.playing, false, 'and never claims it is still playing');
+  assert.equal(under.state, 'paused');
 });
 
 test('an outage serves the last good answer too', async () => {
@@ -386,4 +393,52 @@ test('an empty player is reported as empty, not as a remembered track', async ()
 test('debug names the substitution so it cannot be mistaken for a live read', async () => {
   await body(PLAYING, '/');
   assert.match((await debug({ playStatus: 429 })).reason, /served_last_good$/);
+});
+
+/* ------------------------------------------------------------------
+   Edge behaviour: debug gating, the cache key, preflight.
+   ------------------------------------------------------------------ */
+
+test('debug is ignored without the right key, and off when no key is set', async () => {
+  for (const [path, env] of [
+    ['/?debug=wrong', ENV],
+    ['/?debug=1', ENV],
+    ['/?debug=', { ...ENV, DEBUG_KEY: undefined }],
+    ['/?debug', { ...ENV, DEBUG_KEY: '' }],
+  ]) {
+    stub({ playStatus: 204 });
+    const res = await get(path, env);
+    assert.notEqual(res.headers.get('cache-control'), 'no-store', path);
+    assert.equal((await res.json()).reason, undefined, path);
+  }
+});
+
+test('the cache is keyed on the path, not the query string', async () => {
+  const keys = [];
+  const saved = globalThis.caches;
+  globalThis.caches = { default: { match: async (k) => (keys.push(k.url), undefined), put: async () => {} } };
+  try {
+    stub(PLAYING);
+    await get('/now-playing.json?bust=1');
+    await get('/now-playing.json?bust=2');
+    assert.deepEqual(keys, ['https://w.example/now-playing.json', 'https://w.example/now-playing.json']);
+  } finally {
+    globalThis.caches = saved;
+  }
+});
+
+test('the cache write is handed to waitUntil when there is a context', async () => {
+  stub(PLAYING);
+  const waited = [];
+  const req = new Request('https://w.example/now-playing.json', { method: 'GET' });
+  await worker.fetch(req, ENV, { waitUntil: (p) => waited.push(p) });
+  assert.equal(waited.length, 1);
+});
+
+test('a preflight is answered with 204 and CORS headers', async () => {
+  stub();
+  const res = await worker.fetch(new Request('https://w.example/now-playing.json', { method: 'OPTIONS' }), ENV);
+  assert.equal(res.status, 204);
+  assert.equal(res.headers.get('access-control-allow-origin'), '*');
+  assert.match(res.headers.get('access-control-allow-methods'), /GET/);
 });

@@ -4,9 +4,11 @@ export interface Env {
   SPOTIFY_CLIENT_ID: string;
   SPOTIFY_CLIENT_SECRET: string;
   SPOTIFY_REFRESH_TOKEN: string;
+  /** Unlocks `?debug=<key>`. Unset, debug is off. */
+  DEBUG_KEY?: string;
 }
 
-/** What the page receives. `reason` and below are added only on `?debug=1`. */
+/** What the page receives. `reason` and below are added only on `?debug=<DEBUG_KEY>`. */
 export interface Payload {
   playing: boolean;
   /** Which source the title came from. */

@@ -24,7 +24,12 @@ export const GET: APIRoute = () => {
 /* THANKS */
   Every maintainer of the above, none of whom were paid for it.
 `;
-  return new Response(body, {
+  /* The header only reaches a server-rendered route. This one is prerendered to
+     a file, and the host picks its own Content-Type — `text/plain` with no
+     charset from some, which a browser reads as windows-1252 and turns the em
+     dash into mojibake. A byte order mark wins over a missing or wrong charset,
+     so the file says it is UTF-8 by itself. */
+  return new Response(`\uFEFF${body}`, {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },
   });
 };
