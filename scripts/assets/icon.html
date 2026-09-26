@@ -33,5 +33,18 @@
     letter-spacing: -8px;
     color: #e9a23b;
   }
+  /* Full-bleed variants, picked by gen-images.mjs. The platform draws its own
+     mask over these (iOS rounds the corners, Android crops to its shape), so
+     a baked-in ring would be clipped at the corners. */
+  .bleed .ring {
+    border: 0;
+    border-radius: 0;
+  }
+  /* Maskable: the glyph must sit inside the central 80% circle that every
+     mask shape keeps, so it is set smaller than on the plain tile. */
+  .maskable .ring {
+    font-size: 168px;
+    letter-spacing: -6px;
+  }
 </style>
 <div class="ring">SM</div>

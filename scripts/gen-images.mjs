@@ -25,7 +25,7 @@ const siteTs = await readFile(resolve(root, 'src/lib/site.ts'), 'utf8');
 const email = siteTs.match(/email:\s*'([^']+)'/)?.[1];
 if (!email) throw new Error('could not read site.email from src/lib/site.ts');
 
-async function shoot(template, width, height, target) {
+async function shoot(template, width, height, target, variants = []) {
   const ctx = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1 });
   const page = await ctx.newPage();
   await page.goto(asset(template), { waitUntil: 'load' });
@@ -33,6 +33,7 @@ async function shoot(template, width, height, target) {
     const el = document.getElementById('email');
     if (el) el.textContent = value;
   }, email);
+  await page.evaluate((names) => document.body.classList.add(...names), variants);
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(150);
   await mkdir(dirname(target), { recursive: true });
@@ -52,12 +53,20 @@ console.log(`✓ public/og.png requantised (${(statSync(out('og.png')).size / 10
 
 // App icons — rendered once at 512 and downscaled, so the glyph stays crisp.
 await shoot('icon.html', 512, 512, out('icon-512.png'));
-for (const [size, name] of [
-  [192, 'icon-192.png'],
-  [180, 'apple-touch-icon.png'],
-]) {
-  await sharp(out('icon-512.png')).resize(size, size).png({ compressionLevel: 9 }).toFile(out(name));
-  console.log(`✓ public/${name} (${size}×${size})`);
-}
+await sharp(out('icon-512.png')).resize(192, 192).png({ compressionLevel: 9 }).toFile(out('icon-192.png'));
+console.log('✓ public/icon-192.png (192×192)');
+
+// iOS masks the touch icon itself, so it gets the full-bleed tile: a drawn
+// ring would be cut off at the corners.
+await shoot('icon.html', 512, 512, out('apple-touch.raw.png'), ['bleed']);
+await sharp(out('apple-touch.raw.png'))
+  .resize(180, 180)
+  .png({ compressionLevel: 9 })
+  .toFile(out('apple-touch-icon.png'));
+await rm(out('apple-touch.raw.png'));
+console.log('✓ public/apple-touch-icon.png (180×180)');
+
+// Android crops maskable icons to its own shape; full bleed, glyph in the safe zone.
+await shoot('icon.html', 512, 512, out('icon-maskable-512.png'), ['bleed', 'maskable']);
 
 await browser.close();
