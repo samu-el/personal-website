@@ -178,23 +178,28 @@
     animation-delay: var(--enter, 560ms);
   }
 
-  /* Watermarks drift slower than the page, so they read as a layer behind it. */
-  @supports (animation-timeline: view()) {
-    .rail-index {
-      /* Longhands: the minifier folds the shorthand and Chromium drops it. */
-      animation-name: drift;
-      animation-duration: auto;
-      animation-timing-function: linear;
-      animation-fill-mode: both;
-      animation-timeline: view();
+  /* Watermarks drift slower than the page, so they read as a layer behind it.
+     Gated on motion itself: a scroll timeline ignores the global duration
+     clamp. Kept within the margin components.css leaves each numeral, and
+     off the header's, which its clipping field would crop. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .rail-index:not(.rail-index--gold) {
+        /* Longhands: the minifier folds the shorthand and Chromium drops it. */
+        animation-name: drift;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: view();
+      }
     }
   }
   @keyframes drift {
     from {
-      translate: 0 5rem;
+      translate: 0 0.75rem;
     }
     to {
-      translate: 0 -5rem;
+      translate: 0 -0.75rem;
     }
   }
 
@@ -256,8 +261,16 @@
   .ledger-row:focus-within .row-index {
     color: var(--color-accent);
   }
-  /* The ticker pauses under the pointer, so a word can actually be read. */
-  .marquee-band:hover .animate-marquee {
+  /* The ticker pauses under the pointer, so a word can actually be read — and
+     by its toggle, which a keyboard or a thumb can reach. Not on focus: the
+     toggle is the only focusable thing here, and pressing play while focused
+     would do nothing. */
+  .marquee-band:hover .animate-marquee,
+  .marquee-band[data-paused] .animate-marquee {
     animation-play-state: paused;
+  }
+  .marquee-toggle[aria-pressed='true'] .marquee-pause,
+  .marquee-toggle[aria-pressed='false'] .marquee-play {
+    display: none;
   }
 }

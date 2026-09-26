@@ -1,19 +1,22 @@
 /* ── Components ─────────────────────────────────────────────────── */
 @layer components {
+  /* The gutter is a variable so a child set against the wrap's edge — the
+     header watermark — can line up with its content edge instead. */
   .wrap {
+    --wrap-pad: 1.25rem;
     width: 100%;
     max-width: 76rem;
     margin-inline: auto;
-    padding-inline: 1.25rem;
+    padding-inline: var(--wrap-pad);
   }
   @media (min-width: 40rem) {
     .wrap {
-      padding-inline: 2rem;
+      --wrap-pad: 2rem;
     }
   }
   @media (min-width: 80rem) {
     .wrap {
-      padding-inline: 3rem;
+      --wrap-pad: 3rem;
     }
   }
 
@@ -57,12 +60,18 @@
 
   /* The eyebrow's index again, at a size where it becomes texture. There for
      the rhythm of the page when scrolling, not to be read. */
+  /* Offsets are written against the figures, not the box: at line-height 1
+     the digits run from 0.1em to 0.85em down it and end 0.03em past its
+     right edge. Each placement keeps them inside their own block, clear of
+     the drift in motion.css, so no numeral reads as the next section's. */
   .rail-index {
     position: absolute;
-    right: -0.04em;
-    top: -0.32em;
+    right: 0.03em;
+    /* Stacked: figures start in the top padding and end beside the title. */
+    top: calc(-1.5rem - 0.1em);
     font-family: var(--font-display);
-    font-size: clamp(7rem, 22vw, 16rem);
+    font-size: clamp(6rem, 18vw, 8rem);
+    font-variant-numeric: lining-nums tabular-nums;
     line-height: 1;
     letter-spacing: -0.05em;
     color: rgb(var(--c-fg) / 0.045);
@@ -70,19 +79,52 @@
     user-select: none;
     z-index: 0;
   }
+  @media (min-width: 64rem) {
+    /* Two columns: figures stand in the top padding and end just inside the
+       header, above a lede set low in the right column. */
+    .rail-index {
+      top: auto;
+      bottom: calc(100% - 0.75rem - 0.15em);
+      font-size: 8.5rem;
+    }
+  }
   .dark .rail-index {
     color: rgb(var(--c-fg) / 0.06);
   }
-  /* For rows whose right side is the busy one — the stack's item columns —
-     the numeral sits behind the title instead, low, where there is room. */
+
+  /* The page header's: gold, larger, from the top of its ink field, which
+     clips — so it starts below that edge rather than across it. */
   .rail-index--gold {
-    color: rgb(233 162 59 / 0.22);
+    top: calc(1rem - 0.1em);
+    right: calc(var(--wrap-pad, 0px) + 0.03em);
+    bottom: auto;
+    font-size: clamp(7rem, 22vw, 16rem);
+    color: rgb(var(--c-accent) / 0.22);
   }
+  @media (min-width: 64rem) {
+    .rail-index--gold {
+      top: calc(1.5rem - 0.1em);
+      bottom: auto;
+      font-size: clamp(7rem, 22vw, 16rem);
+    }
+  }
+
+  /* For rows whose right side is the busy one — the stack's item columns —
+     the numeral sits behind the title instead, low, where there is room.
+     Stacked, that side is the items, so it goes up beside the title. */
   .rail-index--left {
-    right: auto;
-    left: -0.06em;
-    top: auto;
-    bottom: -0.18em;
+    top: calc(2.5rem - 0.1em);
+    font-size: clamp(5rem, 16vw, 7rem);
+  }
+  @media (min-width: 64rem) {
+    .rail-index--left {
+      right: auto;
+      left: -0.03em;
+      top: auto;
+      /* Figures end 1.5rem above the row's own rule, never across it. */
+      bottom: calc(1.5rem - 0.15em);
+      font-size: 9rem;
+    }
   }
 
   /* Rows separated by hairlines: the divider carries the structure, and

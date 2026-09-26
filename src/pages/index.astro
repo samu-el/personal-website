@@ -67,11 +67,12 @@ const currently: [string, string][] = [
 
 <Layout title={site.title} description={site.description} path="/" type="profile">
   <!-- ── Hero: an ink field, edge to edge ─────────────────────────── -->
-  <!-- Full-width, not .wrap: the headline is sized to the viewport. -->
+  <!-- The field runs edge to edge; its content keeps to .wrap, so the eyebrow,
+       lede and buttons share an edge with the logo and every section below. -->
   <section class="field-ink relative overflow-hidden" style="view-transition-name:field">
     <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true"></div>
 
-    <div class="relative px-5 pb-14 pt-10 sm:px-8 lg:pb-24 lg:pt-20 xl:px-12 2xl:px-16">
+    <div class="wrap relative pb-14 pt-10 lg:pb-24 lg:pt-20">
       <p class="eyebrow hero-enter" style="--enter:0ms">
         <a href={href('/contact')} class="hit transition-colors hover:text-accent">Reach out</a>
         <span class="hidden text-line-strong sm:inline" aria-hidden="true">/</span>
@@ -132,7 +133,8 @@ const currently: [string, string][] = [
         </div>
 
         <!-- Currently: the same facts, as a ruled table. -->
-        <aside class="hero-enter lg:col-span-4 lg:col-start-9" style="--enter:670ms">
+        <!-- A div, not an aside: a complementary landmark inside main is not top-level. -->
+        <div class="hero-enter lg:col-span-4 lg:col-start-9" style="--enter:670ms">
           <h2 class="meta">Currently</h2>
           <Ledger rows={currently} align="columns" />
           <a
@@ -146,7 +148,7 @@ const currently: [string, string][] = [
               aria-hidden="true"
             />
           </a>
-        </aside>
+        </div>
       </div>
     </div>
   </section>
@@ -168,6 +170,18 @@ const currently: [string, string][] = [
     <p class="sr-only">
       Core stack: {marquee.join(', ')}.
     </p>
+    <!-- Hover pauses it for a mouse; this is the same for a thumb or a key
+         (WCAG 2.2.2). Nothing moves under reduced motion, so it is not shown. -->
+    <button
+      type="button"
+      class="marquee-toggle hit absolute right-3 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-line-strong bg-bg text-fg transition-colors hover:bg-surface motion-reduce:hidden lg:right-5"
+      aria-pressed="false"
+      aria-label="Pause the stack ticker"
+      data-marquee-toggle
+    >
+      <Icon name="lucide:pause" class="marquee-pause size-3.5" aria-hidden="true" />
+      <Icon name="lucide:play" class="marquee-play size-3.5" aria-hidden="true" />
+    </button>
   </div>
 
   <!-- ── Metrics ──────────────────────────────────────────────────── -->
@@ -179,7 +193,9 @@ const currently: [string, string][] = [
         liveMetrics.map((m, i) => (
           <div
             class:list={[
-              'py-8 lg:py-12',
+              // Rows shared across the dl, so a label that wraps to two lines
+              // lowers every figure beside it, not just its own.
+              'row-span-3 grid grid-rows-subgrid py-8 lg:py-12',
               i > 0 && 'lg:pl-8',
               i < 3 && 'lg:pr-8',
               i % 2 === 1 && 'border-l border-line pl-6 lg:border-l-0 lg:pl-8',
@@ -192,7 +208,8 @@ const currently: [string, string][] = [
             <dd class="numeral mt-5 text-[clamp(3rem,7.4vw,6rem)] text-fg" data-count>
               {m.value}
             </dd>
-            {m.note && <p class="mt-3 text-[0.8125rem] leading-snug text-subtle">{m.note}</p>}
+            {/* A second dd, not a p: a dl group holds only dt and dd. */}
+            {m.note && <dd class="mt-3 text-[0.8125rem] leading-snug text-subtle">{m.note}</dd>}
           </div>
         ))
       }
@@ -233,13 +250,13 @@ const currently: [string, string][] = [
     lede="Client work ships under other names. These are the public ones."
     id="work"
   >
+    {/* All lazy: below the fold here, unlike on /work where the first is the LCP. */}
     <div class="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-x-12 lg:gap-y-16">
       {
         ordered.map((p, i) => (
           <ProjectFigure
             project={p}
             delay={i * 80}
-            eager={i === 0}
             captionClass={p.data.device === 'phone' ? 'mx-auto max-w-[19rem]' : ''}
           />
         ))
@@ -281,4 +298,12 @@ const currently: [string, string][] = [
 <script>
   import { countUp } from '@/lib/client/count';
   countUp();
+
+  /* The ticker's pause: a state on the band, so the CSS decides what stops. */
+  const toggle = document.querySelector<HTMLButtonElement>('[data-marquee-toggle]');
+  toggle?.addEventListener('click', () => {
+    const paused = toggle.getAttribute('aria-pressed') !== 'true';
+    toggle.setAttribute('aria-pressed', String(paused));
+    toggle.closest('.marquee-band')?.toggleAttribute('data-paused', paused);
+  });
 </script>

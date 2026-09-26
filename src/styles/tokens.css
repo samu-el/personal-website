@@ -62,7 +62,8 @@
     --c-border-alpha: 0.11;
     --c-fg: 22 23 26;
     --c-fg-muted: 92 94 101;
-    --c-fg-subtle: 132 134 141;
+    /* Subtle is the faintest text: it clears 4.5:1 on bg, sunken and both surfaces, in each theme. */
+    --c-fg-subtle: 104 106 113;
     --c-accent: 161 92 0;
     --c-accent-fg: 255 255 255;
     --c-jade: 21 118 79;
@@ -80,7 +81,7 @@
     --c-border-alpha: 0.1;
     --c-fg: 236 236 234;
     --c-fg-muted: 150 151 157;
-    --c-fg-subtle: 112 113 119;
+    --c-fg-subtle: 136 137 143;
     --c-accent: 233 162 59;
     --c-accent-fg: 18 14 6;
     --c-jade: 74 190 138;
