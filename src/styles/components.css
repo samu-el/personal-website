@@ -110,19 +110,21 @@
   }
 
   /* For rows whose right side is the busy one — the stack's item columns —
-     the numeral sits behind the title instead, low, where there is room.
+     the numeral lives in the title block instead, so every row places it the
+     same way whatever its height: figures rising from the title's baseline
+     into the top padding, behind the eyebrow and title, clear of the blurb.
      Stacked, that side is the items, so it goes up beside the title. */
   .rail-index--left {
-    top: calc(2.5rem - 0.1em);
+    top: -0.1em;
     font-size: clamp(5rem, 16vw, 7rem);
   }
   @media (min-width: 64rem) {
     .rail-index--left {
       right: auto;
       left: -0.03em;
-      top: auto;
-      /* Figures end 1.5rem above the row's own rule, never across it. */
-      bottom: calc(1.5rem - 0.15em);
+      /* Box top set so the figures' foot (0.85em down) meets the h2 baseline. */
+      top: calc(6.35rem - 0.85em);
+      bottom: auto;
       font-size: 9rem;
     }
   }
