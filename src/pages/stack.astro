@@ -26,11 +26,11 @@ const index = await navIndex('/stack');
       {
         stack.map((group) => (
           <section class="relative grid gap-8 py-10 lg:grid-cols-12 lg:gap-8 lg:py-16">
-            <span class="rail-index rail-index--left" aria-hidden="true">
-              {group.index}
-            </span>
             <div class="relative lg:col-span-4">
-              <div class="lg:sticky lg:top-24">
+              <div class="relative lg:sticky lg:top-24">
+                <span class="rail-index rail-index--left" aria-hidden="true">
+                  {group.index}
+                </span>
                 <p class="eyebrow" data-reveal>
                   <span class="text-accent">{group.index}</span>
                   {group.title}
