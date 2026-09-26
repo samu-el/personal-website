@@ -10,8 +10,8 @@ import { Icon } from 'astro-icon/components';
 <button
   type="button"
   id="theme-toggle"
-  class="group relative grid h-9 w-9 place-items-center rounded-full border border-line text-muted transition-colors hover:border-line-strong hover:text-fg"
-  aria-label="Change colour theme"
+  class="group relative grid h-9 w-9 place-items-center rounded-full border border-line text-muted transition-colors hover:border-line-strong hover:text-fg pointer-coarse:h-11 pointer-coarse:w-11"
+  aria-label="Colour theme: System"
   title="Change colour theme"
 >
   {
@@ -25,8 +25,9 @@ import { Icon } from 'astro-icon/components';
       <Icon name={icon} class={`theme-icon theme-icon--${pref} size-[15px]`} aria-hidden="true" />
     ))
   }
-  <span class="sr-only" id="theme-state">System theme</span>
 </button>
+<!-- Outside the button, so a change is announced without re-reading its name. -->
+<span class="sr-only" id="theme-state" aria-live="polite"></span>
 
 <style>
   .theme-icon {
@@ -45,29 +46,48 @@ import { Icon } from 'astro-icon/components';
 </style>
 
 <script>
-  import { byId } from '@/lib/client/dom';
+  import { $$, byId } from '@/lib/client/dom';
   import { dark } from '@/lib/client/env';
 
   const ORDER = ['system', 'light', 'dark'] as const;
+  const NAMES = { system: 'System', light: 'Light', dark: 'Dark' };
   const LABELS = { system: 'System theme', light: 'Light theme', dark: 'Dark theme' };
   type Pref = (typeof ORDER)[number];
 
   const root = document.documentElement;
   const current = () => (root.dataset.theme || 'system') as Pref;
+  const btn = byId('theme-toggle');
+
+  /** The button's name carries the state, so it is right from first focus. */
+  function label(pref: Pref) {
+    btn?.setAttribute('aria-label', `Colour theme: ${NAMES[pref]}`);
+  }
+
+  /* The browser chrome follows a chosen theme; `system` hands back to the
+     media variants. Layout.astro stashed each tag's own colour in data-tint. */
+  function tint(pref: Pref) {
+    const metas = $$<HTMLMetaElement>('meta[name="theme-color"]');
+    const chosen = metas.find((m) => m.media.includes(pref))?.dataset.tint;
+    for (const m of metas) m.content = (pref === 'system' ? m.dataset.tint : chosen) ?? m.content;
+  }
+
+  label(current());
 
   let easing = 0;
-  function apply(pref: Pref) {
+  function apply(pref: Pref, announce = true) {
     // Let colours cross-fade for one transition, then stop slowing things.
     root.classList.add('theme-transition');
     clearTimeout(easing);
     easing = window.setTimeout(() => root.classList.remove('theme-transition'), 450);
     root.classList.toggle('dark', pref === 'dark' || (pref === 'system' && dark.matches));
     root.dataset.theme = pref;
+    label(pref);
+    tint(pref);
     const state = byId('theme-state');
-    if (state) state.textContent = LABELS[pref];
+    if (state && announce) state.textContent = LABELS[pref];
   }
 
-  byId('theme-toggle')?.addEventListener('click', () => {
+  btn?.addEventListener('click', () => {
     const next = ORDER[(ORDER.indexOf(current()) + 1) % ORDER.length];
     try {
       if (next === 'system') localStorage.removeItem('theme');
@@ -80,6 +100,6 @@ import { Icon } from 'astro-icon/components';
 
   // Keep `system` honest when the OS preference changes mid-session.
   dark.addEventListener('change', () => {
-    if (current() === 'system') apply('system');
+    if (current() === 'system') apply('system', false);
   });
 </script>

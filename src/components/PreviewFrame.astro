@@ -12,8 +12,10 @@ import { Icon } from 'astro-icon/components';
 
 interface Props {
   project: CollectionEntry<'projects'>;
-  /** The first frame on a page should not be lazy. */
+  /** The first frame on a page should not be lazy, and is fetched first. */
   eager?: boolean;
+  /** How wide the frame renders; defaults to the /work row's layout. */
+  sizes?: string;
   class?: string;
 }
 
@@ -21,11 +23,12 @@ const previews = import.meta.glob<{ default: ImageMetadata }>('/src/assets/previ
   eager: true,
 });
 
-const { project, eager = false, class: className } = Astro.props;
+const { project, eager = false, sizes: sizesProp, class: className } = Astro.props;
 const { title, demo, device } = project.data;
 
 const preview = pickAsset(previews, project.id);
 const phone = device === 'phone';
+const sizes = sizesProp ?? (phone ? '19rem' : '(min-width: 1024px) 58vw, 100vw');
 
 /** Hostname only. A full URL is noise at this type size. */
 const host = demo ? new URL(demo).host : null;
@@ -45,9 +48,10 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
 ---
 
 <div class:list={['group/frame relative', phone && 'mx-auto w-full max-w-[19rem]', className]}>
-  <!-- Warmth behind the frame, positioned from the cursor. -->
+  <!-- Warmth behind the frame, positioned from the cursor. Narrower than the
+       phone gutter sideways, or it widens the page and the browser zooms out. -->
   <div
-    class="pointer-events-none absolute -inset-6 opacity-0 blur-3xl transition-opacity duration-700 group-hover/frame:opacity-100 group-hover/row:opacity-100"
+    class="pointer-events-none absolute -inset-x-4 -inset-y-6 opacity-0 sm:-inset-x-6 blur-3xl transition-opacity duration-700 group-hover/frame:opacity-100 group-hover/row:opacity-100"
     style="background:radial-gradient(45% 45% at var(--mx,50%) var(--my,40%),rgb(var(--c-accent)/0.3),transparent 70%)"
     aria-hidden="true"
     data-frame
@@ -99,8 +103,9 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
             src={preview}
             alt={`${title}, running`}
             widths={phone ? [320, 480, 880] : [640, 960, 1280, 1600]}
-            sizes={phone ? '19rem' : '(min-width: 1024px) 58vw, 100vw'}
+            {sizes}
             loading={eager ? 'eager' : 'lazy'}
+            fetchpriority={eager ? 'high' : undefined}
             decoding="async"
             class="size-full object-cover object-top transition-transform duration-[900ms] ease-out-quint group-hover/frame:scale-[1.035] group-hover/row:scale-[1.035]"
           />

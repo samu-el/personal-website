@@ -3,8 +3,8 @@
  * Live "currently listening" card, filled in the browser from the Worker in
  * worker/. Playing with a live bar, paused where it stopped, or the last track
  * that finished; no track at all leaves the card hidden. It holds its shape as
- * a skeleton until the first answer — why that costs no layout shift is in
- * docs/architecture.md, "Now playing".
+ * a skeleton, shown before the first paint, until the first answer — why that
+ * costs no layout shift is in docs/architecture.md, "Now playing".
  */
 import { Icon } from 'astro-icon/components';
 import { href } from '@/lib/paths';
@@ -97,6 +97,24 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
   </div>
   <div class="rule"></div>
 </section>
+
+<!-- Before the first paint, so the skeleton is already holding the card's
+     space when the answer lands and the swap moves nothing. Without script the
+     card stays hidden; after an empty answer the next visit does not reserve
+     a card that is likely to collapse again. The key is EMPTY_KEY in
+     now-playing.ts. -->
+<script is:inline>
+  (() => {
+    const card = document.getElementById('now-playing');
+    let empty = false;
+    try {
+      empty = localStorage.getItem('np-empty') === '1';
+    } catch {
+      /* storage blocked — reserve the card */
+    }
+    if (card && !empty) card.hidden = false;
+  })();
+</script>
 
 <style>
   /* Sized in `em` and under 1em tall, so the line box is unchanged and the

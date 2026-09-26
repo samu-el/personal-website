@@ -33,7 +33,7 @@ The history endpoint is only called when the player names no track at all —
 never while something is playing, which would spend a rate-limited call on an
 answer that gets discarded. It is called after a rejection as well as after a
 204, because a token holding only `user-read-recently-played` gets a 401 on
-the player and can still answer this. `?debug=1` reports that call's own
+the player and can still answer this. `?debug=<key>` reports that call's own
 status as `recentReason`, separately from `reason`, so a fallback that worked
 does not hide a player call that did not.
 
@@ -153,12 +153,14 @@ curl -s https://smr.et/api/now-playing.json | jq
 
 ## Why is it saying `playing: false`?
 
-Add `?debug=1`. "Nothing is playing", "the refresh token has expired" and "the
-token lacks the right scope" all produce an identical `{ playing: false }`
-otherwise, which is not something you can debug from outside.
+Add `?debug=<key>`, where the key is the `DEBUG_KEY` secret
+(`wrangler secret put DEBUG_KEY`; with it unset, debug is off). "Nothing is
+playing", "the refresh token has expired" and "the token lacks the right
+scope" all produce an identical `{ playing: false }` otherwise, which is not
+something you can debug from outside.
 
 ```sh
-curl -s 'https://now-playing.smr.et/?debug=1' | jq
+curl -s "https://now-playing.smr.et/?debug=$DEBUG_KEY" | jq
 ```
 
 | `reason`                      | What it means                                                                                                                      | Fix                                                  |
@@ -192,7 +194,8 @@ matters most for a 401, which has two very different causes:
 
 Debug replies are `no-store`, so they are always a live read rather than a
 minute-old cached answer. They report HTTP statuses and whether each secret is
-set, never a value, so there is nothing there worth hiding behind auth.
+set, never a value; the key is there because each one bypasses the edge cache
+and spends a Spotify call.
 
 ## Is the Worker actually answering?
 

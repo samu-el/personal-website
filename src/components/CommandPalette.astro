@@ -95,8 +95,9 @@ const goto: Record<string, string> = {
       aria-expanded="true"
       aria-controls="cmdk-list"
       aria-autocomplete="list"
+      aria-label="Search pages, projects and actions"
       placeholder="Jump to a page, project or action…"
-      class="h-14 w-full flex-1 bg-transparent text-[0.9375rem] text-fg outline-none placeholder:text-subtle"
+      class="h-14 w-full flex-1 bg-transparent text-base text-fg outline-none placeholder:text-subtle"
     />
     <kbd
       class="hidden shrink-0 rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-2xs text-subtle sm:block"
@@ -104,13 +105,14 @@ const goto: Record<string, string> = {
     >
   </div>
 
-  <ul id="cmdk-list" role="listbox" aria-label="Results" class="max-h-[min(24rem,60dvh)] overflow-y-auto p-2"></ul>
+  <div id="cmdk-list" role="listbox" aria-label="Results" class="max-h-[min(24rem,60dvh)] overflow-y-auto p-2"></div>
 
-  <p id="cmdk-empty" hidden class="px-4 py-8 text-center text-sm text-subtle" aria-live="polite">
-    Nothing matches that.
-  </p>
+  <p id="cmdk-empty" hidden class="px-4 py-8 text-center text-sm text-subtle">Nothing matches that.</p>
+  <!-- Mounted for good: a live region that appears along with its message is
+       often not read at all. The script writes the result count here. -->
+  <p id="cmdk-status" class="sr-only" role="status"></p>
 
-  <div class="flex items-center gap-4 border-t border-line px-4 py-2.5 meta">
+  <div class="cmdk-foot flex items-center gap-4 border-t border-line px-4 py-2.5 meta">
     <span class="flex items-center gap-1.5"><kbd class="cmdk-key">↑↓</kbd> Move</span>
     <span class="flex items-center gap-1.5"><kbd class="cmdk-key">↵</kbd> Open</span>
     <span class="ml-auto hidden items-center gap-1.5 sm:flex">
@@ -120,12 +122,14 @@ const goto: Record<string, string> = {
 </dialog>
 
 <template id="cmdk-row">
-  <li role="option" aria-selected="false" class="cmdk-row">
-    <a class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm">
+  <!-- No link inside: an option's children are presentational, so a
+       focusable one would be nested-interactive. The script navigates. -->
+  <div role="option" aria-selected="false" class="cmdk-row">
+    <div class="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm">
       <span class="cmdk-label flex-1 truncate"></span>
       <span class="cmdk-hint shrink-0 meta"></span>
-    </a>
-  </li>
+    </div>
+  </div>
 </template>
 
 <style>
@@ -170,15 +174,22 @@ const goto: Record<string, string> = {
     color: var(--color-subtle);
   }
 
-  .cmdk-row > a {
+  .cmdk-row > div {
     cursor: pointer;
   }
-  .cmdk-row[aria-selected='true'] > a {
+  .cmdk-row[aria-selected='true'] > div {
     background-color: var(--color-surface-2);
     color: var(--color-accent);
   }
   .cmdk-row[aria-selected='true'] .cmdk-hint {
     color: var(--color-accent);
+  }
+
+  /* Arrow keys and Enter mean nothing on a touch screen. */
+  @media (hover: none) {
+    .cmdk-foot {
+      display: none;
+    }
   }
 
   .cmdk-key {

@@ -59,6 +59,8 @@ const routes = [
         <Icon name="lucide:copy" class="size-4" aria-hidden="true" />
         <span data-copy-label>Copy address</span>
       </button>
+      <!-- The label change is visual; this is what a screen reader hears. -->
+      <span id="copy-email-status" class="sr-only" role="status" aria-live="polite"></span>
     </div>
   </PageHeader>
 
@@ -68,7 +70,7 @@ const routes = [
       {
         routes.map((r, i) => (
           <li
-            class="ledger-row group grid gap-4 py-8 sm:grid-cols-12 sm:gap-6 lg:py-10"
+            class="ledger-row group grid gap-4 py-8 sm:grid-cols-12 sm:items-baseline sm:gap-6 lg:py-10"
             data-reveal
             style={`--reveal-delay:${i * 70}ms`}
           >

@@ -37,10 +37,15 @@ const isLive = d.status === 'Live' || d.status === 'Ongoing';
    anywhere in frontmatter stops Astro finding `interface Props`. */
 const links = [
   ...(d.demo ? [{ href: d.demo, icon: 'lucide:external-link', label: 'View live', cls: 'btn-primary' }] : []),
-  ...(d.repo ? [{ href: d.repo, icon: 'simple-icons:github', label: 'Source', cls: 'btn-ghost' }] : []),
+  ...(d.repo
+    ? [{ href: d.repo, icon: 'simple-icons:github', label: 'Source', cls: 'btn-ghost bg-bg hover:bg-surface-2' }]
+    : []),
 ];
 
 const eyebrow = 'meta';
+/** Paper behind each line of header text, so the column rules run under the
+ *  words instead of through them. */
+const onPaper = 'bg-bg [box-decoration-break:clone]';
 ---
 
 <Layout title={d.title} description={d.blurb} path={`/work/${project.id}`} type="article" tags={d.tags}>
@@ -52,7 +57,7 @@ const eyebrow = 'meta';
 
         <div class="grid gap-10 lg:grid-cols-12 lg:gap-8">
           <div class="lg:col-span-7">
-            <p class="flex flex-wrap items-center gap-x-3 gap-y-1.5" data-reveal>
+            <p class:list={['flex w-fit flex-wrap items-center gap-x-3 gap-y-1.5', onPaper]} data-reveal>
               <span class="meta">
                 {d.kind}
               </span>
@@ -72,12 +77,13 @@ const eyebrow = 'meta';
               </span>
             </p>
 
+            <!-- Outranks the footer's "Reach out." at every width. -->
             <h1
-              class="display mt-6 text-[clamp(2.4rem,6.6vw,4.25rem)]"
+              class="display-hero mt-6 text-[clamp(2.75rem,7.6vw,6rem)]"
               data-reveal
               style={`--reveal-delay:60ms;view-transition-name:project-${project.id}`}
             >
-              {d.title}
+              <span class={onPaper}>{d.title}</span>
             </h1>
 
             <p
@@ -85,7 +91,7 @@ const eyebrow = 'meta';
               data-reveal
               style="--reveal-delay:120ms"
             >
-              {d.blurb}
+              <span class={onPaper}>{d.blurb}</span>
             </p>
 
             <div class="mt-9 flex flex-wrap gap-3" data-reveal style="--reveal-delay:180ms">
@@ -99,7 +105,7 @@ const eyebrow = 'meta';
               }
               {
                 !d.repo && d.repoPrivate && (
-                  <span class="inline-flex items-center gap-2 meta">
+                  <span class:list={['inline-flex items-center gap-2 meta', onPaper]}>
                     <Icon name="lucide:lock" class="size-3.5" aria-hidden="true" />
                     Private source
                   </span>
@@ -108,7 +114,8 @@ const eyebrow = 'meta';
             </div>
           </div>
 
-          <aside class="lg:col-span-4 lg:col-start-9" data-reveal style="--reveal-delay:240ms">
+          <!-- A div: an aside inside main is not a top-level landmark. -->
+          <div class="lg:col-span-4 lg:col-start-9" data-reveal style="--reveal-delay:240ms">
             <div class="card rounded-lg p-6">
               <dl class="space-y-4 text-sm">
                 <div>
@@ -149,7 +156,7 @@ const eyebrow = 'meta';
                 }
               </dl>
             </div>
-          </aside>
+          </div>
         </div>
       </div>
     </header>
@@ -158,7 +165,7 @@ const eyebrow = 'meta';
          thing is and has not yet been asked to read about it. -->
     <div class="wrap pt-10 lg:pt-16">
       <div data-reveal>
-        <PreviewFrame {project} eager />
+        <PreviewFrame {project} eager sizes="(min-width: 1280px) 1120px, 90vw" />
       </div>
     </div>
 
