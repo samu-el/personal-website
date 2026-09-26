@@ -31,7 +31,7 @@
 </div>
 
 <script>
-  import { byId } from '@/lib/client/dom';
+  import { byId, dialogOpen, isEditable } from '@/lib/client/dom';
 
   const LABEL = 'color:#e9a23b;font-weight:600';
   const BODY = 'color:#96979d';
@@ -48,14 +48,23 @@ Try ⌘K for the command palette. Or the Konami code.`,
 
   // ↑ ↑ ↓ ↓ ← → ← → B A
   const SEQUENCE = 'arrowup arrowup arrowdown arrowdown arrowleft arrowright arrowleft arrowright b a'.split(' ');
+  /* KMP failure table: on a miss, fall back to the longest prefix that is
+     still a suffix of what was typed, so ↑↑↑↓↓… still completes. */
+  const FALLBACK = SEQUENCE.map(() => 0);
+  for (let i = 1, k = 0; i < SEQUENCE.length; i++) {
+    while (k > 0 && SEQUENCE[i] !== SEQUENCE[k]) k = FALLBACK[k - 1];
+    if (SEQUENCE[i] === SEQUENCE[k]) k += 1;
+    FALLBACK[i] = k;
+  }
   let at = 0;
   let hideTimer = 0;
 
   document.addEventListener('keydown', (event) => {
+    if (event.repeat || event.ctrlKey || event.metaKey || event.altKey || event.shiftKey) return;
+    if (isEditable(event.target) || dialogOpen()) return;
     const key = event.key.toLowerCase();
-    // Advance on a hit, and fall back to 1 when the wrong key still happens to
-    // start the sequence again.
-    at = key === SEQUENCE[at] ? at + 1 : key === SEQUENCE[0] ? 1 : 0;
+    while (at > 0 && key !== SEQUENCE[at]) at = FALLBACK[at - 1];
+    if (key === SEQUENCE[at]) at += 1;
     if (at < SEQUENCE.length) return;
     at = 0;
     const on = !root.hasAttribute('data-debug');
