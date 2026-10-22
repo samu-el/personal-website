@@ -138,7 +138,7 @@ const outbound = { target: '_blank', rel: 'noopener noreferrer' };
                       aria-label={`${film.rating} out of 5`}
                     >
                       {stars(film.rating).map((icon) => (
-                        <Icon name={icon} class="size-4 fill-current" aria-hidden="true" />
+                        <Icon is:inline name={icon} class="size-4 [&_path]:fill-current" aria-hidden="true" />
                       ))}
                     </span>
                   )}

@@ -87,7 +87,8 @@ async function contextFor(device) {
 
 /**
  * scripts/seeds/<id>.mjs may export `image` (a published screenshot to use
- * instead), `prepare(page)` (run before navigation) and `path`.
+ * instead), `prepare(page, project)` (run before navigation, handed the
+ * project so it can reach the same origin) and `path`.
  */
 async function seedFor(id) {
   const file = new URL(`./seeds/${id}.mjs`, import.meta.url);
@@ -111,7 +112,7 @@ async function capture(project, seed) {
   const context = await contextFor(project.device);
   const page = await context.newPage();
   try {
-    if (seed?.prepare) await seed.prepare(page);
+    if (seed?.prepare) await seed.prepare(page, project);
     const url = new URL(seed?.path ?? '/', project.demo).toString();
     const response = await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 });
     const status = response?.status() ?? 0;

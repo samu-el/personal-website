@@ -374,7 +374,7 @@ A project may ship `scripts/seeds/<id>.mjs` to change how it is captured:
   Monee ships its own app screenshots, which is a better source than anything
   the script could do: the product's own picture of itself, no account needed,
   and it updates here whenever they replace it.
-- **`prepare(page)`**: runs before navigation, to reach a state worth
+- **`prepare(page, project)`**: runs before navigation, to reach a state worth
   photographing. An empty first-run screen is a true picture of nothing.
 - **`path`**: where to land, if not the site root.
 

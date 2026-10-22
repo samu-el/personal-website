@@ -4,7 +4,6 @@ import Layout from '@/layouts/Layout.astro';
 import Section from '@/components/Section.astro';
 import ProjectFigure from '@/components/ProjectFigure.astro';
 import PostCard from '@/components/PostCard.astro';
-import Ledger from '@/components/Ledger.astro';
 import { site } from '@/lib/site';
 import { publishedPosts } from '@/lib/posts';
 import { href } from '@/lib/paths';
@@ -58,7 +57,7 @@ const marquee = [
   'Terraform',
 ];
 
-/** The facts, as a ruled ledger under the head of "Types of work". */
+/** The facts, a ruled row under the figures on the same four columns. */
 const currently: [string, string][] = [
   ['Role', 'Software Engineer'],
   ['Based in', 'Addis Ababa, Ethiopia'],
@@ -165,9 +164,8 @@ const currently: [string, string][] = [
     </button>
   </div>
 
-  <!-- ── Services, beside the facts ───────────────────────────────── -->
+  <!-- ── Services ─────────────────────────────────────────────────── -->
   <Section title="Types of work." id="services" split divider={false} gap="m">
-    <Ledger slot="head" rows={currently} align="columns" class="mt-10 text-[0.9375rem] lg:mt-14" />
     <ol class="ledger">
       {
         services.map((s, i) => (
@@ -189,11 +187,13 @@ const currently: [string, string][] = [
     </ol>
   </Section>
 
-  <!-- ── Figures ──────────────────────────────────────────────────── -->
-  <!-- Four figures as one ruled row, bounded by heavy rules. The label says
-       what each counts. -->
+  <!-- ── Figures and facts ───────────────────────────────────────── -->
+  <!-- Four figures as one ruled row, bounded by heavy rules, with the four
+       facts under them on the same columns. The label says what each is. -->
   <div class="wrap pb-[var(--section-gap-s)]">
-    <dl class="grid grid-cols-2 border-y-2 border-fg lg:grid-cols-4 lg:divide-x lg:divide-line">
+    <dl
+      class="grid grid-cols-2 border-b border-t-2 border-b-line border-t-fg lg:grid-cols-4 lg:divide-x lg:divide-line"
+    >
       {
         liveMetrics.map((m, i) => (
           <div
@@ -213,6 +213,25 @@ const currently: [string, string][] = [
             <dd class="numeral mt-5 text-[clamp(3rem,6.4vw,6rem)] text-fg" data-count>
               {m.value}
             </dd>
+          </div>
+        ))
+      }
+    </dl>
+    <dl class="grid grid-cols-2 border-b-2 border-fg lg:grid-cols-4 lg:divide-x lg:divide-line">
+      {
+        currently.map(([term, value], i) => (
+          <div
+            class:list={[
+              'py-6 lg:py-8',
+              i > 0 && 'lg:pl-8',
+              i < 3 && 'lg:pr-8',
+              i % 2 === 1 && 'border-l border-line pl-6 lg:border-l-0 lg:pl-8',
+              i % 2 === 0 && 'pr-6',
+              i >= 2 && 'border-t border-line lg:border-t-0',
+            ]}
+          >
+            <dt class="meta">{term}</dt>
+            <dd class="mt-2 text-[0.9375rem] leading-snug text-fg">{value}</dd>
           </div>
         ))
       }

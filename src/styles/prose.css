@@ -5,7 +5,7 @@
   .prose {
     font-size: 1.0625rem;
     line-height: 1.7;
-    max-width: 68ch;
+    max-width: 60ch;
     color: var(--color-fg);
   }
   .prose > * + * {

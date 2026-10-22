@@ -29,6 +29,7 @@ interface Props {
 const { project, prev, next } = Astro.props as Props;
 const { Content } = await render(project);
 const d = project.data;
+const phone = d.device === 'phone';
 
 /* Built by spreading rather than filtering a cast: a generic type argument
    anywhere in frontmatter stops Astro finding `interface Props`. */
@@ -95,21 +96,36 @@ const links = [
 
     <!-- The product, at the width of the page: the reader sees the thing
          before being asked to read about it. -->
-    <section class="wrap pt-12 lg:pt-16" aria-label={`${d.title}, running`}>
-      <div data-reveal>
-        <PreviewFrame {project} eager sizes="(min-width: 1440px) 1312px, 92vw" />
-      </div>
-    </section>
+    {
+      !phone && (
+        <section class="wrap pt-12 lg:pt-16" aria-label={`${d.title}, running`}>
+          <div data-reveal>
+            <PreviewFrame {project} eager sizes="(min-width: 1440px) 1312px, 92vw" />
+          </div>
+        </section>
+      )
+    }
 
-    <div class="wrap sec">
+    <!-- A phone capture is held beside the write-up instead: alone across the
+         page it would stand in a band of nothing. -->
+    <section class="wrap sec">
       <div class="grid gap-14 lg:grid-cols-12 lg:gap-8">
-        <div class="prose prose-lg lg:col-span-7">
+        {
+          phone && (
+            <figure class="lg:col-span-3">
+              <div class="lg:sticky lg:top-28" data-reveal>
+                <PreviewFrame {project} eager />
+              </div>
+            </figure>
+          )
+        }
+        <div class:list={['prose prose-lg', phone ? 'lg:col-span-6' : 'lg:col-span-7']}>
           <Content />
         </div>
 
         <!-- The facts, held beside the write-up. A div: an aside inside main
              is not a top-level landmark. -->
-        <div class="lg:col-span-4 lg:col-start-9">
+        <div class:list={[phone ? 'lg:col-span-3' : 'lg:col-span-4 lg:col-start-9']}>
           <dl class="ledger text-[0.9375rem] lg:sticky lg:top-28">
             <div class="flex justify-between gap-4 py-3">
               <dt class="text-subtle">Role</dt>
@@ -142,7 +158,7 @@ const links = [
           </dl>
         </div>
       </div>
-    </div>
+    </section>
 
     <PrevNext
       base="/work"

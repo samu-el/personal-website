@@ -95,16 +95,9 @@ const glance: [string, string][] = [
           >
             {/* Period column, its years on the role title's baseline */}
             <div class="lg:col-span-4">
-              {/* The years stacked, so the span needs no dash between them. */}
-              <p class="numeral text-[clamp(2.25rem,4vw,3.25rem)] text-fg">
-                {role.from ? (
-                  <>
-                    <span class="block">{role.from}</span>
-                    <span class:list={['block', role.current ? 'text-accent' : 'text-subtle']}>{role.to}</span>
-                  </>
-                ) : (
-                  <span class="text-subtle">Earlier</span>
-                )}
+              {/* One line, in words: "2016 to 2020", "2020 to present". */}
+              <p class="numeral text-[clamp(1.75rem,2.8vw,2.5rem)] text-fg">
+                {role.from ? `${role.from} to ${role.current ? role.to.toLowerCase() : role.to}` : 'Earlier'}
               </p>
               <p class="meta mt-4">{role.location}</p>
             </div>
