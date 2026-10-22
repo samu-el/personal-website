@@ -1,36 +1,27 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import PageHeader from '@/components/PageHeader.astro';
-import { navIndex } from '@/lib/posts';
 import { stack } from '@/data/stack';
 import { Icon } from 'astro-icon/components';
 
 const title = 'Stack';
 const description =
   'Languages, frameworks and tools used by Samuel Mussie in production: TypeScript, Python, React, Next.js, PostgreSQL, Flutter, AWS.';
-
-const index = await navIndex('/stack');
 ---
 
 <Layout {title} {description} path="/stack">
-  <PageHeader {index}>
-    Languages, frameworks
-    <em class="block italic text-accent">and tools.</em>
-  </PageHeader>
+  <PageHeader>Languages, frameworks and tools.</PageHeader>
 
   <!-- A specimen sheet: each group is a ruled row, its title held on the
        left while the items run in two ruled columns on the right. -->
-  <div class="wrap py-6 lg:py-10">
+  <div class="wrap pb-[var(--section-gap)] pt-2">
     <div class="ledger">
       {
         stack.map((group) => (
-          <section class="relative grid gap-8 py-10 lg:grid-cols-12 lg:gap-8 lg:py-16">
+          <section class="relative grid gap-8 py-12 lg:grid-cols-12 lg:gap-8 lg:py-20">
             <div class="relative lg:col-span-4">
-              <div class="relative lg:sticky lg:top-24">
-                <span class="rail-index rail-index--left" aria-hidden="true">
-                  {group.index}
-                </span>
-                <h2 class="display relative text-[clamp(1.75rem,3.2vw,2.4rem)]" data-reveal>
+              <div class="relative lg:sticky lg:top-28">
+                <h2 class="display text-section" data-reveal>
                   {group.title}
                 </h2>
               </div>
@@ -59,8 +50,8 @@ const index = await navIndex('/stack');
                     />
                   )}
                   <span class="min-w-0 flex-1">
-                    <p class="text-[0.9375rem] font-medium tracking-tight text-fg">{item.name}</p>
-                    {item.note && <p class="mt-0.5 font-mono text-2xs tracking-wide text-subtle">{item.note}</p>}
+                    <p class="text-base font-medium text-fg">{item.name}</p>
+                    {item.note && <p class="meta mt-0.5">{item.note}</p>}
                   </span>
                 </li>
               ))}
@@ -71,13 +62,13 @@ const index = await navIndex('/stack');
     </div>
 
     <!-- How this site is built -->
-    <section class="mt-12 border-t border-line pt-12 lg:mt-20 lg:pt-16">
+    <section class="border-t-2 border-fg pt-12 lg:pt-20">
       <div class="grid gap-8 lg:grid-cols-12 lg:gap-8">
         <div class="lg:col-span-4">
-          <p class="eyebrow" data-reveal>This site</p>
+          <h2 class="display text-section" data-reveal>This site</h2>
         </div>
         <div class="lg:col-span-7">
-          <div class="prose" data-reveal style="--reveal-delay:60ms">
+          <div class="prose prose-lg" data-reveal style="--reveal-delay:60ms">
             <p>
               Astro with content collections, Tailwind CSS, and no client framework. The JavaScript on a page is a theme
               toggle, a mobile menu, a command palette, a scroll observer and a clock; there is no JS bundle. Fonts are

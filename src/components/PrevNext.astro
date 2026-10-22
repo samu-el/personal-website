@@ -15,10 +15,10 @@ interface Props {
   size?: string;
   label: string;
 }
-const { base, back, forward, backLabel, forwardLabel, size = 'text-xl', label } = Astro.props as Props;
+const { base, back, forward, backLabel, forwardLabel, size = 'text-title', label } = Astro.props as Props;
 const cue = 'inline-flex items-center gap-2 meta';
 const arrow = 'size-3 transition-transform duration-300';
-const title = `${size} font-medium leading-snug tracking-tight transition-colors group-hover:text-accent`;
+const title = `display ${size} transition-colors group-hover:text-accent`;
 ---
 
 <nav aria-label={label} class="border-t border-line" hidden={!back && !forward}>

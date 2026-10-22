@@ -4,7 +4,7 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import CommandPalette from '@/components/CommandPalette.astro';
 import EasterEggs from '@/components/EasterEggs.astro';
-import { nav, site } from '@/lib/site';
+import { site } from '@/lib/site';
 
 interface Props {
   title: string;
@@ -21,15 +21,10 @@ interface Props {
 }
 
 const { bareFooter = false, ...head } = Astro.props;
-
-/** The rail's running head: this page's section, or the role for the home page. */
-const path = head.path ?? '/';
-const section =
-  path === '/' ? site.role : (nav.find((n) => n.href !== '/' && path.startsWith(n.href))?.label ?? site.role);
 ---
 
 <!doctype html>
-<html lang="en" class="scroll-pt-24" data-email={site.email}>
+<html lang="en" class="scroll-pt-24 overflow-x-clip" data-email={site.email}>
   <head>
     <BaseHead {...head} />
     <script is:inline>
@@ -55,9 +50,8 @@ const section =
       })();
     </script>
   </head>
-  <body class="min-h-dvh antialiased">
+  <body class="min-h-dvh overflow-x-clip antialiased">
     <Header />
-    <div class="rail-vertical hidden xl:block" aria-hidden="true">{section} · {site.name}</div>
     <main id="main">
       <slot />
     </main>

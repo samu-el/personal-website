@@ -10,12 +10,12 @@ import { Icon } from 'astro-icon/components';
 <button
   type="button"
   id="theme-toggle"
-  class="group relative grid h-9 w-9 place-items-center rounded-full border border-line text-muted transition-colors hover:border-line-strong hover:text-fg pointer-coarse:h-11 pointer-coarse:w-11"
+  class="group relative grid size-11 shrink-0 place-items-center whitespace-nowrap rounded-full border border-line text-muted transition-colors hover:border-line-strong hover:text-fg"
   aria-label="Colour theme: System"
   title="Change colour theme"
 >
   {
-    /* Shown by the data-theme attribute on <html>, so the applied theme and
+    /* Shown by the data-theme attribute on the root element, so the applied theme and
        the icon can never disagree. */
     [
       ['system', 'lucide:monitor'],

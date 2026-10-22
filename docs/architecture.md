@@ -112,7 +112,7 @@ re-implemented the same pointer bookkeeping.
 | ---------------- | ----------------------------------------------------------------------------------------------- |
 | `env.ts`         | The three media queries, asked once: `calm`, `fine`, `dark`, plus `mayMove()` and `mayFollow()` |
 | `dom.ts`         | `$`, `$$`, `byId`, typed so a script is not three casts deep before it starts                   |
-| `follow.ts`      | One delegated pointer-follow used by both the leaning buttons and the tilting frames            |
+| `follow.ts`      | One delegated pointer-follow, used by the leaning buttons                                       |
 | `time.ts`        | `clock(ms)` and `since(iso)`                                                                    |
 | `header.ts`      | The mobile disclosure panel and the sliding nav indicator                                       |
 | `now-playing.ts` | The card: poll, paint, progress                                                                 |
@@ -120,9 +120,10 @@ re-implemented the same pointer bookkeeping.
 
 ### `follow()` is the interesting one
 
-Two behaviours were written twice over (a button that leans toward the cursor
-and a project frame that tilts under it) and they differ only in what they do
-with the position. `follow(selector, move, settle)` owns the part that was
+Two behaviours were once written twice over (a button that leans toward the
+cursor and a project frame that tilted under it; the tilt went in the Hallmark
+redesign, which shows each capture still) and they differed only in what they
+did with the position. `follow(selector, move, settle)` owns the part that was
 identical: one delegated listener rather than a pair per element, passive so it
 never blocks a scroll, the bookkeeping to settle the element being left, and
 the gate on pointer and motion preferences. `move` is handed the element and
@@ -194,15 +195,15 @@ ended up declared in several places hundreds of lines apart. It is now split by
 concern, imported from `global.css` in the old source order; the built
 stylesheet is byte for byte what it was before the split.
 
-| File             | Contents                                                          |
-| ---------------- | ----------------------------------------------------------------- |
-| `tokens.css`     | `@theme`: colour channels, type scale, easing, the duration scale |
-| `base.css`       | Reset, document defaults, focus rings                             |
-| `components.css` | `.btn`, `.card`, `.chip`, `.ledger`, rails, watermarks            |
-| `prose.css`      | Long-form article styling                                         |
-| `motion.css`     | Reveal, view transitions, micro-interactions, the debug overlay   |
-| `touch.css`      | Press feedback and touch-target floors                            |
-| `fonts.css`      | The four self-hosted faces                                        |
+| File             | Contents                                                             |
+| ---------------- | -------------------------------------------------------------------- |
+| `tokens.css`     | `@theme`: colour channels, type scale, easing, the duration scale    |
+| `base.css`       | Reset, document defaults, focus rings                                |
+| `components.css` | `.wrap`, section rhythm, `.btn`, `.chip`, `.ledger`, `.shot`, fields |
+| `prose.css`      | Long-form article styling                                            |
+| `motion.css`     | Reveal, view transitions, micro-interactions, the debug overlay      |
+| `touch.css`      | Press feedback and touch-target floors                               |
+| `fonts.css`      | The four self-hosted faces                                           |
 
 ### Colour as a field
 
@@ -257,10 +258,11 @@ Everything that moves is gated three ways, every time:
 3. **`.js` on `<html>`** opts in anything a failed script must not leave hidden.
    Content is visible by default; the reveal script _adds_ the pending class.
 
-Two scroll-driven effects use `animation-timeline` under `@supports`. They are
+One scroll-driven effect (the reading hairline) uses `animation-timeline` under `@supports`. It is
 written as longhands on purpose: the CSS minifier folds `animation-timeline`
 into the `animation` shorthand, and Chromium drops the whole declaration when
-it does. The watermark drift was silently dead until this was found.
+it does. The (since removed) watermark drift was silently dead until this was found;
+the reading hairline in the header is the one that remains.
 
 The header used to animate its own height. It is sticky and in flow, so
 compressing it moved every following element up by 8px each time the threshold
@@ -285,7 +287,7 @@ zod schemas. Three flags decide what is ever rendered:
 
 The nav is computed, not hardcoded: when nothing is published, the Writing item
 drops out and the numbering is recomputed so there is no gap where it used to
-be. `navIndex(path)` gives each page the index its header watermark displays.
+be.
 
 Assets are matched to content by **id**, not named in frontmatter:
 `lib/assets.ts` finds `<id>.<ext>` at the end of an `import.meta.glob` key.
@@ -378,6 +380,11 @@ A project may ship `scripts/seeds/<id>.mjs` to change how it is captured:
 
 The browser is launched on first use, so a project sourced from a published
 image needs no Chromium installed at all.
+
+`PreviewFrame` shows a capture as it is: the theme's radius and an inset
+outline, no drawn browser bar or phone bezel, and no tilt or zoom under the
+pointer. A capture with a live site links there; its one hover signal is an
+accent ring drawn by a pseudo-element, so the focus outline never animates.
 
 ---
 

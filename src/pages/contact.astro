@@ -1,15 +1,12 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import PageHeader from '@/components/PageHeader.astro';
-import { navIndex } from '@/lib/posts';
 import { site } from '@/lib/site';
 import { Icon } from 'astro-icon/components';
 import SocialLinks from '@/components/SocialLinks.astro';
 
 const title = 'Contact';
 const description = 'Contact Samuel Mussie, software engineer in Addis Ababa, Ethiopia. Email or LinkedIn.';
-
-const index = await navIndex('/contact');
 
 /** Each row is one email with its subject filled in; the heading is the whole label. */
 const routes = [
@@ -24,9 +21,11 @@ const routes = [
 ---
 
 <Layout {title} {description} path="/contact" bareFooter>
-  <PageHeader {index}>
+  <PageHeader>
     Get in touch.
-    <em class="block italic text-accent">{site.email}</em>
+    <p slot="after" class="display mt-6 text-[clamp(1.75rem,3.4vw,3rem)] text-accent" data-reveal>
+      {site.email}
+    </p>
     <div slot="after" class="relative mt-10 flex flex-wrap gap-3" data-reveal style="--reveal-delay:120ms">
       <a href={`mailto:${site.email}`} class="btn btn-primary">
         <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
@@ -43,21 +42,17 @@ const routes = [
 
   <!-- Routes: a numbered ledger rather than four boxes. The whole row is the
        link, so the heading is its label and there is nothing to explain. -->
-  <div class="wrap py-6 lg:py-10">
+  <div class="wrap sec-follow">
     <ol class="ledger">
       {
         routes.map((r, i) => (
           <li class="ledger-row" data-reveal style={`--reveal-delay:${i * 70}ms`}>
             <a
               href={r.href}
-              class="group grid grid-cols-[2.5rem_1fr_auto] items-baseline gap-4 py-8 transition-colors sm:grid-cols-12 sm:gap-6 lg:py-10"
+              class="group grid grid-cols-[2.5rem_1fr_auto] items-baseline gap-4 py-8 transition-colors sm:grid-cols-12 sm:gap-6 lg:py-12"
             >
-              <span class="row-index numeral text-[1.75rem] text-subtle sm:col-span-1">
-                {String(i + 1).padStart(2, '0')}
-              </span>
-              <h2 class="row-title display text-[clamp(1.6rem,3vw,2.25rem)] transition-colors group-hover:text-accent sm:col-span-9">
-                {r.heading}
-              </h2>
+              <span class="numeral text-[1.75rem] text-subtle sm:col-span-1">{String(i + 1).padStart(2, '0')}</span>
+              <h2 class="display text-section transition-colors group-hover:text-accent sm:col-span-9">{r.heading}</h2>
               <span class="flex items-center gap-2 self-center text-subtle sm:col-span-2 sm:justify-end">
                 <Icon name={r.icon} class="size-4" aria-hidden="true" />
                 <Icon
@@ -79,15 +74,11 @@ const routes = [
     />
   </div>
 
-  <footer class="mt-12 border-t border-line bg-sunken lg:mt-20">
-    <div
-      class="wrap flex flex-col gap-3 py-8 font-mono text-2xs tracking-wide text-subtle sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
-      <p class="flex items-center gap-2">
-        <span class="inline-block size-1.5 rounded-full bg-jade" aria-hidden="true"></span>
-        {site.location}
-      </p>
+  <!-- A colophon: the contact page is itself the close, so no repeat of it. -->
+  <footer class="border-t border-line bg-sunken">
+    <div class="wrap flex flex-col gap-3 py-10 sm:flex-row sm:items-center sm:justify-between">
+      <p class="meta">© {new Date().getFullYear()} {site.name}</p>
+      <p class="meta">{site.location}</p>
     </div>
   </footer>
 </Layout>

@@ -124,7 +124,8 @@ export function nowPlaying() {
   function renderProgress() {
     if (!total || !el.bar || !el.elapsed) return;
     const ms = Math.min(base + (Date.now() - baseAt), total);
-    el.bar.style.width = `${((ms / total) * 100).toFixed(2)}%`;
+    // Scaled, not sized: width is a layout property and would re-lay the card each tick.
+    el.bar.style.transform = `scaleX(${(ms / total).toFixed(4)})`;
     el.elapsed.textContent = clock(ms);
     // Ran off the end: the next poll knows what replaced it, and carrying on
     // would only be wrong faster.
@@ -207,7 +208,7 @@ export function nowPlaying() {
     el.progress!.hidden = false;
     renderProgress();
     if (jump) {
-      // Commit the new width with no transition before handing it back, or
+      // Commit the new scale with no transition before handing it back, or
       // both land in one style pass and the bar animates the jump anyway.
       void el.bar!.offsetWidth;
       el.bar!.style.transition = '';

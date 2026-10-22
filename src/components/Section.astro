@@ -1,42 +1,63 @@
 ---
 /**
- * A titled block on a long page: a display heading with the index behind it
- * as a watermark. The same shape as PageHeader, one level down. No eyebrow,
- * no lede: the heading names the block and the content explains it.
+ * A titled block on a long page. The heading names the block and the content
+ * explains it: no eyebrow, no lede, no index. Two shapes:
+ *
+ * - stacked (default): the head block above a body that fills the width;
+ * - split: the head on columns 1 to 4, anything in the `head` slot under it,
+ *   and the body on 5 to 12 (rows, an index, a timeline).
  */
 interface Props {
-  /** Two-digit watermark, e.g. "03". Decoration only. */
-  index?: string;
   title?: string;
   id?: string;
-  /** Renders the top hairline rule. */
+  /** Renders the heavy rule that opens the section. */
   divider?: boolean;
+  split?: boolean;
+  /** Gap step above and below: s, m or l. */
+  gap?: 's' | 'm' | 'l';
   class?: string;
 }
 
-const { index, title, id, divider = true, class: className = '' } = Astro.props;
+const { title, id, divider = true, split = false, gap = 's', class: className = '' } = Astro.props;
 const hasHeader = Boolean(title);
+const pad = { s: 'sec', m: 'sec-m', l: 'sec-l' }[gap];
 ---
 
 <section id={id} class:list={['scroll-mt-24', className]}>
   {divider && <div class="rule-heavy" data-draw />}
-  <div class="wrap relative py-12 lg:py-28">
+  <div class:list={['wrap', pad]}>
     {
-      hasHeader && (
-        <header class="relative">
-          {index && (
-            <span class="rail-index" aria-hidden="true">
-              {index}
-            </span>
+      split ? (
+        <div class="grid gap-12 lg:grid-cols-12 lg:gap-8">
+          {hasHeader && (
+            <header class="lg:col-span-4">
+              <div class="lg:sticky lg:top-28">
+                <h2 class="display text-section" data-reveal>
+                  {title}
+                </h2>
+                <slot name="head" />
+              </div>
+            </header>
           )}
-          <h2 class="display relative text-[clamp(2.1rem,5.4vw,3.6rem)]" data-reveal>
-            {title}
-          </h2>
-        </header>
+          <div class="min-w-0 lg:col-span-8">
+            <slot />
+          </div>
+        </div>
+      ) : (
+        <>
+          {hasHeader && (
+            <header>
+              <h2 class="display text-section" data-reveal>
+                {title}
+              </h2>
+              <slot name="head" />
+            </header>
+          )}
+          <div class:list={[hasHeader && 'mt-12 lg:mt-16']}>
+            <slot />
+          </div>
+        </>
       )
     }
-    <div class:list={['relative', hasHeader && 'mt-10 lg:mt-20']}>
-      <slot />
-    </div>
   </div>
 </section>

@@ -1,8 +1,10 @@
 ---
 /**
- * The /work treatment: one alternating row per project, led by a screenshot of
- * the thing running. Assets are matched by project id, so dropping a file in
- * is all it takes. docs/architecture.md, "Screenshots".
+ * The /work treatment, one block per project, led by a screenshot of the thing
+ * running. A desktop capture runs the full width under its title, with the
+ * write-up and the facts beneath; a phone capture stands beside them. Assets
+ * are matched by project id, so dropping a file in is all it takes.
+ * docs/architecture.md, "Screenshots".
  */
 import Chips from '@/components/Chips.astro';
 import type { CollectionEntry } from 'astro:content';
@@ -10,6 +12,7 @@ import { Image } from 'astro:assets';
 import { byId as pickAsset } from '@/lib/assets';
 import { Icon } from 'astro-icon/components';
 import { href } from '@/lib/paths';
+import { tone } from '@/lib/status';
 import PreviewFrame from '@/components/PreviewFrame.astro';
 
 interface Props {
@@ -26,8 +29,7 @@ const { title, blurb, period, kind, role, status, stack, demo, repo, stats } = p
 
 const logo = pickAsset(logos, project.id);
 
-/** Rows alternate, so the page reads as a column rather than a stack. */
-const flip = index % 2 === 1;
+const phone = project.data.device === 'phone';
 
 /** Stands in for a missing logo: the initial, saying nothing the title does not. */
 const monogram = (title.replace(/[^A-Za-z]/g, '')[0] ?? '·').toUpperCase();
@@ -35,117 +37,109 @@ const monogram = (title.replace(/[^A-Za-z]/g, '')[0] ?? '·').toUpperCase();
 const detail = href(`/work/${project.id}`);
 ---
 
-<article class="group/row relative" data-reveal style={`--reveal-delay:${Math.min(index, 4) * 80}ms`}>
-  <div class="grid items-center gap-7 lg:grid-cols-12 lg:gap-12">
-    <!-- ── Preview ──────────────────────────────────────────────────── -->
-    <div class:list={['lg:col-span-7', flip && 'lg:order-2']}>
-      <PreviewFrame {project} eager={index === 0} />
+<article class="relative" data-reveal style={`--reveal-delay:${Math.min(index, 4) * 60}ms`}>
+  <!-- Title row: the mark, the name, and the facts as separate cells. -->
+  <header class="grid items-end gap-6 border-b border-line pb-6 lg:grid-cols-12 lg:gap-8">
+    <div class="flex min-w-0 items-center gap-4 lg:col-span-7">
+      <!-- The project's mark, or its initial styled as chosen typography
+           rather than a picture that failed to load. -->
+      <span
+        class:list={[
+          'grid size-12 shrink-0 place-items-center overflow-hidden rounded-lg border',
+          // A light plate in both themes: these marks were drawn for a light
+          // ground, and fantasy.et's dark purple vanished on the dark one.
+          logo ? 'border-line bg-plate' : 'border-line bg-surface-2',
+        ]}
+        aria-hidden="true"
+      >
+        {
+          logo ? (
+            /* Its own size: these are favicons, and asking for more pixels
+               than the source has upscales it twice. */
+            <Image src={logo} alt="" width={logo.width} height={logo.height} class="size-full object-contain" />
+          ) : (
+            <span class="display text-xl leading-none text-accent">{monogram}</span>
+          )
+        }
+      </span>
+      <h2 class="display min-w-0 text-section" style={`view-transition-name:project-${project.id}`}>
+        <a href={detail} class="link">{title}</a>
+      </h2>
+    </div>
+    <dl class="grid grid-cols-3 gap-6 text-[0.9375rem] lg:col-span-5">
+      <div>
+        <dt class="sr-only">Kind</dt>
+        <dd class="text-fg">{kind}</dd>
+      </div>
+      <div>
+        <dt class="sr-only">Period</dt>
+        <dd class="tabular-nums text-muted">{period}</dd>
+      </div>
+      <div class="text-right">
+        <dt class="sr-only">Status</dt>
+        <dd class={tone(status)}>{status}</dd>
+      </div>
+    </dl>
+  </header>
+
+  <div class:list={['mt-10 grid gap-10 lg:grid-cols-12 lg:gap-8', phone ? 'lg:items-center' : '']}>
+    <div class:list={[phone ? 'lg:col-span-4' : 'lg:col-span-12']}>
+      <PreviewFrame {project} eager={index === 0} sizes={phone ? '19rem' : '(min-width: 1440px) 1312px, 92vw'} />
     </div>
 
-    <!-- ── Detail ───────────────────────────────────────────────────── -->
-    <div class:list={['lg:col-span-5', flip && 'lg:order-1']}>
-      <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-        <span class="meta">{kind}</span>
-        <span class="text-line-strong" aria-hidden="true">·</span>
-        <span class="font-mono text-2xs tracking-wide text-subtle">{period}</span>
+    <div
+      class:list={['grid gap-10', phone ? 'lg:col-span-7 lg:col-start-6' : 'lg:col-span-12 lg:grid-cols-12 lg:gap-8']}
+    >
+      <div class:list={[!phone && 'lg:col-span-6']}>
+        <p class="lead text-muted">{blurb}</p>
+        <p class="meta mt-5">{role}</p>
+      </div>
+
+      <div class:list={[!phone && 'lg:col-span-5 lg:col-start-8']}>
         {
-          (status === 'Live' || status === 'Ongoing') && (
-            <span class="ml-auto flex shrink-0 items-center gap-1.5 meta text-jade">
-              <span class="relative flex size-1.5">
-                <span class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-60" />
-                <span class="relative inline-flex size-1.5 rounded-full bg-jade" />
-              </span>
-              {status}
-            </span>
+          stats.length > 0 && (
+            <dl class="ledger text-[0.9375rem]">
+              {stats.map((s) => (
+                <div class="flex justify-between gap-4 py-3">
+                  <dt class="text-subtle">{s.label}</dt>
+                  <dd class="text-right text-fg">{s.value}</dd>
+                </div>
+              ))}
+            </dl>
+          )
+        }
+
+        <Chips items={stack.slice(0, 6)} label="Stack" class="mt-6" />
+
+        {
+          (demo || repo) && (
+            <div class="mt-6 flex flex-wrap items-center gap-x-6 gap-y-2">
+              {demo && (
+                <a
+                  href={demo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="hit inline-flex items-center gap-2 text-[0.9375rem] text-muted transition-colors hover:text-accent"
+                >
+                  <Icon name="lucide:external-link" class="size-4" aria-hidden="true" />
+                  Live
+                </a>
+              )}
+              {repo && (
+                <a
+                  href={repo}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="hit inline-flex items-center gap-2 text-[0.9375rem] text-muted transition-colors hover:text-accent"
+                >
+                  <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
+                  Source
+                </a>
+              )}
+            </div>
           )
         }
       </div>
-
-      <div class="mt-5 flex items-center gap-3.5">
-        <!-- The project's mark, or its initial styled as chosen typography
-             rather than a picture that failed to load. -->
-        <span
-          class:list={[
-            'grid size-11 shrink-0 place-items-center overflow-hidden rounded-lg border',
-            // A light plate in both themes: these marks were drawn for a light
-            // ground, and fantasy.et's dark purple vanished on the dark one.
-            logo ? 'border-line bg-[rgb(250_248_245)]' : 'border-accent/25 bg-accent/[0.07]',
-          ]}
-          aria-hidden="true"
-        >
-          {
-            logo ? (
-              /* Its own size: these are favicons, and asking for more pixels
-                 than the source has upscales it twice. */
-              <Image src={logo} alt="" width={logo.width} height={logo.height} class="size-full object-contain" />
-            ) : (
-              <span class="display text-xl leading-none text-accent">{monogram}</span>
-            )
-          }
-        </span>
-
-        <h2
-          class="display min-w-0 flex-1 text-[clamp(1.5rem,3vw,2.125rem)] leading-tight"
-          style={`view-transition-name:project-${project.id}`}
-        >
-          <a href={detail} class="group/link">
-            <span class="link">{title}</span>
-            <Icon
-              name="lucide:arrow-right"
-              class="ml-0.5 inline-block size-[0.7em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:text-accent"
-              aria-hidden="true"
-            />
-          </a>
-        </h2>
-      </div>
-
-      <p class="mt-4 leading-relaxed text-muted">{blurb}</p>
-
-      <p class="mt-4 meta">{role}</p>
-
-      {
-        stats.length > 0 && (
-          <dl class="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-md border border-line bg-line [&>*:last-child:nth-child(odd)]:col-span-2">
-            {stats.map((s) => (
-              <div class="bg-surface-2 px-3.5 py-3">
-                <dt class="meta">{s.label}</dt>
-                <dd class="mt-1 text-[0.9375rem] leading-snug tracking-tight text-fg">{s.value}</dd>
-              </div>
-            ))}
-          </dl>
-        )
-      }
-
-      <Chips items={stack.slice(0, 6)} label="Stack" class="mt-6" />
-
-      {
-        (demo || repo) && (
-          <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-5">
-            {demo && (
-              <a
-                href={demo}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="hit inline-flex items-center gap-1.5 meta text-muted transition-colors hover:text-accent"
-              >
-                <Icon name="lucide:external-link" class="size-3" aria-hidden="true" />
-                Live
-              </a>
-            )}
-            {repo && (
-              <a
-                href={repo}
-                target="_blank"
-                rel="noopener noreferrer"
-                class="hit inline-flex items-center gap-1.5 meta text-muted transition-colors hover:text-accent"
-              >
-                <Icon name="simple-icons:github" class="size-3" aria-hidden="true" />
-                Source
-              </a>
-            )}
-          </div>
-        )
-      }
     </div>
   </div>
 </article>

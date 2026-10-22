@@ -1,7 +1,7 @@
 ---
 title: 'fantasy.et'
 blurb: 'Fantasy Premier League tooling: a Next.js web app and a React Native mobile companion sharing one data layer, built against the public FPL API.'
-period: '2025–2026'
+period: '2025 to 2026'
 weight: 100
 kind: 'Product'
 role: 'Sole author'

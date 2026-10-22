@@ -1,14 +1,18 @@
 ---
 /**
- * A framed screenshot of a project actually running, shared by the /work rows
- * and each detail page. Assets are matched by project id, so dropping a file
- * in is all it takes and a missing one degrades to the fallback below. The
- * frame follows the project's `device`. docs/architecture.md, "Screenshots".
+ * A screenshot of a project actually running, shared by the home page, the
+ * /work rows and each detail page. Assets are matched by project id, so
+ * dropping a file in is all it takes (`npm run shots` refreshes them) and a
+ * missing one degrades to the fallback below. docs/architecture.md,
+ * "Screenshots".
+ *
+ * The capture is the picture: no drawn browser bar or phone bezel around it,
+ * only the theme's radius and an inset outline. A project with a live site
+ * links the picture there.
  */
 import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
 import { byId as pickAsset } from '@/lib/assets';
-import { Icon } from 'astro-icon/components';
 
 interface Props {
   project: CollectionEntry<'projects'>;
@@ -16,6 +20,8 @@ interface Props {
   eager?: boolean;
   /** How wide the frame renders; defaults to the /work row's layout. */
   sizes?: string;
+  /** Crops a desktop capture to another ratio, from the top. */
+  aspect?: string;
   class?: string;
 }
 
@@ -23,7 +29,7 @@ const previews = import.meta.glob<{ default: ImageMetadata }>('/src/assets/previ
   eager: true,
 });
 
-const { project, eager = false, sizes: sizesProp, class: className } = Astro.props;
+const { project, eager = false, sizes: sizesProp, aspect: aspectProp, class: className } = Astro.props;
 const { title, demo, device } = project.data;
 
 const preview = pickAsset(previews, project.id);
@@ -43,120 +49,37 @@ const linkAttrs = demo
     }
   : {};
 
-/** Matches the phone viewport scripts/shots.mjs captures at. */
-const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
+/** Matches the viewport scripts/shots.mjs captures at, unless a crop is asked for. */
+const aspect = aspectProp ?? (phone ? 'aspect-[440/936]' : 'aspect-[16/10]');
 ---
 
-<div class:list={['group/frame relative', phone && 'mx-auto w-full max-w-[19rem]', className]}>
-  <!-- Warmth behind the frame, positioned from the cursor. Narrower than the
-       phone gutter sideways, or it widens the page and the browser zooms out. -->
-  <div
-    class="pointer-events-none absolute -inset-x-4 -inset-y-6 opacity-0 sm:-inset-x-6 blur-3xl transition-opacity duration-700 group-hover/frame:opacity-100 group-hover/row:opacity-100"
-    style="background:radial-gradient(45% 45% at var(--mx,50%) var(--my,40%),rgb(var(--c-accent)/0.3),transparent 70%)"
-    aria-hidden="true"
-    data-frame
-  >
-  </div>
-
+<div class:list={['relative', phone && 'mx-auto w-full max-w-[19rem]', className]}>
   <Tag
     {...linkAttrs}
-    class:list={[
-      'card frame-card relative block overflow-hidden',
-      // A phone is held, not docked: rounder, and the bezel is the padding.
-      phone ? 'rounded-[1.75rem] bg-surface-2 p-2.5' : 'rounded-xl',
-    ]}
+    class:list={['shot', phone && 'shot-phone', aspect]}
+    data-slot={`shot-${project.id}`}
+    data-kind="product"
+    data-alt={`${title}, its main screen`}
   >
     {
-      phone ? (
-        /* Speaker slit rather than a fake notch: it reads as a handset at a
-           glance without pretending to be a specific one. */
-        <span class="mx-auto mb-2 block h-1 w-12 rounded-full bg-line-strong" aria-hidden="true" />
+      preview ? (
+        <Image
+          src={preview}
+          alt={`${title}, running`}
+          widths={phone ? [320, 480, 880] : [640, 960, 1280, 1600]}
+          {sizes}
+          loading={eager ? 'eager' : 'lazy'}
+          fetchpriority={eager ? 'high' : undefined}
+          decoding="async"
+          class="size-full object-cover object-top"
+        />
       ) : (
-        /* Browser chrome, with the real hostname in it. */
-        <div class="flex items-center gap-2.5 border-b border-line bg-surface-2 px-3.5 py-2.5 sm:px-4">
-          <span class="flex shrink-0 gap-1.5" aria-hidden="true">
-            <span class="size-2 rounded-full bg-line-strong" />
-            <span class="size-2 rounded-full bg-line-strong" />
-            <span class="size-2 rounded-full bg-line-strong" />
-          </span>
-          <span class="min-w-0 flex-1 truncate font-mono text-2xs tracking-wide text-subtle transition-colors group-hover/frame:text-muted group-hover/row:text-muted">
-            {host ?? project.id}
-          </span>
-          {demo && (
-            <Icon
-              name="lucide:external-link"
-              class="size-3 shrink-0 text-subtle transition-all duration-300 group-hover/frame:text-accent group-hover/row:text-accent"
-              aria-hidden="true"
-            />
-          )}
+        /* No screenshot yet: the title, never a stand-in that pretends to be
+           a picture of the product. */
+        <div class="absolute inset-0 grid place-items-center">
+          <p class="display relative px-6 text-center text-title text-subtle">{title}</p>
         </div>
       )
     }
-
-    <!-- Fixed ratio so nothing reflows as the image decodes. -->
-    <div
-      class:list={['relative overflow-hidden bg-surface-2', aspect, phone && 'rounded-[1.25rem] border border-line']}
-    >
-      {
-        preview ? (
-          <Image
-            src={preview}
-            alt={`${title}, running`}
-            widths={phone ? [320, 480, 880] : [640, 960, 1280, 1600]}
-            {sizes}
-            loading={eager ? 'eager' : 'lazy'}
-            fetchpriority={eager ? 'high' : undefined}
-            decoding="async"
-            class="size-full object-cover object-top transition-transform duration-[900ms] ease-out-quint group-hover/frame:scale-[1.035] group-hover/row:scale-[1.035]"
-          />
-        ) : (
-          /* No screenshot yet: grid texture and the title, never a stand-in
-             that pretends to be a picture of the product. */
-          <div class="absolute inset-0 grid place-items-center">
-            <div class="absolute inset-0 grid-lines opacity-60" aria-hidden="true" />
-            <p class="display relative px-6 text-center text-[clamp(1.5rem,4vw,2.5rem)] text-subtle">{title}</p>
-          </div>
-        )
-      }
-    </div>
   </Tag>
 </div>
-
-<script>
-  import { $ } from '@/lib/client/dom';
-  import { follow } from '@/lib/client/follow';
-
-  /* Purely additive: with no JS, no pointer or reduced motion the frame still
-     lights up on hover, just centred. */
-
-  /** Degrees of tilt at the frame's edge. Enough to feel held, not to warp. */
-  const TILT = 4;
-
-  follow(
-    '.group\\/frame',
-    (frame, x, y) => {
-      const glow = $('[data-frame]', frame);
-      if (glow) {
-        glow.style.setProperty('--mx', `${x * 100}%`);
-        glow.style.setProperty('--my', `${y * 100}%`);
-      }
-      // Right of centre turns the right edge away; below centre tips the top
-      // forward. data-tracking shortens the transition (see motion.css).
-      const card = $('.frame-card', frame);
-      if (card) {
-        card.setAttribute('data-tracking', '');
-        card.style.setProperty('--ry', `${((x - 0.5) * 2 * TILT).toFixed(2)}deg`);
-        card.style.setProperty('--rx', `${((0.5 - y) * 2 * TILT).toFixed(2)}deg`);
-      }
-    },
-    (frame) => {
-      const card = $('.frame-card', frame);
-      if (!card) return;
-      // Dropping data-tracking first hands the long ease back, so leaving
-      // eases out rather than snapping to level.
-      card.removeAttribute('data-tracking');
-      card.style.removeProperty('--rx');
-      card.style.removeProperty('--ry');
-    },
-  );
-</script>

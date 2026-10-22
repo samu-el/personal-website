@@ -1,7 +1,6 @@
 export type StackItem = { name: string; note?: string; icon?: string };
 export type StackGroup = {
   title: string;
-  index: string;
   items: StackItem[];
 };
 
@@ -13,7 +12,6 @@ export type StackGroup = {
 export const stack: StackGroup[] = [
   {
     title: 'Languages',
-    index: '01',
     items: [
       { name: 'TypeScript', note: 'primary', icon: 'simple-icons:typescript' },
       { name: 'Python', note: 'services, data, AI', icon: 'simple-icons:python' },
@@ -27,7 +25,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'Front end',
-    index: '02',
     items: [
       { name: 'React', icon: 'simple-icons:react' },
       { name: 'Next.js', icon: 'simple-icons:nextdotjs' },
@@ -39,7 +36,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'Back end & data',
-    index: '03',
     items: [
       { name: 'FastAPI', note: 'Python services', icon: 'simple-icons:fastapi' },
       { name: 'Node.js', icon: 'simple-icons:nodedotjs' },
@@ -51,7 +47,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'AI',
-    index: '04',
     items: [
       { name: 'RAG pipelines', note: 'chunking, retrieval, citations', icon: 'lucide:search-code' },
       { name: 'Vector search', note: 'pgvector', icon: 'lucide:git-compare' },
@@ -61,7 +56,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'Infrastructure',
-    index: '05',
     items: [
       { name: 'AWS', icon: 'simple-icons:amazonwebservices' },
       { name: 'GitHub Actions', note: 'CI/CD', icon: 'simple-icons:githubactions' },
@@ -73,7 +67,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'Tooling',
-    index: '06',
     items: [
       { name: 'Git', icon: 'simple-icons:git' },
       { name: 'Linear', icon: 'simple-icons:linear' },

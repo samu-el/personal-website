@@ -19,19 +19,10 @@
     .ledger-row:active::after {
       transform: scaleX(1);
     }
-    .ledger-row:active .row-title {
-      transform: translateX(0.35rem);
-    }
   }
 }
 
 @layer utilities {
-  /* Colour on press has to beat the text-* utility on the element. */
-  @media (hover: none) {
-    .ledger-row:active .row-index {
-      color: var(--color-accent);
-    }
-  }
   .menu-row:active {
     color: var(--color-accent);
   }

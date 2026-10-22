@@ -1,7 +1,6 @@
 ---
 import { getCollection } from 'astro:content';
 import Layout from '@/layouts/Layout.astro';
-import { navIndex } from '@/lib/posts';
 import ProjectShowcase from '@/components/ProjectShowcase.astro';
 import { Icon } from 'astro-icon/components';
 import PageHeader from '@/components/PageHeader.astro';
@@ -18,25 +17,20 @@ const showcased = all.filter((p) => !p.data.hidden);
 const title = 'Work';
 const description =
   'Selected work by Samuel Mussie: fantasy.et, a Fantasy Premier League web app and mobile companion in TypeScript, Next.js and React Native.';
-
-const index = await navIndex('/work');
 ---
 
 <Layout {title} {description} path="/work">
-  <PageHeader {index}>
-    Selected <em class="italic text-accent">work.</em>
-  </PageHeader>
+  <PageHeader>Selected work.</PageHeader>
 
-  <div class="wrap py-12 lg:py-24">
-    <!-- Rows rather than cards, separated by a rule, so each project gets
-         room for a screenshot instead of competing in a stack. -->
-    <div class="grid gap-14 lg:gap-24">
+  <div class="wrap sec-follow">
+    <!-- One block per project, each led by its own screenshot at full size. -->
+    <div class="grid gap-24 lg:gap-36">
       {showcased.map((p, i) => <ProjectShowcase project={p} index={i} />)}
     </div>
 
     <!-- Everything else lives on GitHub rather than being re-listed here: one
          button under a rule, which is all the end of a list needs. -->
-    <div class="mt-12 border-t border-line pt-10 lg:mt-28 lg:pt-12">
+    <div class="mt-24 border-t-2 border-fg pt-10 lg:mt-36 lg:pt-12">
       <a
         href="https://github.com/samu-el?tab=repositories"
         target="_blank"
