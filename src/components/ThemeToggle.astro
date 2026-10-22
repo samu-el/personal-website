@@ -93,7 +93,7 @@ import { Icon } from 'astro-icon/components';
       if (next === 'system') localStorage.removeItem('theme');
       else localStorage.setItem('theme', next);
     } catch {
-      /* private mode — the choice just won't persist */
+      /* private mode: the choice just won't persist */
     }
     apply(next);
   });

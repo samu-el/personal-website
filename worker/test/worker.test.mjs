@@ -115,13 +115,13 @@ test('debug reports missing secrets without revealing values', async () => {
     SPOTIFY_CLIENT_SECRET: false,
     SPOTIFY_REFRESH_TOKEN: false,
   });
-  // Booleans only — a value here would be a credential leak.
+  // Booleans only: a value here would be a credential leak.
   for (const v of Object.values(out.secrets)) assert.equal(typeof v, 'boolean');
 });
 
 /* Each of these answers an identical `{ playing: false }` in normal operation.
    The debug reason is the only thing that tells them apart, and telling them
-   apart by hand cost two rounds of guessing — so each is pinned. */
+   apart by hand cost two rounds of guessing, so each is pinned. */
 for (const [what, opts, reason] of [
   ['an expired refresh token', { tokenStatus: 400 }, 'token_exchange_failed_400'],
   ['nothing playing, which proves token and scope are good', { playStatus: 204 }, 'spotify_204_nothing_playing'],

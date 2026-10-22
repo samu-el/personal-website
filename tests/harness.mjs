@@ -2,7 +2,7 @@
  * What both browser suites need: a browser, a base URL, the egress proxy,
  * viewport presets, a page to drive and a way to report. Node's global fetch
  * ignores HTTPS_PROXY, so a deployed site checked from behind one answers 403
- * from the proxy rather than anything real — hence the dispatcher below.
+ * from the proxy rather than anything real, hence the dispatcher below.
  */
 import { chromium } from 'playwright';
 import { EnvHttpProxyAgent, setGlobalDispatcher } from 'undici';
@@ -54,7 +54,7 @@ export function results() {
     report() {
       const failed = all.filter((r) => !r.ok).length;
       for (const r of all) {
-        console.log(`${r.ok ? '✓' : '✗'}  ${r.name}${r.info ? `  — ${r.info}` : ''}`);
+        console.log(`${r.ok ? '✓' : '✗'}  ${r.name}${r.info ? `  · ${r.info}` : ''}`);
       }
       console.log(`\n${all.length - failed}/${all.length} checks passed`);
       if (failed) process.exit(1);

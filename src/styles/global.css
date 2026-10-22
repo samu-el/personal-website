@@ -4,12 +4,12 @@
  * Split by concern rather than kept as one file: layer blocks were appended
  * at the end as features landed, so `components` and `utilities` each ended
  * up declared in several places hundreds of lines apart. Import order here is
- * the old source order, so the cascade is unchanged — the built stylesheet is
+ * the old source order, so the cascade is unchanged: the built stylesheet is
  * byte for byte what it was before the split.
  */
 @import 'tailwindcss';
 
-/* Self-hosted fonts — see fonts.css. No third-party request, no
+/* Self-hosted fonts, see fonts.css. No third-party request, no
    render-blocking stylesheet from someone else's CDN. */
 @import './fonts.css';
 

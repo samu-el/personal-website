@@ -1,7 +1,7 @@
 /* ── Components ─────────────────────────────────────────────────── */
 @layer components {
-  /* The gutter is a variable so a child set against the wrap's edge — the
-     header watermark — can line up with its content edge instead. */
+  /* The gutter is a variable so a child set against the wrap's edge (the
+     header watermark) can line up with its content edge instead. */
   .wrap {
     --wrap-pad: 1.25rem;
     width: 100%;
@@ -93,7 +93,7 @@
   }
 
   /* The page header's: gold, larger, from the top of its ink field, which
-     clips — so it starts below that edge rather than across it. */
+     clips, so it starts below that edge rather than across it. */
   .rail-index--gold {
     top: calc(1rem - 0.1em);
     right: calc(var(--wrap-pad, 0px) + 0.03em);
@@ -109,10 +109,10 @@
     }
   }
 
-  /* For rows whose right side is the busy one — the stack's item columns —
+  /* For rows whose right side is the busy one (the stack's item columns),
      the numeral lives in the title block instead, so every row places it the
      same way whatever its height: figures rising from the title's baseline
-     into the top padding, behind the eyebrow and title, clear of the blurb.
+     into the top padding, behind the title.
      Stacked, that side is the items, so it goes up beside the title. */
   .rail-index--left {
     top: -0.1em;
@@ -123,7 +123,7 @@
       right: auto;
       left: -0.03em;
       /* Box top set so the figures' foot (0.85em down) meets the h2 baseline. */
-      top: calc(6.35rem - 0.85em);
+      top: calc(2.15rem - 0.85em);
       bottom: auto;
       font-size: 9rem;
     }
@@ -258,7 +258,7 @@
     color: var(--color-subtle);
   }
 
-  /* Underline that wipes in on hover — used for all inline prose links. */
+  /* Underline that wipes in on hover, used for all inline prose links. */
   .link {
     position: relative;
     color: var(--color-fg);

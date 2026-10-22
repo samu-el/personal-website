@@ -7,7 +7,7 @@ import { publishedPosts } from '@/lib/posts';
 export const GET: APIRoute = async (context) => {
   const posts = await publishedPosts();
   return rss({
-    title: `${site.name} — Writing`,
+    title: `${site.name} · Writing`,
     description:
       'Essays on hiring senior engineers, running distributed teams, and shipping AI features that survive contact with users.',
     site: context.site ?? 'https://smr.et',

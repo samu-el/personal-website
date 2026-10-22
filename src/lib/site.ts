@@ -1,29 +1,26 @@
 /**
  * Single source of truth for identity, navigation and social links.
- * Facts here are drawn from public sources — see PROFILE.md for provenance.
+ * Facts here are drawn from public sources. See PROFILE.md for provenance.
  */
 
 export const site = {
   name: 'Samuel Mussie',
   shortName: 'Samuel',
   /** Still used by the favicon and app icons (public/favicon.svg,
-   *  scripts/assets/icon.html) — a face is not legible at 16px. */
+   *  scripts/assets/icon.html): a face is not legible at 16px. */
   initials: 'SM',
   role: 'Software Engineer',
   location: 'Addis Ababa, Ethiopia',
-  /** For tight spots — the header wordmark, the social card. */
-  locationShort: 'Addis Ababa',
-  /** Current employer. Referenced in the timeline only — not part of the pitch. */
+  /** Current employer. Referenced in the timeline only, not part of the pitch. */
   company: 'Mereb Technologies',
   companyUrl: 'https://www.mereb.tech',
   locale: 'en',
   timezone: 'Africa/Addis_Ababa',
   email: 'me@smr.et',
   /** Used in <title> suffix and OG site name. */
-  title: 'Samuel Mussie — Software Engineer',
-  tagline: 'No software engineering problem is too big to solve.',
+  title: 'Samuel Mussie · Software Engineer',
   description:
-    'Samuel Mussie is a software engineer in Addis Ababa. A decade of building web and mobile products end to end — Python and TypeScript services, React and Next.js front ends, Flutter and native mobile, and the retrieval systems behind AI features that hold up in production.',
+    'Samuel Mussie is a software engineer in Addis Ababa. A decade of building web and mobile products end to end: Python and TypeScript services, React and Next.js front ends, Flutter and native mobile, and the retrieval systems behind AI features that hold up in production.',
 } as const;
 
 export type NavItem = { label: string; href: string; index: string };

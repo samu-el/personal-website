@@ -21,8 +21,13 @@ await sleep(150);
 
 const lastWord = () => page.$eval('.hero-words .w:last-child', (el) => Number(getComputedStyle(el).opacity));
 const words = await page.locator('.hero-words .w').count();
-check('hero: words present', words >= 9, `count=${words}`);
-check('hero: last word starts hidden', (await lastWord()) < 1);
+check('hero: words present', words >= 2, `count=${words}`);
+/* Asked of the animation rather than of the opacity: the name is two words,
+   so the entrance can be over by the time the network goes idle. */
+const entrance = await page.$eval('.hero-words .w:last-child', (el) =>
+  el.getAnimations().some((a) => a.animationName === 'word-up'),
+);
+check('hero: last word has an entrance', entrance);
 await sleep(ENTRANCE);
 check('hero: last word ends visible', (await lastWord()) === 1);
 const enter = await page.$$eval('.hero-enter', (els) => els.map((e) => Number(getComputedStyle(e).opacity)));
@@ -40,19 +45,12 @@ await sleep(500);
 const barShort = await barHeight();
 /* Two assertions, because the bug was the second one: the compression
    happened, and nothing below the header moved by it. */
-const compressed = await page.evaluate(() => {
-  const sub = getComputedStyle(document.querySelector('.wordmark-sub'));
-  return {
-    subMaxHeight: parseFloat(sub.maxHeight) || 0,
-    subOpacity: Number(sub.opacity),
-    scrolledAttr: document.getElementById('site-header').hasAttribute('data-scrolled'),
-  };
-});
-check(
-  'header: compresses on scroll',
-  compressed.scrolledAttr && compressed.subMaxHeight === 0 && compressed.subOpacity === 0,
-  compressed,
-);
+const avatarScale = () => page.$eval('.wordmark-avatar', (el) => Number(getComputedStyle(el).scale) || 1);
+const compressed = await page.evaluate(() => ({
+  scrolledAttr: document.getElementById('site-header').hasAttribute('data-scrolled'),
+}));
+const scaled = await avatarScale();
+check('header: compresses on scroll', compressed.scrolledAttr && scaled < 1, { ...compressed, scaled });
 check(
   'header: compressing never changes the bar height',
   Math.abs(barShort - barTall) < 0.5,
@@ -82,21 +80,18 @@ await scroll(page, 0);
 await sleep(600);
 check(
   'header: restores at the top',
-  await page.evaluate(() => {
-    const sub = getComputedStyle(document.querySelector('.wordmark-sub'));
-    const header = document.getElementById('site-header');
-    return !header.hasAttribute('data-scrolled') && Number(sub.opacity) === 1 && parseFloat(sub.maxHeight) > 0;
-  }),
+  !(await page.evaluate(() => document.getElementById('site-header').hasAttribute('data-scrolled'))) &&
+    (await avatarScale()) === 1,
 );
 
 /* Twice now, checks have been cut from this file to meet a line target, and
    both times by the same rule: what fails *visibly* goes, what fails invisibly
-   stays. Gone in 590ffa0, the cosmetic pointer effects — the nav indicator,
+   stays. Gone in 590ffa0, the cosmetic pointer effects: the nav indicator,
    the tilt, the lean, the ticker, row hover, the count-up, the theme ease.
    Gone in the commit that added this note, the thirteen mobile menu checks,
    which were the most thorough block in the file and also the most redundant:
    a menu that will not open is the first thing anyone holding a phone sees.
-   What stays is everything invisible on a developer's screen — content left
+   What stays is everything invisible on a developer's screen: content left
    hidden, the page shifting under a reader, a stranded skeleton, reduced
    motion ignored. `git show 590ffa0 -- tests/interact.mjs` and
    `git show b5bdecb -- tests/interact.mjs` restore them. */
@@ -310,7 +305,7 @@ await close();
 
   /* Nothing is coming: neither a rejected request nor a page without script
      may leave a skeleton pulsing at a promise it cannot keep. They differ in
-     how the card ends up hidden — one is the script giving up, the other is
+     how the card ends up hidden: one is the script giving up, the other is
      the markup never having promised anything. */
   for (const [what, opts, wants] of [
     [

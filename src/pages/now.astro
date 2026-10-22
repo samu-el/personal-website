@@ -19,7 +19,7 @@ import Thumb from '@/components/Thumb.astro';
 const index = await navIndex('/now');
 const [github, films, tracks] = await Promise.all([githubActivity(), recentFilms(), recentTracks()]);
 
-/** "3 days ago" — coarse on purpose, so a stale build cannot look precise. */
+/** "3 days ago": coarse on purpose, so a stale build cannot look precise. */
 function ago(iso: string): string {
   const days = Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000);
   if (days <= 0) return 'today';
@@ -42,17 +42,14 @@ const stamp = `${meta} shrink-0 tabular-nums`;
 const outbound = { target: '_blank', rel: 'noopener noreferrer' };
 ---
 
-<Layout title="Now" description={`Recent public repository activity and recent films — ${site.name}.`} path="/now">
-  <PageHeader {index} label="Now" compact>Lately.</PageHeader>
+<Layout title="Now" description={`Recent public repository activity and recent films · ${site.name}.`} path="/now">
+  <PageHeader {index} compact>Lately.</PageHeader>
 
   <NowPlaying />
 
   {
     github && github.recent.length > 0 && (
       <FeedSection title="Recently pushed" rule={false}>
-        <p slot="aside" class="font-mono text-2xs tracking-wide text-subtle" data-reveal>
-          {github.publicRepos} public repositories
-        </p>
         {github.recent.map((repo, i) => (
           <li data-reveal style={stagger(i)}>
             <a
@@ -82,18 +79,10 @@ const outbound = { target: '_blank', rel: 'noopener noreferrer' };
             </a>
           </li>
         ))}
-        <div slot="after" class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
-          <a href="https://github.com/samu-el?tab=repositories" {...outbound} class="btn btn-ghost">
-            <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
-            All repositories
-          </a>
-          <div class="text-[0.9375rem] text-subtle">
-            {github.languages.length > 0 && (
-              <p>Languages across all public repositories: {github.languages.join(', ')}.</p>
-            )}
-            <p class="mt-1">Private repositories are not listed.</p>
-          </div>
-        </div>
+        <a slot="after" href="https://github.com/samu-el?tab=repositories" {...outbound} class="btn btn-ghost mt-8">
+          <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
+          All repositories
+        </a>
       </FeedSection>
     )
   }
@@ -101,10 +90,6 @@ const outbound = { target: '_blank', rel: 'noopener noreferrer' };
   {
     tracks && tracks.length > 0 && (
       <FeedSection title="Recently played">
-        <span slot="aside" class:list={[meta, 'flex items-center gap-1.5']}>
-          <Icon name="simple-icons:spotify" class="size-3.5" aria-hidden="true" />
-          Spotify
-        </span>
         {tracks.map((track, i) => (
           <li data-reveal style={stagger(i)}>
             <a href={track.url} {...outbound} class="group flex items-center gap-4 py-3">

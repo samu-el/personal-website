@@ -15,26 +15,25 @@ const items = await visibleNav();
     <!-- Call to action: the one line, at the size it deserves. -->
     <div class="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-8">
       <div class="lg:col-span-8">
-        <p class="eyebrow">Contact</p>
-        <h2 class="display-hero mt-5 text-[clamp(2.4rem,6.4vw,5rem)]">Reach out.</h2>
+        <h2 class="display-hero text-[clamp(2.4rem,6.4vw,5rem)]">Reach out.</h2>
       </div>
       <div class="flex flex-wrap gap-3 lg:col-span-4 lg:justify-end">
         <a href={`mailto:${site.email}`} class="btn btn-primary">
           <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
           {site.email}
         </a>
-        <a href={href('/contact')} class="btn btn-ghost">More ways to reach me</a>
+        <a href={href('/contact')} class="btn btn-ghost">Contact</a>
       </div>
     </div>
 
-    <!-- Link columns, ruled. -->
+    <!-- Link columns, ruled. No column headings: page names and network names
+         say what they are. Navs, so each list is still named for a screen reader. -->
     <div
       class="mt-12 grid grid-cols-2 gap-x-6 gap-y-10 border-t border-line pt-10 lg:mt-16 lg:grid-cols-12 lg:gap-8 lg:pt-12"
     >
       <!-- Columns end on the twelfth, flush with the buttons above them. -->
-      <div class="lg:col-span-3 lg:col-start-6">
-        <h3 class="meta">Pages</h3>
-        <ul class="mt-5 space-y-2.5">
+      <nav aria-label="Pages" class="lg:col-span-3 lg:col-start-8">
+        <ul class="space-y-2.5">
           {
             items.map((item) => (
               <li>
@@ -49,11 +48,9 @@ const items = await visibleNav();
             ))
           }
         </ul>
-      </div>
-
-      <div class="lg:col-span-2">
-        <h3 class="meta">Elsewhere</h3>
-        <ul class="mt-5 space-y-2.5">
+      </nav>
+      <nav aria-label="Elsewhere" class="lg:col-span-2">
+        <ul class="space-y-2.5">
           {
             socials.map((s) => (
               <li>
@@ -69,12 +66,6 @@ const items = await visibleNav();
               </li>
             ))
           }
-        </ul>
-      </div>
-
-      <div class="lg:col-span-2">
-        <h3 class="meta">This site</h3>
-        <ul class="mt-5 space-y-2.5">
           {
             writing && (
               <li>
@@ -83,24 +74,14 @@ const items = await visibleNav();
                   class="hit inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
                 >
                   <Icon name="lucide:rss" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
-                  RSS feed
+                  RSS
                 </a>
               </li>
             )
           }
-          <li>
-            <a
-              href={href('/stack')}
-              class="hit inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
-            >
-              <Icon name="lucide:layers" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
-              Built with
-            </a>
-          </li>
         </ul>
-      </div>
+      </nav>
     </div>
-
     <div class="rule mt-10 lg:mt-14"></div>
 
     <div

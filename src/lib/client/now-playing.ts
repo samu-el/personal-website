@@ -30,7 +30,7 @@ interface Payload {
 
 /** Bound on the staleness correction, so a badly set clock cannot peg the bar. */
 const MAX_AGE_MS = 60000;
-/** How long a good answer outlives failed reads — the Worker's own last-good window. */
+/** How long a good answer outlives failed reads: the Worker's own last-good window. */
 const KEEP_MS = 10 * 60000;
 /** A request that has not answered by now is abandoned and counted as a failure. */
 const TIMEOUT_MS = 10000;
@@ -140,7 +140,7 @@ export function nowPlaying() {
   }
 
   function paint(data: Payload) {
-    /* An older deployed Worker sends no state, so infer it — otherwise the
+    /* An older deployed Worker sends no state, so infer it. Otherwise the
        card reads "Paused" over a playing track while the two are out of step. */
     const reported: State = data.state ?? (data.playing ? 'playing' : 'paused');
     // A remembered answer is not live, whatever it says: nobody knows the
@@ -173,7 +173,7 @@ export function nowPlaying() {
     // at the same moment.
     el.art.style.opacity = '0';
     el.art.src = art;
-    el.art.alt = album ? `${album} — album art` : '';
+    el.art.alt = album ? `${album}, album art` : '';
     el.art.onload = () => {
       el.art!.style.opacity = '1';
       if (el.sleeve) el.sleeve.dataset.art = 'ready';
@@ -243,7 +243,7 @@ export function nowPlaying() {
       clearTimeout(limit);
       if (inflight === ctrl) inflight = null;
     }
-    // Retired while out — the tab was hidden — so its answer is out of date.
+    // Retired while out (the tab was hidden), so its answer is out of date.
     if (id !== seq) return;
     strikes = data ? 0 : strikes + 1;
     schedule(

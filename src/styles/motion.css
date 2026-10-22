@@ -254,14 +254,14 @@
   }
 }
 
-/* Hover states that have to beat a utility on the same element — utilities are
+/* Hover states that have to beat a utility on the same element: utilities are
    the last layer, so a components-layer rule loses however specific it is. */
 @layer utilities {
   .ledger-row:hover .row-index,
   .ledger-row:focus-within .row-index {
     color: var(--color-accent);
   }
-  /* The ticker pauses under the pointer, so a word can actually be read — and
+  /* The ticker pauses under the pointer, so a word can actually be read, and
      by its toggle, which a keyboard or a thumb can reach. Not on focus: the
      toggle is the only focusable thing here, and pressing play while focused
      would do nothing. */

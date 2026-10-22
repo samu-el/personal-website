@@ -24,7 +24,7 @@ let seq = 0;
 const id = () => `el${(seq += 1).toString(36).padStart(4, '0')}`;
 /* Excalidraw wants a seed and a version nonce per element. They are counted
    rather than randomised so a regenerated scene is byte-identical to the one
-   in git when nothing about it changed — otherwise every run is a diff. */
+   in git when nothing about it changed. Otherwise every run is a diff. */
 let counter = 0;
 const nonce = () => (counter = (counter * 1103515245 + 12345) % 2 ** 31);
 
@@ -183,7 +183,7 @@ export const heading = (x, y, title, subtitle) => [
 export const scene = (elements) => ({
   type: 'excalidraw',
   version: 2,
-  source: 'https://smr.et — docs/diagrams/build.mjs',
+  source: 'https://smr.et · docs/diagrams/build.mjs',
   elements: flat(elements),
   appState: { gridSize: null, viewBackgroundColor: '#ffffff' },
   files: {},
@@ -245,8 +245,8 @@ export function svg(elements) {
 }
 
 export async function write(name, elements) {
-  /* Minified on purpose. Nobody reads a scene as text — the .svg beside it is
-     what the doc shows and what a reviewer looks at — and pretty-printing six
+  /* Minified on purpose. Nobody reads a scene as text (the .svg beside it is
+     what the doc shows and what a reviewer looks at), and pretty-printing six
      scenes cost 7,667 lines of committed whitespace and turned every
      regeneration into a thousand-line diff. excalidraw.com does not care. */
   const json = new URL(`./${name}.excalidraw`, import.meta.url);

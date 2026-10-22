@@ -16,7 +16,7 @@ interface Props {
   modifiedTime?: Date;
   tags?: string[];
   noindex?: boolean;
-  /** Drops the footer CTA — used on the contact page, where it would repeat. */
+  /** Drops the footer CTA. Used on the contact page, where it would repeat. */
   bareFooter?: boolean;
 }
 
@@ -39,7 +39,7 @@ const section =
         try {
           pref = localStorage.getItem('theme') || 'system';
         } catch {
-          /* storage blocked — fall through to system */
+          /* storage blocked: fall through to system */
         }
         const isDark =
           pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -57,7 +57,7 @@ const section =
   </head>
   <body class="min-h-dvh antialiased">
     <Header />
-    <div class="rail-vertical hidden xl:block" aria-hidden="true">{section} — {site.name}</div>
+    <div class="rail-vertical hidden xl:block" aria-hidden="true">{section} · {site.name}</div>
     <main id="main">
       <slot />
     </main>
@@ -87,7 +87,7 @@ const section =
         const arm = () => {
           const fold = window.innerHeight * 0.92;
           for (const el of $$('[data-reveal]:not(.reveal-pending), [data-draw]:not(.draw-pending)')) {
-            // Anything already on screen stays put — no stutter on first paint.
+            // Anything already on screen stays put, so no stutter on first paint.
             if (el.getBoundingClientRect().top <= fold) continue;
             // A rule draws in; everything else fades up. Same observer.
             el.classList.add(el.hasAttribute('data-draw') ? 'draw-pending' : 'reveal-pending');

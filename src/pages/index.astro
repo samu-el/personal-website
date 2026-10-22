@@ -37,9 +37,9 @@ const liveMetrics = github
   : metrics;
 
 /** Split here, not in the browser, so the markup is the words: copy, search
- *  and a screen reader all get the sentence. */
-const line1 = ['No', 'software', 'engineering', 'problem'];
-const line2 = ['is', 'too', 'big', 'to', 'solve.'];
+ *  and a screen reader all get the name. */
+const line1 = ['Samuel'];
+const line2 = ['Mussie.'];
 
 const marquee = [
   'TypeScript',
@@ -56,30 +56,24 @@ const marquee = [
   'Terraform',
 ];
 
-/** The Currently table: the same facts as the intro, as a ruled ledger. */
+/** The hero's fact table: role, place, focus, timezone, as a ruled ledger. */
 const currently: [string, string][] = [
   ['Role', 'Software Engineer'],
   ['Based in', 'Addis Ababa, Ethiopia'],
-  ['Focus', 'Full-stack web and mobile — TypeScript, Python, React, PostgreSQL.'],
+  ['Focus', 'Full-stack web and mobile: TypeScript, Python, React, PostgreSQL.'],
   ['Timezone', 'EAT / GMT+3'],
 ];
 ---
 
 <Layout title={site.title} description={site.description} path="/" type="profile">
   <!-- ── Hero: an ink field, edge to edge ─────────────────────────── -->
-  <!-- The field runs edge to edge; its content keeps to .wrap, so the eyebrow,
+  <!-- The field runs edge to edge; its content keeps to .wrap, so the name,
        lede and buttons share an edge with the logo and every section below. -->
   <section class="field-ink relative overflow-hidden" style="view-transition-name:field">
     <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true"></div>
 
     <div class="wrap relative pb-14 pt-10 lg:pb-24 lg:pt-20">
-      <p class="eyebrow hero-enter" style="--enter:0ms">
-        <a href={href('/contact')} class="hit transition-colors hover:text-accent">Reach out</a>
-        <span class="hidden text-line-strong sm:inline" aria-hidden="true">/</span>
-        <span class="hidden sm:inline">{site.location}</span>
-      </p>
-
-      <h1 class="display-hero hero-words mt-10 text-[clamp(3rem,10.2vw,10rem)] lg:mt-14">
+      <h1 class="display-hero hero-words text-[clamp(3rem,10.2vw,10rem)]">
         {
           line1.map((w, i) => (
             <Fragment>
@@ -110,9 +104,9 @@ const currently: [string, string][] = [
             class="hero-enter max-w-2xl text-[1.125rem] leading-[1.6] text-muted lg:text-[1.5rem] lg:leading-[1.45]"
             style="--enter:470ms"
           >
-            <strong class="font-medium text-fg">Samuel Mussie</strong> — software engineer based in Addis Ababa, Ethiopia.
-            Ten years building web and mobile products: Python and TypeScript services, React and Next.js front ends, Flutter
-            and native iOS, and retrieval-augmented AI features.
+            Software engineer in Addis Ababa, Ethiopia. Ten years building web and mobile products: Python and
+            TypeScript services, React and Next.js front ends, Flutter and native iOS, and retrieval-augmented AI
+            features.
           </p>
 
           <div class="hero-enter mt-10 flex flex-wrap items-center gap-x-8 gap-y-5" style="--enter:570ms">
@@ -132,22 +126,10 @@ const currently: [string, string][] = [
           </div>
         </div>
 
-        <!-- Currently: the same facts, as a ruled table. -->
-        <!-- A div, not an aside: a complementary landmark inside main is not top-level. -->
+        <!-- The facts as a ruled table; its terms are its labels. A div, not an
+             aside: a complementary landmark inside main is not top-level. -->
         <div class="hero-enter lg:col-span-4 lg:col-start-9" style="--enter:670ms">
-          <h2 class="meta">Currently</h2>
-          <Ledger rows={currently} align="columns" />
-          <a
-            href={href('/contact')}
-            class="hit group mt-5 inline-flex items-center gap-2 text-sm text-fg transition-colors hover:text-accent"
-          >
-            <span class="link">Start a conversation</span>
-            <Icon
-              name="lucide:arrow-right"
-              class="size-4 transition-transform duration-300 group-hover:translate-x-1"
-              aria-hidden="true"
-            />
-          </a>
+          <Ledger rows={currently} align="columns" class="text-sm lg:mt-1.5" />
         </div>
       </div>
     </div>
@@ -186,7 +168,7 @@ const currently: [string, string][] = [
 
   <!-- ── Metrics ──────────────────────────────────────────────────── -->
   <!-- Four figures as one ruled row, bounded by heavy rules. Big enough to be
-       read from across the room. -->
+       read from across the room; the label says what each counts. -->
   <div class="wrap py-6 lg:py-10">
     <dl class="grid grid-cols-2 border-y-2 border-fg lg:grid-cols-4 lg:divide-x lg:divide-line">
       {
@@ -195,7 +177,7 @@ const currently: [string, string][] = [
             class:list={[
               // Rows shared across the dl, so a label that wraps to two lines
               // lowers every figure beside it, not just its own.
-              'row-span-3 grid grid-rows-subgrid py-8 lg:py-12',
+              'row-span-2 grid grid-rows-subgrid py-8 lg:py-12',
               i > 0 && 'lg:pl-8',
               i < 3 && 'lg:pr-8',
               i % 2 === 1 && 'border-l border-line pl-6 lg:border-l-0 lg:pl-8',
@@ -208,8 +190,6 @@ const currently: [string, string][] = [
             <dd class="numeral mt-5 text-[clamp(3rem,7.4vw,6rem)] text-fg" data-count>
               {m.value}
             </dd>
-            {/* A second dd, not a p: a dl group holds only dt and dd. */}
-            {m.note && <dd class="mt-3 text-[0.8125rem] leading-snug text-subtle">{m.note}</dd>}
           </div>
         ))
       }
@@ -217,7 +197,7 @@ const currently: [string, string][] = [
   </div>
 
   <!-- ── Services ─────────────────────────────────────────────────── -->
-  <Section index="01" eyebrow="Work" title="Types of work." lede="Full-stack, across web and mobile." id="services">
+  <Section index="01" title="Types of work." id="services">
     <ol class="ledger">
       {
         services.map((s, i) => (
@@ -243,13 +223,7 @@ const currently: [string, string][] = [
   </Section>
 
   <!-- ── Selected work ────────────────────────────────────────────── -->
-  <Section
-    index="02"
-    eyebrow="Selected work"
-    title="Projects."
-    lede="Client work ships under other names. These are the public ones."
-    id="work"
-  >
+  <Section index="02" title="Selected work." id="work">
     {/* All lazy: below the fold here, unlike on /work where the first is the LCP. */}
     <div class="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-x-12 lg:gap-y-16">
       {
@@ -265,7 +239,7 @@ const currently: [string, string][] = [
 
     <div class="mt-12 lg:mt-16">
       <a href={href('/work')} class="btn btn-ghost">
-        Details
+        All work
         <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
       </a>
     </div>
@@ -274,7 +248,7 @@ const currently: [string, string][] = [
   <!-- ── Writing (only when there is something published) ──────────── -->
   {
     posts.length > 0 && (
-      <Section index="03" eyebrow="Writing" title="Writing." lede="Posts." id="writing">
+      <Section index="03" title="Writing." id="writing">
         <div>
           {posts.map((post, i) => (
             <PostCard post={post} index={i} />

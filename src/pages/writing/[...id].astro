@@ -157,28 +157,24 @@ const eyebrow = 'meta';
               )
             }
 
-            <div class="card rounded-lg p-6">
-              <h2 class={eyebrow}>Written by</h2>
-              <p class="mt-4 text-[0.9375rem] font-medium tracking-tight">{site.name}</p>
-              <p class="mt-1 text-[0.8125rem] leading-snug text-subtle">
-                {site.role}, {site.company} · {site.location}
-              </p>
-              <div class="rule my-5"></div>
-              <div class="flex flex-wrap gap-2">
-                {
-                  share.map((s) => (
-                    <a
-                      href={s.href}
-                      target={s.external ? '_blank' : undefined}
-                      rel={s.external ? 'noopener noreferrer' : undefined}
-                      class="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 meta text-muted transition-colors hover:border-accent hover:text-accent"
-                    >
-                      <Icon name={s.icon} class="size-3" aria-hidden="true" />
-                      {s.label}
-                    </a>
-                  ))
-                }
-              </div>
+            {
+              /* The site is one author's, so no byline card: just the two things a
+                reader can do with a post. */
+            }
+            <div class="flex flex-wrap gap-2">
+              {
+                share.map((s) => (
+                  <a
+                    href={s.href}
+                    target={s.external ? '_blank' : undefined}
+                    rel={s.external ? 'noopener noreferrer' : undefined}
+                    class="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 meta text-muted transition-colors hover:border-accent hover:text-accent"
+                  >
+                    <Icon name={s.icon} class="size-3" aria-hidden="true" />
+                    {s.label}
+                  </a>
+                ))
+              }
             </div>
 
             {

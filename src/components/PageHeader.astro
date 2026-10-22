@@ -1,23 +1,21 @@
 ---
 /**
  * The header block every inner page opens with: an ink field the width of the
- * viewport, the page's index set huge in gold behind it, the headline in
- * paper, and an aside column for the one-line description.
+ * viewport, the page's index set huge in gold behind it, and the headline in
+ * paper. Nothing else: no eyebrow, no subtitle. The headline names the page;
+ * an action that belongs up here (the contact buttons) goes in `after`.
  *
  * One component so the pages cannot drift from each other, and so the field,
  * the watermark and the reveal timings are decided once.
  */
 interface Props {
-  /** Two-digit index from the nav, e.g. "02". Also the watermark. */
+  /** Two-digit index from the nav, e.g. "02". The watermark; decoration only. */
   index?: string;
-  /** Eyebrow label, e.g. "About". */
-  label: string;
   /** Tighter vertical rhythm for pages whose body starts with a big element. */
   compact?: boolean;
 }
 
-const { index, label, compact = false } = Astro.props;
-const hasAside = Astro.slots.has('aside');
+const { index, compact = false } = Astro.props;
 ---
 
 <section class="field-ink relative overflow-hidden" style="view-transition-name:field">
@@ -31,31 +29,9 @@ const hasAside = Astro.slots.has('aside');
       )
     }
 
-    <p class="eyebrow relative" data-reveal>
-      {index && <span class="text-accent">{index}</span>}
-      {label}
-    </p>
-
-    <div class="relative mt-8 grid gap-8 lg:mt-10 lg:grid-cols-12 lg:gap-8">
-      <div class:list={[hasAside ? 'lg:col-span-8' : 'lg:col-span-12']}>
-        <h1 class="display-hero text-[clamp(3rem,8.6vw,7rem)]" data-reveal style="--reveal-delay:60ms">
-          <slot />
-        </h1>
-      </div>
-      {
-        hasAside && (
-          <div class="lg:col-span-4 lg:col-start-9 lg:self-end">
-            <div
-              class="border-l-2 border-accent pl-5 text-[0.9375rem] leading-relaxed text-muted lg:text-base"
-              data-reveal
-              style="--reveal-delay:120ms"
-            >
-              <slot name="aside" />
-            </div>
-          </div>
-        )
-      }
-    </div>
+    <h1 class="display-hero relative text-[clamp(3rem,8.6vw,7rem)] lg:max-w-[66%]" data-reveal>
+      <slot />
+    </h1>
 
     <slot name="after" />
   </div>

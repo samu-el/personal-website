@@ -1,4 +1,4 @@
-/** Shapes for the Worker's JSDoc. Types only — nothing is imported at runtime. */
+/** Shapes for the Worker's JSDoc. Types only; nothing is imported at runtime. */
 
 export interface Env {
   SPOTIFY_CLIENT_ID: string;

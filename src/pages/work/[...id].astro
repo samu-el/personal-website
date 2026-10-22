@@ -94,24 +94,18 @@ const onPaper = 'bg-bg [box-decoration-break:clone]';
               <span class={onPaper}>{d.blurb}</span>
             </p>
 
-            <div class="mt-9 flex flex-wrap gap-3" data-reveal style="--reveal-delay:180ms">
-              {
-                links.map((l) => (
-                  <a href={l.href} target="_blank" rel="noopener noreferrer" class:list={['btn', l.cls]}>
-                    <Icon name={l.icon} class="size-4" aria-hidden="true" />
-                    {l.label}
-                  </a>
-                ))
-              }
-              {
-                !d.repo && d.repoPrivate && (
-                  <span class:list={['inline-flex items-center gap-2 meta', onPaper]}>
-                    <Icon name="lucide:lock" class="size-3.5" aria-hidden="true" />
-                    Private source
-                  </span>
-                )
-              }
-            </div>
+            {
+              links.length > 0 && (
+                <div class="mt-9 flex flex-wrap gap-3" data-reveal style="--reveal-delay:180ms">
+                  {links.map((l) => (
+                    <a href={l.href} target="_blank" rel="noopener noreferrer" class:list={['btn', l.cls]}>
+                      <Icon name={l.icon} class="size-4" aria-hidden="true" />
+                      {l.label}
+                    </a>
+                  ))}
+                </div>
+              )
+            }
           </div>
 
           <!-- A div: an aside inside main is not a top-level landmark. -->

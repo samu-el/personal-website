@@ -23,9 +23,8 @@ const index = await navIndex('/work');
 ---
 
 <Layout {title} {description} path="/work">
-  <PageHeader {index} label="Work">
+  <PageHeader {index}>
     Selected <em class="italic text-accent">work.</em>
-    <Fragment slot="aside"> Feel free to reach out about any of the projects I&rsquo;ve worked on. </Fragment>
   </PageHeader>
 
   <div class="wrap py-12 lg:py-24">
@@ -35,29 +34,19 @@ const index = await navIndex('/work');
       {showcased.map((p, i) => <ProjectShowcase project={p} index={i} />)}
     </div>
 
-    <!-- Everything else lives on GitHub rather than being re-listed here. -->
-    <section class="mt-12 border-t border-line pt-10 lg:mt-28 lg:pt-12">
-      <div class="grid gap-8 lg:grid-cols-12 lg:gap-10">
-        <div class="lg:col-span-4">
-          <p class="eyebrow" data-reveal>Other repositories</p>
-        </div>
-        <div class="lg:col-span-7">
-          <p class="max-w-xl text-[0.9375rem] leading-relaxed text-muted" data-reveal style="--reveal-delay:60ms">
-            More projects — bots, tools, mobile apps and experiments — are on GitHub.
-          </p>
-          <a
-            href="https://github.com/samu-el?tab=repositories"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-ghost mt-7"
-            data-reveal
-            style="--reveal-delay:120ms"
-          >
-            <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
-            Explore on GitHub
-          </a>
-        </div>
-      </div>
-    </section>
+    <!-- Everything else lives on GitHub rather than being re-listed here: one
+         button under a rule, which is all the end of a list needs. -->
+    <div class="mt-12 border-t border-line pt-10 lg:mt-28 lg:pt-12">
+      <a
+        href="https://github.com/samu-el?tab=repositories"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-ghost"
+        data-reveal
+      >
+        <Icon name="simple-icons:github" class="size-4" aria-hidden="true" />
+        More on GitHub
+      </a>
+    </div>
   </div>
 </Layout>

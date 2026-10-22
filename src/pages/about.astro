@@ -12,7 +12,7 @@ import SocialLinks from '@/components/SocialLinks.astro';
 
 const title = 'About';
 const description =
-  'Samuel Mussie — software engineer in Addis Ababa. Ten years building web and mobile products end to end, across eight languages and three platforms.';
+  'Samuel Mussie, software engineer in Addis Ababa. Ten years building web and mobile products end to end, across eight languages and three platforms.';
 
 const index = await navIndex('/about');
 
@@ -28,13 +28,9 @@ const glance: [string, string][] = [
 ---
 
 <Layout {title} {description} path="/about" type="profile">
-  <PageHeader {index} label="About">
+  <PageHeader {index}>
     Software engineer,
     <em class="block italic text-accent">Addis Ababa.</em>
-    <Fragment slot="aside">
-      Ten years of web and mobile development across eight languages and three platforms. Currently at Mereb
-      Technologies, building products for clients in Europe and the US.
-    </Fragment>
   </PageHeader>
 
   <!-- ── Narrative ────────────────────────────────────────────────── -->
@@ -44,7 +40,7 @@ const glance: [string, string][] = [
         <div class="prose prose-lg" data-reveal>
           <p>
             Samuel Mussie is a software engineer based in Addis Ababa, Ethiopia. He works across the stack on web and
-            mobile products — data modelling and services through to front ends and deployment.
+            mobile products, from data modelling and services through to front ends and deployment.
           </p>
           <p>
             He is currently at <a href={site.companyUrl} target="_blank" rel="noopener noreferrer">Mereb Technologies</a
@@ -74,12 +70,11 @@ const glance: [string, string][] = [
         </div>
       </div>
 
-      <!-- At a glance: a ruled table, sticky beside the prose. -->
-      <!-- A div: an aside inside main is not a top-level landmark. -->
+      <!-- The facts as a ruled table, sticky beside the prose; its terms are its
+           labels. A div: an aside inside main is not a top-level landmark. -->
       <div class="lg:col-span-4 lg:col-start-9">
         <div class="lg:sticky lg:top-24" data-reveal style="--reveal-delay:80ms">
-          <h2 class="meta">At a glance</h2>
-          <Ledger rows={glance} />
+          <Ledger rows={glance} class="text-sm" />
           <SocialLinks
             class="mt-6 space-y-3"
             rowClass="hit flex items-center justify-between gap-3 text-sm text-muted transition-colors hover:text-fg"
@@ -92,7 +87,7 @@ const glance: [string, string][] = [
   <!-- ── Timeline ─────────────────────────────────────────────────── -->
   <!-- A rail rather than a stack of boxes: the years run down the left, the
        roles hang off it, and the hairline between them is the timeline. -->
-  <Section index="05" eyebrow="Timeline" title="Timeline." id="timeline">
+  <Section index="05" title="Timeline." id="timeline">
     <ol class="ledger">
       {
         roles.map((role, i) => (
@@ -108,7 +103,7 @@ const glance: [string, string][] = [
                   <>
                     {role.from}
                     <span class="text-subtle" aria-hidden="true">
-                      —
+                      –
                     </span>
                     <span class={role.current ? 'text-accent' : ''}>{role.to}</span>
                   </>

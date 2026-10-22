@@ -32,14 +32,14 @@ const sizes = sizesProp ?? (phone ? '19rem' : '(min-width: 1024px) 58vw, 100vw')
 
 /** Hostname only. A full URL is noise at this type size. */
 const host = demo ? new URL(demo).host : null;
-/** Only a link when there is somewhere else to go — never to this same page. */
+/** Only a link when there is somewhere else to go, never to this same page. */
 const Tag = demo ? 'a' : 'div';
 const linkAttrs = demo
   ? {
       href: demo,
       target: '_blank',
       rel: 'noopener noreferrer',
-      'aria-label': `${title} — open ${host} in a new tab`,
+      'aria-label': `${title}: open ${host} in a new tab`,
     }
   : {};
 
@@ -120,12 +120,6 @@ const aspect = phone ? 'aspect-[440/936]' : 'aspect-[16/10]';
       }
     </div>
   </Tag>
-
-  {
-    /* A phone frame has no address bar, so the host goes underneath — still
-       stated, just not pretending to be chrome. */
-    phone && host && <p class="mt-3 text-center font-mono text-2xs tracking-wide text-subtle">{host}</p>
-  }
 </div>
 
 <script>

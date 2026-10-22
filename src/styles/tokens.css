@@ -17,7 +17,7 @@
   /* One duration scale. Everything below picks from it rather than inventing
      a number, so a hover, a panel and a reveal read as the same hand. The
      measured spread before this was 0.2s to 1.1s across nine values.
-       t-1  pointer-following and colour — must feel instant
+       t-1  pointer-following and colour, must feel instant
        t-2  hover state changes
        t-3  movement and panels
        t-4  scroll reveals
@@ -51,7 +51,7 @@
   }
 }
 
-/* Semantic colour layer — swapped by `.dark` on <html>. */
+/* Semantic colour layer, swapped by `.dark` on <html>. */
 @layer base {
   :root {
     --c-bg: 247 245 241;

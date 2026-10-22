@@ -3,9 +3,9 @@ import type { CollectionEntry } from 'astro:content';
 import { Icon } from 'astro-icon/components';
 import PreviewFrame from '@/components/PreviewFrame.astro';
 import { href } from '@/lib/paths';
-import { tone } from '@/lib/status';
 
-/** A framed screenshot with its title and status, as the home page shows it. */
+/** A framed screenshot captioned by its title alone, as the home page shows it.
+ *  Kind and status are on the project's own page. */
 interface Props {
   project: CollectionEntry<'projects'>;
   delay?: number;
@@ -18,7 +18,7 @@ const d = project.data;
 
 <figure data-reveal style={`--reveal-delay:${delay}ms`}>
   <PreviewFrame {project} {eager} />
-  <figcaption class:list={['mt-4 flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1', captionClass]}>
+  <figcaption class:list={['mt-4', captionClass]}>
     <h3 class="display text-[1.5rem]" style={`view-transition-name:project-${project.id}`}>
       <a href={href(`/work/${project.id}`)} class="group/link">
         <span class="link">{d.title}</span>
@@ -29,10 +29,5 @@ const d = project.data;
         />
       </a>
     </h3>
-    <p class="meta flex items-center gap-2">
-      {d.kind}
-      <span class="text-line-strong" aria-hidden="true">·</span>
-      <span class={tone(d.status)}>{d.status}</span>
-    </p>
   </figcaption>
 </figure>

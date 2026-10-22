@@ -41,7 +41,7 @@
    Standalone links set at metadata sizes measure 15-22px tall, under
    what a thumb can reliably hit. `.hit` grows the touchable area with a
    pseudo-element, leaving type and layout untouched. Inline prose links
-   are left alone — they cannot be padded without breaking the line. */
+   are left alone: they cannot be padded without breaking the line. */
 @layer components {
   @media (pointer: coarse) {
     .hit {

@@ -7,7 +7,7 @@ import '@/styles/global.css';
 /**
  * The three faces the top of every page is set in. Preloaded because
  * `font-display: swap` without one reflowed the page by 14px when the real
- * face landed — the site's only layout shift worth naming (CLS 0.0166).
+ * face landed: the site's only layout shift worth naming (CLS 0.0166).
  */
 import geistSans from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
 import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
@@ -108,7 +108,7 @@ const personSchema = {
 <link rel="manifest" href={href('/manifest.webmanifest')} />
 {
   hasFeed && (
-    <link rel="alternate" type="application/rss+xml" title={`${site.name} — Writing`} href={href('/rss.xml')} />
+    <link rel="alternate" type="application/rss+xml" title={`${site.name} · Writing`} href={href('/rss.xml')} />
   )
 }
 <link rel="sitemap" href={href('/sitemap-index.xml')} />

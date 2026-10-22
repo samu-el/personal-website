@@ -5,7 +5,7 @@
  *
  * Built on a native <dialog>, so focus trapping, background inertness and
  * Escape-to-close come from the platform rather than from hand-rolled JS.
- * The whole index is baked in at build time — there is no runtime search
+ * The whole index is baked in at build time: there is no runtime search
  * request and nothing to keep in sync by hand.
  */
 import { getCollection } from 'astro:content';
@@ -35,14 +35,12 @@ const entries: Entry[] = [
     label: item.label,
     section: 'Pages',
     href: href(item.href),
-    hint: item.index,
   })),
   ...projects.map((p) => ({
     label: p.data.title,
     section: 'Work',
     href: href(`/work/${p.id}`),
-    hint: p.data.kind,
-    keywords: [p.data.blurb, ...p.data.stack, ...p.data.tags].join(' '),
+    keywords: [p.data.kind, p.data.blurb, ...p.data.stack, ...p.data.tags].join(' '),
   })),
   ...socials.map((s) => ({
     label: s.label,
@@ -62,7 +60,6 @@ const entries: Entry[] = [
     label: 'Change colour theme',
     section: 'Actions',
     action: 'theme',
-    hint: 'T',
     keywords: 'dark light system appearance',
   },
 ];
@@ -96,13 +93,9 @@ const goto: Record<string, string> = {
       aria-controls="cmdk-list"
       aria-autocomplete="list"
       aria-label="Search pages, projects and actions"
-      placeholder="Jump to a page, project or action…"
+      placeholder="Search"
       class="h-14 w-full flex-1 bg-transparent text-base text-fg outline-none placeholder:text-subtle"
     />
-    <kbd
-      class="hidden shrink-0 rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-2xs text-subtle sm:block"
-      >ESC</kbd
-    >
   </div>
 
   <div id="cmdk-list" role="listbox" aria-label="Results" class="max-h-[min(24rem,60dvh)] overflow-y-auto p-2"></div>
@@ -111,14 +104,6 @@ const goto: Record<string, string> = {
   <!-- Mounted for good: a live region that appears along with its message is
        often not read at all. The script writes the result count here. -->
   <p id="cmdk-status" class="sr-only" role="status"></p>
-
-  <div class="cmdk-foot flex items-center gap-4 border-t border-line px-4 py-2.5 meta">
-    <span class="flex items-center gap-1.5"><kbd class="cmdk-key">↑↓</kbd> Move</span>
-    <span class="flex items-center gap-1.5"><kbd class="cmdk-key">↵</kbd> Open</span>
-    <span class="ml-auto hidden items-center gap-1.5 sm:flex">
-      <kbd class="cmdk-key">G</kbd> then a page
-    </span>
-  </div>
 </dialog>
 
 <template id="cmdk-row">
@@ -183,21 +168,6 @@ const goto: Record<string, string> = {
   }
   .cmdk-row[aria-selected='true'] .cmdk-hint {
     color: var(--color-accent);
-  }
-
-  /* Arrow keys and Enter mean nothing on a touch screen. */
-  @media (hover: none) {
-    .cmdk-foot {
-      display: none;
-    }
-  }
-
-  .cmdk-key {
-    border: 1px solid var(--color-line);
-    border-radius: 3px;
-    background-color: var(--color-surface-2);
-    padding: 0.05rem 0.3rem;
-    font-family: var(--font-mono);
   }
 
   @media (prefers-reduced-motion: reduce) {

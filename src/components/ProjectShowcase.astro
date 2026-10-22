@@ -22,7 +22,7 @@ const logos = import.meta.glob<{ default: ImageMetadata }>('/src/assets/logos/*.
 });
 
 const { project, index } = Astro.props;
-const { title, blurb, period, kind, role, status, stack, demo, repo, repoPrivate, stats } = project.data;
+const { title, blurb, period, kind, role, status, stack, demo, repo, stats } = project.data;
 
 const logo = pickAsset(logos, project.id);
 
@@ -119,7 +119,7 @@ const detail = href(`/work/${project.id}`);
       <Chips items={stack.slice(0, 6)} label="Stack" class="mt-6" />
 
       {
-        (demo || repo || repoPrivate) && (
+        (demo || repo) && (
           <div class="mt-6 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-line pt-5">
             {demo && (
               <a
@@ -142,12 +142,6 @@ const detail = href(`/work/${project.id}`);
                 <Icon name="simple-icons:github" class="size-3" aria-hidden="true" />
                 Source
               </a>
-            )}
-            {!repo && repoPrivate && (
-              <span class="inline-flex items-center gap-1.5 meta">
-                <Icon name="lucide:lock" class="size-3" aria-hidden="true" />
-                Private source
-              </span>
             )}
           </div>
         )

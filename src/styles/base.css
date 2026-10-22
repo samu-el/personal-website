@@ -23,7 +23,7 @@
       animation-iteration-count: 1 !important;
       /* Delays as well: a staggered entrance with its durations zeroed still
          waits out each delay before snapping in, which for the hero words is
-         most of a second of missing sentence — for exactly the people who
+         most of a second of missing sentence, for exactly the people who
          asked for calm. */
       animation-delay: 0ms !important;
       transition-duration: 0.01ms !important;

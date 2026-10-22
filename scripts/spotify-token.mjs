@@ -7,7 +7,7 @@
  * prints the token. Nothing is written to disk or sent anywhere but Spotify.
  *
  * Add `http://127.0.0.1:8888/callback` to the app in the Spotify dashboard
- * first — the IP literal, since Spotify requires HTTPS for redirect URIs
+ * first. It has to be the IP literal, since Spotify requires HTTPS for redirect URIs
  * except loopback and does not accept `localhost`. The token lasts 180 days.
  */
 import { createServer } from 'node:http';
@@ -126,7 +126,7 @@ const server = createServer(async (req, res) => {
       process.exitCode = 1;
       return;
     }
-    console.log('\nAdd all three as repository secrets — see docs/architecture.md, "Now playing".');
+    console.log('\nAdd all three as repository secrets. See docs/architecture.md, "Now playing".');
     console.log('Treat them as passwords.');
   } catch (err) {
     res.writeHead(500, { 'Content-Type': 'text/html' });

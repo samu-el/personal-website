@@ -1,7 +1,7 @@
 ---
 title: 'fantasy.et'
 blurb: 'Fantasy Premier League tooling: a Next.js web app and a React Native mobile companion sharing one data layer, built against the public FPL API.'
-period: '2025 — 2026'
+period: '2025–2026'
 weight: 100
 kind: 'Product'
 role: 'Sole author'
@@ -26,10 +26,10 @@ companion. Data comes from the game's public API. Deployed on Vercel.
 
 ## Stack
 
-- **Web** — Next.js and React, in TypeScript.
-- **Mobile** — React Native, in TypeScript, in a
+- **Web**: Next.js and React, in TypeScript.
+- **Mobile**: React Native, in TypeScript, in a
   [separate repository](https://github.com/samu-el/fantasy-pl-mobile).
-- **Data** — the public Fantasy Premier League API, consumed through a shared, typed data layer.
+- **Data**: the public Fantasy Premier League API, consumed through a shared, typed data layer.
 
 ## Links
 

@@ -87,7 +87,7 @@ for (const [width, height, tag] of [
   await close();
 }
 
-// 4. The reveal fires — nothing in view is left hidden.
+// 4. The reveal fires: nothing in view is left hidden.
 {
   const { page, close } = await visit(browser, '/', { viewport: { width: 1440, height: 900 }, wait: 'load' });
   for (const frac of [0.3, 0.55, 0.8]) {

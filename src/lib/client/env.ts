@@ -1,8 +1,8 @@
 /**
  * What the browser will allow, asked once.
  *
- * Every interactive script needs the same two answers — may this move, and is
- * there a real pointer — and each used to open its own matchMedia. These are
+ * Every interactive script needs the same two answers (may this move, and is
+ * there a real pointer?) and each used to open its own matchMedia. These are
  * live MediaQueryList objects, so a preference changed mid-session is picked
  * up without re-reading anything.
  */
