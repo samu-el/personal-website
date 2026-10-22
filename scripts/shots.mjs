@@ -3,6 +3,8 @@
  *
  *   npm run shots            # every project with a demo URL
  *   npm run shots jeopardy   # just these ids
+ *   SHOTS_ORIGIN=http://localhost:3000 npm run shots fantasy-pl
+ *                            # one project, from a local run of its build
  *
  * Run deliberately, not at build time; previews.yml runs it on a GitHub
  * runner. Nothing is written unless a capture succeeds, so a failure leaves
@@ -51,6 +53,17 @@ const wanted = projects().filter((p) => only.length === 0 || only.includes(p.id)
 if (wanted.length === 0) {
   console.error(only.length ? `No project matched: ${only.join(', ')}` : 'No projects with a demo.');
   process.exit(1);
+}
+
+/* A build that is not deployed yet: point one project at a local run of it.
+   One id only, so a local origin can never stand in for every project. */
+const origin = process.env.SHOTS_ORIGIN;
+if (origin) {
+  if (wanted.length !== 1) {
+    console.error('SHOTS_ORIGIN takes exactly one project id.');
+    process.exit(1);
+  }
+  wanted[0].demo = new URL(origin).origin;
 }
 
 await mkdir(OUT, { recursive: true });
