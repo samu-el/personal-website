@@ -1,17 +1,17 @@
-# samuelmussie — personal site
+# samuelmussie: personal site
 
 The personal site of **Samuel Mussie**, a software engineer in Addis Ababa: bio, selected work,
 writing, and the stack behind it.
 
 Built with [Astro](https://astro.build) and [Tailwind CSS](https://tailwindcss.com), shipped as
-static HTML, deployed to GitHub Pages by GitHub Actions. No client framework — the JavaScript on
+static HTML, deployed to GitHub Pages by GitHub Actions. No client framework: the JavaScript on
 a page is a theme toggle, a mobile menu, a scroll observer and a clock.
 
 > This repository replaces a 2019 fork of `github/personal-website` (Jekyll). None of that code
 > remains; the history does.
 
 **[docs/architecture.md](docs/architecture.md)** covers how it all fits together, and
-[docs/diagrams/](docs/diagrams) holds the same thing as Excalidraw scenes — open any
+[docs/diagrams/](docs/diagrams) holds the same thing as Excalidraw scenes. Open any
 `.excalidraw` file at [excalidraw.com](https://excalidraw.com) with File → Open.
 
 ---
@@ -28,7 +28,7 @@ npm run dev        # http://localhost:4321
 | `npm run dev`        | Dev server with hot reload                               |
 | `npm run build`      | Typecheck, then build to `dist/`                         |
 | `npm run build:fast` | Build without the typecheck (what CI uses after `check`) |
-| `npm run check`      | `astro check` — types across `.astro`, `.ts`, content    |
+| `npm run check`      | `astro check`: types across `.astro`, `.ts`, content     |
 | `npm run preview`    | Serve the built `dist/` locally                          |
 | `npm run images`     | Regenerate `public/og.png` and the app icons             |
 | `npm run diagrams`   | Regenerate the architecture diagrams from `scenes.mjs`   |
@@ -40,7 +40,7 @@ Node 22+ is expected (see `.github/workflows/`).
 ### Smoke suite
 
 Two layers. `tests/static.mjs` reads the built `dist/` directly and asserts what is a property
-of the HTML — heading structure, alt text, accessible link names, internal links resolving, the
+of the HTML: heading structure, alt text, accessible link names, internal links resolving, the
 SEO block, the RSS/sitemap/OG/JSON-LD output, the showcase invariants. It needs no browser and
 runs in about a second. `tests/verify.mjs` then drives a real browser over every route for the
 things that need one: console errors, horizontal overflow at three viewports, the theme
@@ -92,8 +92,8 @@ src/
 
 ### Adding a post
 
-There are no posts. The Writing section — its nav link, the home-page section, the RSS feed and
-its sitemap entry — appears automatically the moment a publishable post exists, and disappears
+There are no posts. The Writing section (its nav link, the home-page section, the RSS feed and
+its sitemap entry) appears automatically the moment a publishable post exists, and disappears
 again when none do. So adding one is the only step.
 
 Create `src/content/posts/my-post.md`:
@@ -112,7 +112,7 @@ Body in Markdown.
 
 Reading time is computed from the body; set `readingTime` to override it.
 
-**`aiWritten: true` means a post is never rendered in production**, in any environment — the
+**`aiWritten: true` means a post is never rendered in production**, in any environment, the
 same treatment as `draft`, but not overridable by the dev server. This site publishes only
 Samuel's own words, and the flag makes that a property of the build rather than something to
 remember. It is enforced in `src/lib/posts.ts` and covered by the smoke suite.
@@ -124,27 +124,29 @@ covered automatically.
 
 Same idea in `src/content/projects/`. The required fields are `title`, `blurb`, `period`,
 `kind`, and `role`; `weight` sorts the list (higher first). See any existing file, or
-`src/content.config.ts` for the full schema — a typo in a field name fails the build rather
+`src/content.config.ts` for the full schema; a typo in a field name fails the build rather
 than shipping quietly.
 
 ---
 
 ## Design system
 
-`src/styles/` is six sheets — `tokens`, `base`, `components`, `prose`, `motion`, `touch` —
+`src/styles/` is six sheets (`tokens`, `base`, `components`, `prose`, `motion`, `touch`),
 imported by `global.css` in source order, plus `fonts`.
 
 - **Colour** is two token sets, light on `:root` and dark on `.dark`, exposed to Tailwind as
   semantic utilities (`bg-bg`, `text-muted`, `border-line`, `text-accent`). Nothing in a
   component references a raw hex value, so a palette change is a single edit.
-- **Type** is three families: Instrument Serif for display, Geist for body and UI, Geist Mono
-  for labels and metadata. Self-hosted, latin subsets only, ~112 KB total.
+- **Type** is Instrument Serif for display and Geist for body, UI, labels and metadata (sentence
+  case, untracked); Geist Mono is kept for code only. Self-hosted, latin subsets only.
+- **The locked system** is [`design.md`](design.md): tokens, roles, controls and motion, read
+  first by any Hallmark run. `.hallmark/` holds that tool's records.
 - **Theme** is three-state: system → light → dark, cycled by the header toggle, resolved by an
   inline script before first paint so there is no flash.
 - **Motion** is gated three ways and every duration comes from one scale.
 
-The reasoning — colour as a field, the duration scale, layer precedence, the three motion
-gates — is in [`docs/architecture.md`](docs/architecture.md) §4 and §5, with diagrams.
+The reasoning (colour as a field, the duration scale, layer precedence, the three motion
+gates) is in [`docs/architecture.md`](docs/architecture.md) §4 and §5, with diagrams.
 
 ---
 
@@ -168,12 +170,12 @@ summary still spans every public repository, aged out or not.
 Forks are excluded from "recently pushed" as somebody else's work.
 
 Old coursework and throwaways are kept out of the list by name in
-`HIDDEN_REPOS` — the API counts them as activity, but they are not a signal
+`HIDDEN_REPOS`. The API counts them as activity, but they are not a signal
 worth showing. Edit that set to change what appears.
 
 Both are allowed to fail. On a network error, a rate limit or an unexpected
 payload the fetch returns `null`, the section that would have used it is not
-rendered, and the build still succeeds — the home page's repository count
+rendered, and the build still succeeds: the home page's repository count
 falls back to the curated figure in `src/data/experience.ts`. Nothing is
 cached to disk on purpose: a stale "recently pushed" list is worse than none,
 and rendering each item's own date means the page never claims its own
@@ -193,7 +195,7 @@ art, url }`.
 The route sits on this site's own domain, so the fetch is same-origin: no CORS
 preflight, no third-party request. `public/api/now-playing.json` answers
 `{ "playing": false }` as a fallback, which the Worker route shadows in
-production — without it a browser would log a failed request for an endpoint
+production. Without it a browser would log a failed request for an endpoint
 that is not deployed yet. The smoke suite asserts that fallback exists.
 
 If the Worker is on its own hostname rather than a `smr.et/api/*` route, set
@@ -201,7 +203,7 @@ the repository variable `PUBLIC_NOW_PLAYING_URL` to its absolute URL and the
 page will read from there instead. It is a URL rather than a secret, so it is a
 variable, and being `PUBLIC_` it is inlined into the page deliberately.
 
-The Worker has its own tests — `cd worker && npm test` — which pin each
+The Worker has its own tests (`cd worker && npm test`), which pin each
 `?debug=1` reason against stubbed Spotify responses, and assert that the
 normal payload carries no diagnostics.
 
@@ -229,7 +231,7 @@ is the expected state of a fresh clone; with some of them set the build warns,
 because that is a misconfiguration rather than a choice.
 
 1. Create an app at developer.spotify.com and add `http://127.0.0.1:8888/callback`
-   to its redirect URIs. It has to be the IP literal — Spotify requires HTTPS
+   to its redirect URIs. It has to be the IP literal: Spotify requires HTTPS
    except for loopback addresses, and `localhost` is not accepted.
 2. Mint a refresh token once, locally. It prints the token and writes nothing
    to disk:
@@ -247,7 +249,7 @@ because that is a misconfiguration rather than a choice.
 starts failing, the section disappears, and step 2 has to be repeated. The site
 keeps building throughout.
 
-The parsers are pure and unit-tested against fixtures — `npm run test:unit`.
+The parsers are pure and unit-tested against fixtures (`npm run test:unit`).
 That matters because the GitHub user-level endpoints are unreachable from some
 sandboxes, so the transform cannot always be exercised against a live
 response.
@@ -259,13 +261,13 @@ response.
 The site is served from **https://smr.et**, at the root. Three things make that work, and all
 three need to stay in place:
 
-1. **DNS** — `smr.et` and `www.smr.et` resolve to Cloudflare, which proxies to GitHub Pages.
+1. **DNS**: `smr.et` and `www.smr.et` resolve to Cloudflare, which proxies to GitHub Pages.
    Cloudflare's SSL/TLS mode must be **Full** (not Flexible, which causes a redirect loop with
    Pages).
-2. **The repository settings** — Settings → Pages → Custom domain is set to `smr.et`, and
+2. **The repository settings**: Settings → Pages → Custom domain is set to `smr.et`, and
    **Source must be "GitHub Actions"**, not "Deploy from a branch". See below.
 3. **Two `CNAME` files, both required.** `CNAME` at the repository root is what GitHub treats
-   as the source of truth for the custom-domain setting — the Pages UI writes it, and **deleting
+   as the source of truth for the custom-domain setting. The Pages UI writes it, and **deleting
    it clears the domain**, which takes the site down. `public/CNAME` is the copy that ends up
    inside the deployed `dist/`, since Astro copies only `public/`. Keep both; do not "tidy up"
    either one.
@@ -284,13 +286,13 @@ matter, so it fails:
 Invalid YAML front matter in /github/workspace/src/pages/writing/index.astro
 ```
 
-The site itself is fine — `actions/deploy-pages` publishes it regardless — so the only visible
+The site itself is fine (`actions/deploy-pages` publishes it regardless), so the only visible
 symptom is a failed check and an email on every push. Switching Source to **GitHub Actions**
 stops that pipeline existing.
 
 **Do not "fix" it by adding a `_config.yml` that excludes everything.** That makes the Jekyll
 build _succeed_, and while the source is a branch a successful Jekyll build publishes its
-output — an empty `_site` — which would overwrite the real site. The failure is the only thing
+output (an empty `_site`), which would overwrite the real site. The failure is the only thing
 currently preventing that.
 
 `.nojekyll` does not help either: `actions/jekyll-build-pages` has no handling for it and runs
@@ -298,7 +300,7 @@ currently preventing that.
 
 ### Building for a GitHub Pages project site instead
 
-If the domain ever goes away, nothing needs rewriting — every internal link goes through
+If the domain ever goes away, nothing needs rewriting: every internal link goes through
 `href()` in `src/lib/paths.ts`, which applies the base:
 
 ```bash
@@ -311,4 +313,4 @@ Variables**) or change the defaults in `astro.config.mjs`. Remove `public/CNAME`
 ## Licence
 
 Code is MIT (see `LICENSE`). The written content in `src/content/`, `src/data/`, and the
-copy in `src/pages/` is © Samuel Mussie — reuse the scaffolding, write your own words.
+copy in `src/pages/` is © Samuel Mussie. Reuse the scaffolding, write your own words.

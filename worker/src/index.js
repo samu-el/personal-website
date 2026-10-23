@@ -1,12 +1,12 @@
 /**
- * now-playing — a Cloudflare Worker that answers "what is Samuel listening to
+ * now-playing: a Cloudflare Worker that answers "what is Samuel listening to
  * right now" without handing Spotify credentials to a browser. Plain
  * JavaScript, one file, no runtime imports, so the same source works with
  * `wrangler deploy` and in the dashboard editor; types come from `types.d.ts`
  * via JSDoc and `tsc` still checks them.
  *
- * The reasoning — the short cache, the module-scope token, 429 handling, the
- * last-good fallback — is in docs/architecture.md, "Now playing".
+ * The reasoning (the short cache, the module-scope token, 429 handling, the
+ * last-good fallback) is in docs/architecture.md, "Now playing".
  *
  * @typedef {import('./types').Env} Env
  * @typedef {import('./types').Payload} Payload
@@ -106,7 +106,7 @@ async function accessToken(env) {
   }
   const body = await res.json();
   const token = typeof body?.access_token === 'string' ? body.access_token : null;
-  // Spotify echoes the token's scopes — the only way to see a missing one early.
+  // Spotify echoes the token's scopes: the only way to see a missing one early.
   const scope = typeof body?.scope === 'string' ? body.scope : '';
   if (token) {
     const ttl = typeof body.expires_in === 'number' ? body.expires_in : 3600;
@@ -122,7 +122,7 @@ function retryAfter(/** @type {Response} */ res) {
 }
 
 /**
- * What is on now. 204 means nothing is playing — a success, and proof the token
+ * What is on now. 204 means nothing is playing: a success, and proof the token
  * and its scope are good. 401 bad token, 403 missing scope, 429 rate limit.
  *
  * @param {string} token @param {Diag} diag Mutated for `?debug`.
@@ -133,7 +133,7 @@ async function readPlayer(token, diag) {
   diag.reason = { 200: 'spotify_200', 204: 'spotify_204_nothing_playing' }[res.status] ?? `spotify_${res.status}`;
   if (res.status >= 400) {
     diag.failed = true;
-    // "Permissions missing" vs "Premium required" — the status cannot say which.
+    // "Permissions missing" vs "Premium required": the status cannot say which.
     diag.spotifyMessage = await res
       .clone()
       .text()
@@ -168,7 +168,7 @@ async function readPlayer(token, diag) {
 }
 
 /**
- * The last thing that finished, for an empty player — and for a token that
+ * The last thing that finished, for an empty player, and for a token that
  * holds only the history scope. No progress: the page must draw no bar.
  *
  * @param {string} token @param {Diag} diag @returns {Promise<Payload | null>}
@@ -230,7 +230,7 @@ export default {
    */
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    // Explains a false rather than asserting it. Statuses only, never values —
+    // Explains a false rather than asserting it. Statuses only, never values:
     // and only for whoever holds DEBUG_KEY, so strangers cannot force live reads.
     const debug = Boolean(env.DEBUG_KEY) && url.searchParams.get('debug') === env.DEBUG_KEY;
     // The root too, for workers.dev. Anything else is the static origin's.
@@ -264,7 +264,7 @@ export default {
       lastGood = { payload, at: Date.now() };
     } else if (diag.failed && lastGood && Date.now() - lastGood.at < LAST_GOOD_MAX_MS) {
       // Marked `stale`, stamp dropped: a remembered position is not corrected.
-      // Never "playing" either — nobody knows it still is.
+      // Never "playing" either: nobody knows it still is.
       const { fetchedAt: _drop, ...rest } = lastGood.payload;
       const state = rest.state === 'recent' ? 'recent' : 'paused';
       payload = { ...rest, playing: false, state, stale: true };

@@ -1,59 +1,35 @@
 ---
 import Layout from '@/layouts/Layout.astro';
 import PageHeader from '@/components/PageHeader.astro';
-import { navIndex } from '@/lib/posts';
 import { site } from '@/lib/site';
-import { href } from '@/lib/paths';
-import { services } from '@/data/stack';
 import { Icon } from 'astro-icon/components';
 import SocialLinks from '@/components/SocialLinks.astro';
 
 const title = 'Contact';
-const description = 'Contact Samuel Mussie — software engineer in Addis Ababa, Ethiopia. Email or LinkedIn.';
+const description = 'Contact Samuel Mussie, software engineer in Addis Ababa, Ethiopia. Email or LinkedIn.';
 
-const index = await navIndex('/contact');
-
+/** Each row is one email with its subject filled in; the heading is the whole label. */
 const routes = [
-  {
-    heading: 'Project work',
-    body: 'Full-stack web and mobile development: schema and services through to front end and deployment.',
-    icon: 'lucide:package-check',
-    cta: 'Email about a project',
-    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Project enquiry')}`,
-  },
-  {
-    heading: 'Roles',
-    body: 'Full-time roles and contract work.',
-    icon: 'lucide:briefcase',
-    cta: 'Email about a role',
-    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('Role enquiry')}`,
-  },
-  {
-    heading: 'AI features',
-    body: 'Retrieval pipelines, vector search, evaluation sets, cost and safety boundaries.',
-    icon: 'lucide:sparkles',
-    cta: 'Email about AI work',
-    ctaHref: `mailto:${site.email}?subject=${encodeURIComponent('AI feature')}`,
-  },
-  {
-    heading: 'Anything else',
-    body: 'Questions, corrections, or a note about something on this site.',
-    icon: 'lucide:message-square-quote',
-    cta: 'Send a message',
-    ctaHref: `mailto:${site.email}`,
-  },
-];
+  { heading: 'Project work', subject: 'Project enquiry' },
+  { heading: 'Roles', subject: 'Role enquiry' },
+  { heading: 'AI features', subject: 'AI feature' },
+  { heading: 'Anything else', subject: '' },
+].map((r) => ({
+  ...r,
+  href: `mailto:${site.email}${r.subject ? `?subject=${encodeURIComponent(r.subject)}` : ''}`,
+}));
 ---
 
 <Layout {title} {description} path="/contact" bareFooter>
-  <PageHeader {index} label="Contact">
+  <PageHeader>
     Get in touch.
-    <em class="block italic text-accent">{site.email}</em>
-    <Fragment slot="aside">Email me or reach out on LinkedIn.</Fragment>
-    <div slot="after" class="relative mt-10 flex flex-wrap gap-3" data-reveal style="--reveal-delay:180ms">
+    <p slot="after" class="display mt-6 text-[clamp(1.75rem,3.4vw,3rem)] text-accent" data-reveal>
+      {site.email}
+    </p>
+    <div slot="after" class="relative mt-10 flex flex-wrap gap-3" data-reveal style="--reveal-delay:120ms">
       <a href={`mailto:${site.email}`} class="btn btn-primary">
         <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
-        {site.email}
+        Email me
       </a>
       <button type="button" id="copy-email" class="btn btn-ghost">
         <Icon name="lucide:copy" class="size-4" aria-hidden="true" />
@@ -64,75 +40,37 @@ const routes = [
     </div>
   </PageHeader>
 
-  <!-- Routes: a numbered ledger rather than four boxes. -->
-  <div class="wrap py-6 lg:py-10">
+  <!-- Routes: a numbered ledger rather than four boxes. The whole row is the
+       link, so the heading is its label and there is nothing to explain. -->
+  <div class="wrap sec-follow">
     <ol class="ledger">
       {
         routes.map((r, i) => (
-          <li
-            class="ledger-row group grid gap-4 py-8 sm:grid-cols-12 sm:items-baseline sm:gap-6 lg:py-10"
-            data-reveal
-            style={`--reveal-delay:${i * 70}ms`}
-          >
-            <span class="row-index numeral text-[1.75rem] text-subtle sm:col-span-1">
-              {String(i + 1).padStart(2, '0')}
-            </span>
-            <div class="sm:col-span-6 lg:col-span-5">
-              <h2 class="row-title display text-[clamp(1.6rem,3vw,2.25rem)]">{r.heading}</h2>
-              <p class="mt-3 max-w-md text-[0.9375rem] leading-relaxed text-muted">{r.body}</p>
-            </div>
-            <div class="flex items-start sm:col-span-5 sm:col-start-8 sm:justify-end lg:col-span-6 lg:col-start-7">
-              <a
-                href={r.ctaHref}
-                class="hit inline-flex items-center gap-2 meta text-fg transition-colors hover:text-accent"
-              >
-                <Icon name={r.icon} class="size-4 text-subtle" aria-hidden="true" />
-                {r.cta}
-                <Icon
-                  name="lucide:arrow-right"
-                  class="size-3 transition-transform duration-300 group-hover:translate-x-1"
-                  aria-hidden="true"
-                />
-              </a>
-            </div>
+          <li class="ledger-row" data-reveal style={`--reveal-delay:${i * 70}ms`}>
+            <a
+              href={r.href}
+              class="group grid grid-cols-[1fr_auto] items-baseline gap-4 py-8 transition-colors sm:gap-6 lg:py-12"
+            >
+              <h2 class="display text-section transition-colors group-hover:text-accent">{r.heading}</h2>
+              <Icon name="lucide:arrow-right" class="size-5 self-center text-subtle" aria-hidden="true" />
+            </a>
           </li>
         ))
       }
     </ol>
 
-    <!-- Practical details -->
-    <div class="mt-14 grid gap-12 lg:mt-24 lg:grid-cols-12 lg:gap-8">
-      <div class="lg:col-span-6">
-        <h2 class="meta">Where to find me</h2>
-        <SocialLinks
-          class="ledger mt-4"
-          rowClass="hit flex items-center justify-between gap-4 py-3.5 text-[0.9375rem] text-fg transition-colors"
-          iconClass="size-4"
-        />
-      </div>
-
-      <div class="lg:col-span-5 lg:col-start-8">
-        <h2 class="meta">Types of work</h2>
-        <ul class="ledger mt-4">
-          {services.map((s) => <li class="py-3.5 text-[0.9375rem] leading-relaxed text-fg">{s.title}</li>)}
-        </ul>
-        <a href={href('/work')} class="btn btn-ghost mt-7 !px-4 !py-2 !text-[0.8125rem]">
-          Selected work
-          <Icon name="lucide:arrow-right" class="size-3.5" aria-hidden="true" />
-        </a>
-      </div>
-    </div>
+    <SocialLinks
+      class="ledger mt-14 lg:mt-24"
+      rowClass="hit flex items-center justify-between gap-4 py-3.5 text-[0.9375rem] text-fg transition-colors"
+      iconClass="size-4"
+    />
   </div>
 
-  <footer class="mt-12 border-t border-line bg-sunken lg:mt-20">
-    <div
-      class="wrap flex flex-col gap-3 py-8 font-mono text-2xs tracking-wide text-subtle sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p>© {new Date().getFullYear()} {site.name}. All rights reserved.</p>
-      <p class="flex items-center gap-2">
-        <span class="inline-block size-1.5 rounded-full bg-jade" aria-hidden="true"></span>
-        {site.location}
-      </p>
+  <!-- A colophon: the contact page is itself the close, so no repeat of it. -->
+  <footer class="border-t border-line bg-sunken">
+    <div class="wrap flex flex-col gap-3 py-10 sm:flex-row sm:items-center sm:justify-between">
+      <p class="meta">© {new Date().getFullYear()} {site.name}</p>
+      <p class="meta">{site.location}</p>
     </div>
   </footer>
 </Layout>

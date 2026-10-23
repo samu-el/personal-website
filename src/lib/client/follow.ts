@@ -3,8 +3,8 @@ import { mayFollow } from './env';
 /**
  * Follows the pointer across the elements matching `selector`.
  *
- * Two behaviours were written twice over — the button that leans toward the
- * cursor and the project frame that tilts under it — and they differ only in
+ * Two behaviours were written twice over (the button that leans toward the
+ * cursor and the project frame that tilts under it) and they differ only in
  * what they do with the position. This owns the part that was identical: one
  * delegated listener rather than a pair per element, passive so it never
  * blocks a scroll, the bookkeeping to settle the element being left, and the
@@ -40,6 +40,6 @@ export function follow(
     },
     { passive: true },
   );
-  // Off the document entirely — out of the window, or into devtools.
+  // Off the document entirely: out of the window, or into devtools.
   document.addEventListener('pointerleave', leave, { passive: true });
 }

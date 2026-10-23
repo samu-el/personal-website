@@ -2,7 +2,7 @@ import type { APIRoute } from 'astro';
 import { site } from '@/lib/site';
 
 /**
- * humanstxt.org — the counterpart to robots.txt: who built the thing, and
+ * humanstxt.org: the counterpart to robots.txt: who built the thing, and
  * with what. Costs one file and is the first place some people look.
  */
 export const GET: APIRoute = () => {
@@ -18,16 +18,16 @@ export const GET: APIRoute = () => {
   Standards:  HTML5, CSS, JavaScript
   Components: Astro, Tailwind CSS, TypeScript
   Hosting:    GitHub Pages, behind Cloudflare
-  Fonts:      Instrument Serif, Geist, Geist Mono — all self-hosted
+  Fonts:      Instrument Serif, Geist, Geist Mono, all self-hosted
   Analytics:  None. No cookies either.
 
 /* THANKS */
   Every maintainer of the above, none of whom were paid for it.
 `;
   /* The header only reaches a server-rendered route. This one is prerendered to
-     a file, and the host picks its own Content-Type — `text/plain` with no
-     charset from some, which a browser reads as windows-1252 and turns the em
-     dash into mojibake. A byte order mark wins over a missing or wrong charset,
+     a file, and the host picks its own Content-Type (`text/plain` with no
+     charset, from some), which a browser reads as windows-1252, turning any
+     non-ASCII character into mojibake. A byte order mark wins over a missing or wrong charset,
      so the file says it is UTF-8 by itself. */
   return new Response(`\uFEFF${body}`, {
     headers: { 'Content-Type': 'text/plain; charset=utf-8' },

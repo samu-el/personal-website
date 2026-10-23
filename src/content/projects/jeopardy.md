@@ -34,12 +34,12 @@ opponents.
 
 ## Stack
 
-- **App** — Next.js and React, in TypeScript, with MUI components and Zustand for client state.
-- **Runtime** — Bun, with a custom server that also hosts the Socket.IO bridge for shared rooms.
-- **Rooms** — server-authoritative: the server owns the board, the buzzer and the clock, and
+- **App**: Next.js and React, in TypeScript, with MUI components and Zustand for client state.
+- **Runtime**: Bun, with a custom server that also hosts the Socket.IO bridge for shared rooms.
+- **Rooms**: server-authoritative. The server owns the board, the buzzer and the clock, and
   clients send intent only. Redis, when configured, keeps rooms across restarts. Shared rooms need
   the custom server, so they are not part of the Vercel deployment.
-- **Sound** — a synthesized cue set. The show's own recordings are copyrighted and are not shipped.
+- **Sound**: a synthesized cue set. The show's own recordings are copyrighted and are not shipped.
 
 ## Links
 

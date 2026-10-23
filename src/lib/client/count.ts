@@ -4,7 +4,7 @@ import { $$ } from './dom';
 /**
  * Figures count up from zero when they scroll into view. The markup holds the
  * final value, so with no script, reduced motion, or an old browser the number
- * is simply there. The suffix — " yrs", "+" — rides along untouched.
+ * is simply there. The suffix (" yrs", "+") rides along untouched.
  */
 export function countUp(duration = 1400) {
   if (calm.matches || !('IntersectionObserver' in window)) return;

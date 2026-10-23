@@ -5,7 +5,7 @@ Spotify right now, so the static site can show it without holding a secret.
 
 The route deliberately shadows `public/api/now-playing.json` in the site
 repository, which answers `{ "playing": false }`. That way the page always
-gets a 200 — before this Worker is deployed the static file answers, and a
+gets a 200: before this Worker is deployed the static file answers, and a
 browser never logs a failed request for an endpoint that does not exist yet.
 
 ```json
@@ -29,7 +29,7 @@ browser never logs a failed request for an endpoint that does not exist yet.
 | `paused`  | the same call, `is_playing: false`           | "Paused", bar frozen at position, static meter    |
 | `recent`  | `/me/player/recently-played?limit=1`         | "Last played · 2 hours ago", no bar, static meter |
 
-The history endpoint is only called when the player names no track at all —
+The history endpoint is only called when the player names no track at all,
 never while something is playing, which would spend a rate-limited call on an
 answer that gets discarded. It is called after a rejection as well as after a
 204, because a token holding only `user-read-recently-played` gets a 401 on
@@ -37,14 +37,14 @@ the player and can still answer this. `?debug=<key>` reports that call's own
 status as `recentReason`, separately from `reason`, so a fallback that worked
 does not hide a player call that did not.
 
-A bare `{ "playing": false }` — no `state`, no title — means Spotify named
+A bare `{ "playing": false }` (no `state`, no title) means Spotify named
 nothing at all: credentials missing, both calls rejected, or the API
 unreachable. That is the only case where the page renders nothing.
 
 `progressMs` is a reading taken when the Worker ran, not a running clock, and
 the edge serves that same reading for up to `CACHE_SECONDS`. `fetchedAt` is
 the epoch-millisecond stamp of the reading, travelling inside the cached body
-so it ages with it — the page adds the elapsed time back and advances the
+so it ages with it. The page adds the elapsed time back and advances the
 progress bar locally, instead of starting it up to half a minute behind and
 jumping on each poll. The correction is clamped, since it compares the
 visitor's clock against the edge's.
@@ -57,8 +57,8 @@ so it pastes into the dashboard editor verbatim. There is no build step.
 **Before you start**, the refresh token must carry the
 **`user-read-currently-playing`** scope. The one minted for the build-time
 "recently played" feed only had `user-read-recently-played`, so mint a new one
-with `node scripts/spotify-token.mjs` from the repository root — it now
-requests both — and keep the client id and secret to hand.
+with `node scripts/spotify-token.mjs` from the repository root (it now
+requests both), and keep the client id and secret to hand.
 
 ### 1. Create the Worker
 
@@ -67,7 +67,7 @@ requests both — and keep the client id and secret to hand.
 3. **Edit code**, select everything in the editor, and paste the whole of
    `worker/src/index.js` over it. **Deploy**.
 
-It will answer `{"playing":false}` at this point — the secrets are not set yet,
+It will answer `{"playing":false}` at this point: the secrets are not set yet,
 which the Worker treats as "nothing playing" rather than an error.
 
 ### 2. Add the three secrets
@@ -87,23 +87,23 @@ change one you overwrite it; you cannot read it back.
 
 ### 3. Point a hostname at it
 
-There are two arrangements. **The route is better** — same origin as the site,
+There are two arrangements. **The route is better**: same origin as the site,
 so no second DNS lookup, no second TLS handshake, no CORS, and nothing extra
 for a blocker to catch. Pick one:
 
-**Option A — a route on the apex (recommended, no site change).** In the
+**Option A: a route on the apex (recommended, no site change).** In the
 Worker's **Settings** → **Domains & Routes** → **Add** → **Route**:
 
 - **Zone**: `smr.et`
 - **Route**: `smr.et/api/*`
 
 The DNS record for the apex must be **proxied** (orange cloud) or the route is
-never consulted. Nothing else to do — the page already fetches
+never consulted. Nothing else to do: the page already fetches
 `/api/now-playing.json`.
 
-**Option B — its own subdomain.** Add a **Custom Domain** such as
+**Option B: its own subdomain.** Add a **Custom Domain** such as
 `now-playing.smr.et` instead. This works, but the page then has to fetch it
-cross-origin, so set a repository **variable** (not a secret — it is a URL):
+cross-origin, so set a repository **variable** (not a secret; it is a URL):
 
 - **Settings → Secrets and variables → Actions → Variables → New variable**
 - `PUBLIC_NOW_PLAYING_URL` = `https://now-playing.smr.et/now-playing.json`
@@ -117,7 +117,7 @@ card never appears no matter how healthy the Worker is.
 ```sh
 # Option A
 curl -si https://smr.et/api/now-playing.json | head -20
-# Option B, or the workers.dev URL — the root works too
+# Option B, or the workers.dev URL; the root works too
 curl -s https://now-playing.smr.et/
 ```
 
@@ -130,7 +130,7 @@ Then read the table in the next section to tell which side answered.
 
 The refresh token needs the **`user-read-currently-playing`** scope. The one
 minted for the build-time "recently played" feed only has
-`user-read-recently-played`, so mint a new one — `scripts/spotify-token.mjs`
+`user-read-recently-played`, so mint a new one. `scripts/spotify-token.mjs`
 in the repository root already requests both.
 
 ```sh
@@ -163,19 +163,19 @@ something you can debug from outside.
 curl -s "https://now-playing.smr.et/?debug=$DEBUG_KEY" | jq
 ```
 
-| `reason`                      | What it means                                                                                                                      | Fix                                                  |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
-| `ok`                          | Playing, and reported                                                                                                              | nothing                                              |
-| `spotify_204_nothing_playing` | Genuinely nothing on. **Token and scope are both good.**                                                                           | play something                                       |
-| `paused`                      | A track is loaded but paused                                                                                                       | press play                                           |
-| `spotify_403`                 | The token lacks `user-read-currently-playing`                                                                                      | re-mint the token, overwrite `SPOTIFY_REFRESH_TOKEN` |
-| `spotify_401`                 | The access token was rejected. **Read `spotifyMessage`** — the status alone cannot tell a missing scope from a non-Premium account | see below                                            |
-| `token_exchange_failed_400`   | The refresh token is expired or revoked                                                                                            | re-mint the token                                    |
-| `spotify_429`                 | Rate limited                                                                                                                       | wait                                                 |
-| `missing_secrets`             | One or more secrets are not set — the reply names which                                                                            | add them                                             |
+| `reason`                      | What it means                                                                                                                     | Fix                                                  |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
+| `ok`                          | Playing, and reported                                                                                                             | nothing                                              |
+| `spotify_204_nothing_playing` | Genuinely nothing on. **Token and scope are both good.**                                                                          | play something                                       |
+| `paused`                      | A track is loaded but paused                                                                                                      | press play                                           |
+| `spotify_403`                 | The token lacks `user-read-currently-playing`                                                                                     | re-mint the token, overwrite `SPOTIFY_REFRESH_TOKEN` |
+| `spotify_401`                 | The access token was rejected. **Read `spotifyMessage`**: the status alone cannot tell a missing scope from a non-Premium account | see below                                            |
+| `token_exchange_failed_400`   | The refresh token is expired or revoked                                                                                           | re-mint the token                                    |
+| `spotify_429`                 | Rate limited                                                                                                                      | wait                                                 |
+| `missing_secrets`             | One or more secrets are not set; the reply names which                                                                            | add them                                             |
 
-Every debug reply also reports `grantedScopes` — the scopes the refresh token
-actually carries, echoed by Spotify — and `scopeOk`, whether
+Every debug reply also reports `grantedScopes` (the scopes the refresh token
+actually carries, echoed by Spotify) and `scopeOk`, whether
 `user-read-currently-playing` is among them. **Scopes are bound at
 authorisation time**, so a token granted without it can never acquire it by
 being refreshed: the consent screen has to be approved again. `scopeOk: false`
@@ -184,9 +184,9 @@ means re-mint, not retry.
 A rejection also carries `spotifyMessage`, Spotify's own words for it. That
 matters most for a 401, which has two very different causes:
 
-- **"Permissions missing"** — the token lacks `user-read-currently-playing`.
+- **"Permissions missing"**: the token lacks `user-read-currently-playing`.
   Re-mint it and overwrite the secret.
-- **Anything mentioning Premium** — as of the February 2026 Web API changes,
+- **Anything mentioning Premium**: as of the February 2026 Web API changes,
   [all Development Mode apps require the app owner to have an active Spotify
   Premium subscription](https://developer.spotify.com/documentation/web-api/tutorials/february-2026-migration-guide).
   A free account cannot use the API in Development Mode at all, whatever the
@@ -216,7 +216,7 @@ curl -si https://smr.et/api/now-playing.json | head -20
 If the origin is answering, the route is not intercepting. Check
 **Workers & Pages → smr-now-playing → Settings → Domains & Routes** in the
 dashboard, confirm the zone route is listed, and confirm the DNS record for
-the apex is **proxied** (orange cloud) — a grey-cloud record bypasses Workers
+the apex is **proxied** (orange cloud). A grey-cloud record bypasses Workers
 entirely.
 
 `workers_dev` is on, so the Worker also has its own
@@ -231,7 +231,7 @@ npx wrangler tail                      # stream logs while you curl
 
 If the workers.dev URL works and the smr.et one does not, the problem is the
 route. If neither works while music is playing, it is the secrets or the token
-scope — the Worker needs `user-read-currently-playing`.
+scope: the Worker needs `user-read-currently-playing`.
 
 ## Notes
 
@@ -240,22 +240,22 @@ scope — the Worker needs `user-read-currently-playing`.
 - Responses are cached at the edge for 5 seconds while playing and 10 when
   paused or idle, with no `stale-while-revalidate`. The cache is there to
   shield Spotify's rate limit, not to save latency: a miss costs two Spotify
-  calls, so the ceiling is 24 a minute however much traffic arrives — 12 per
+  calls, so the ceiling is 24 a minute however much traffic arrives: 12 per
   Spotify's rolling 30-second window, a small fraction of the allowance, and
   flat regardless of how many people are watching.
 
   These were 30 and 60 with `stale-while-revalidate` on top, which is how a
   refresh could return the byte-identical payload for a minute or more and look
   broken. Raising them again brings that back; if the rate limit ever needs the
-  headroom, cache the access token instead — it is valid for an hour, and
+  headroom, cache the access token instead. It is valid for an hour, and
   caching it halves the cost of a miss.
 
 - There is no push. Spotify offers no webhook or subscription for playback, so
   how fresh this can be is bounded by the edge TTL plus the page's poll
-  interval — about ten seconds in practice, and about five on a manual refresh.
+  interval: about ten seconds in practice, and about five on a manual refresh.
   Nothing short of a process polling Spotify continuously does better, and that
   would poll whether or not anyone is looking.
 - The refresh token expires after 180 days on this Spotify app. When it does,
   the endpoint starts answering `playing: false` and the section quietly
-  disappears — mint a new token and `wrangler secret put` it again.
+  disappears. Mint a new token and `wrangler secret put` it again.
 - `npx wrangler tail` streams live logs if something looks wrong.

@@ -15,7 +15,7 @@ export type Role = {
  * Career timeline.
  *
  * Deliberately factual: what was built, on what stack, where and when. No
- * opinions, no anecdotes, no claims about how Samuel thinks — those are his to
+ * opinions, no anecdotes, no claims about how Samuel thinks. Those are his to
  * write. See PROFILE.md for what still needs confirming.
  */
 export const roles: Role[] = [
@@ -66,16 +66,13 @@ export const roles: Role[] = [
   },
 ];
 
-export type Metric = { value: string; label: string; note?: string };
+export type Metric = { value: string; label: string };
 
-/** Counts taken from the public commit history. */
+/** Counts taken from the public commit history (first public commit, 2016).
+ *  The figure and its label only: the About and Stack pages carry the detail. */
 export const metrics: Metric[] = [
-  { value: '10 yrs', label: 'Writing software', note: 'first public commit, 2016' },
-  {
-    value: '8',
-    label: 'Languages in production',
-    note: 'TS, Python, Swift, Dart, PHP, Java, JS, SQL',
-  },
-  { value: '30+', label: 'Public repositories', note: 'github.com/samu-el' },
-  { value: '3', label: 'Platforms shipped', note: 'web, iOS, Android' },
+  { value: '10 yrs', label: 'Writing software' },
+  { value: '8', label: 'Languages in production' },
+  { value: '30+', label: 'Public repositories' },
+  { value: '3', label: 'Platforms shipped' },
 ];

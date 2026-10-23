@@ -1,0 +1,23 @@
+[
+  {
+    "mode": "redesign",
+    "depth": "full",
+    "scope": "site",
+    "shape": "Index-first",
+    "theme": "brand",
+    "axes": "light/high-contrast-serif/warm",
+    "hero": "Stage (/), Banner (inner)",
+    "nav": "edge-aligned bar",
+    "footer": "statement",
+    "imagery": "screenshots 4 (npm run shots)",
+    "photos": [],
+    "entry": "word-by-word name",
+    "fingerprint": "ink-field hero, gold ticker band, split rows, figures, bento of captures, statement footer",
+    "sections": ["hero", "band", "rows", "figures", "bento", "footer"],
+    "signature": "the owner live products, captured running, from the first screen",
+    "waived": ["44c", "78", "71"],
+    "prompt": "personal site of a software engineer in Addis Ababa: work, about, stack, now, contact",
+    "job": "hire",
+    "date": "2026-10-22"
+  }
+]

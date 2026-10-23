@@ -22,7 +22,7 @@ const pages = globSync('dist/**/*.html').map((file) => ({
   route: '/' + file.replace(/^dist\//, ''),
   html: readFileSync(file, 'utf8').replace(/<template[\s\S]*?<\/template>/g, ''),
 }));
-if (pages.length < 5) throw new Error(`only ${pages.length} built pages — did the build run?`);
+if (pages.length < 5) throw new Error(`only ${pages.length} built pages. Did the build run?`);
 console.log(`Checking ${pages.length} built pages…`);
 
 /** Tag soup, deliberately: one regex beats a parser dependency for this. */

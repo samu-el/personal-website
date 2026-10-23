@@ -4,7 +4,8 @@ import Header from '@/components/Header.astro';
 import Footer from '@/components/Footer.astro';
 import CommandPalette from '@/components/CommandPalette.astro';
 import EasterEggs from '@/components/EasterEggs.astro';
-import { nav, site } from '@/lib/site';
+import { site } from '@/lib/site';
+import type { PreviewPreload } from '@/lib/previews';
 
 interface Props {
   title: string;
@@ -16,20 +17,17 @@ interface Props {
   modifiedTime?: Date;
   tags?: string[];
   noindex?: boolean;
-  /** Drops the footer CTA — used on the contact page, where it would repeat. */
+  /** From previewPreloads(), for a page led by a light and dark capture pair. */
+  preload?: PreviewPreload[];
+  /** Drops the footer CTA. Used on the contact page, where it would repeat. */
   bareFooter?: boolean;
 }
 
 const { bareFooter = false, ...head } = Astro.props;
-
-/** The rail's running head: this page's section, or the role for the home page. */
-const path = head.path ?? '/';
-const section =
-  path === '/' ? site.role : (nav.find((n) => n.href !== '/' && path.startsWith(n.href))?.label ?? site.role);
 ---
 
 <!doctype html>
-<html lang="en" class="scroll-pt-24" data-email={site.email}>
+<html lang="en" class="scroll-pt-24 overflow-x-clip" data-email={site.email}>
   <head>
     <BaseHead {...head} />
     <script is:inline>
@@ -39,13 +37,22 @@ const section =
         try {
           pref = localStorage.getItem('theme') || 'system';
         } catch {
-          /* storage blocked — fall through to system */
+          /* storage blocked: fall through to system */
         }
         const isDark =
           pref === 'dark' || (pref === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
         document.documentElement.classList.toggle('dark', isDark);
         document.documentElement.dataset.theme = pref;
         document.documentElement.classList.add('js');
+        // The page's first capture, in this theme only: BaseHead left one
+        // inert preload per theme, and a copy without the media query fetches.
+        const theme = isDark ? 'dark' : 'light';
+        for (const link of document.querySelectorAll('link[data-theme-preload]')) {
+          if (link.dataset.themePreload !== theme) continue;
+          const live = link.cloneNode();
+          live.removeAttribute('media');
+          link.after(live);
+        }
         // The browser chrome follows a chosen theme. Each tag keeps its own
         // colour in data-tint, so the toggle can hand back to `system`.
         const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
@@ -55,9 +62,8 @@ const section =
       })();
     </script>
   </head>
-  <body class="min-h-dvh antialiased">
+  <body class="min-h-dvh overflow-x-clip antialiased">
     <Header />
-    <div class="rail-vertical hidden xl:block" aria-hidden="true">{section} — {site.name}</div>
     <main id="main">
       <slot />
     </main>
@@ -87,7 +93,7 @@ const section =
         const arm = () => {
           const fold = window.innerHeight * 0.92;
           for (const el of $$('[data-reveal]:not(.reveal-pending), [data-draw]:not(.draw-pending)')) {
-            // Anything already on screen stays put — no stutter on first paint.
+            // Anything already on screen stays put, so no stutter on first paint.
             if (el.getBoundingClientRect().top <= fold) continue;
             // A rule draws in; everything else fades up. Same observer.
             el.classList.add(el.hasAttribute('data-draw') ? 'draw-pending' : 'reveal-pending');

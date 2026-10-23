@@ -6,6 +6,7 @@ import Breadcrumb from '@/components/Breadcrumb.astro';
 import Chips from '@/components/Chips.astro';
 import PrevNext from '@/components/PrevNext.astro';
 import PreviewFrame from '@/components/PreviewFrame.astro';
+import { previewPreloads, previewsFor, WRAP_SIZES } from '@/lib/previews';
 import { Icon } from 'astro-icon/components';
 import { tone } from '@/lib/status';
 
@@ -29,153 +30,137 @@ interface Props {
 const { project, prev, next } = Astro.props as Props;
 const { Content } = await render(project);
 const d = project.data;
-
-/** Only a project that is actually up gets the live dot. */
-const isLive = d.status === 'Live' || d.status === 'Ongoing';
+const phone = d.device === 'phone';
+const preload = await previewPreloads(previewsFor(project, WRAP_SIZES));
 
 /* Built by spreading rather than filtering a cast: a generic type argument
    anywhere in frontmatter stops Astro finding `interface Props`. */
 const links = [
   ...(d.demo ? [{ href: d.demo, icon: 'lucide:external-link', label: 'View live', cls: 'btn-primary' }] : []),
-  ...(d.repo
-    ? [{ href: d.repo, icon: 'simple-icons:github', label: 'Source', cls: 'btn-ghost bg-bg hover:bg-surface-2' }]
-    : []),
+  ...(d.repo ? [{ href: d.repo, icon: 'simple-icons:github', label: 'Source', cls: 'btn-ghost' }] : []),
 ];
-
-const eyebrow = 'meta';
-/** Paper behind each line of header text, so the column rules run under the
- *  words instead of through them. */
-const onPaper = 'bg-bg [box-decoration-break:clone]';
 ---
 
-<Layout title={d.title} description={d.blurb} path={`/work/${project.id}`} type="article" tags={d.tags}>
+<Layout title={d.title} description={d.blurb} path={`/work/${project.id}`} type="article" tags={d.tags} {preload}>
   <article>
-    <header class="relative overflow-hidden border-b border-line">
-      <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true"></div>
-      <div class="wrap relative py-10 lg:py-20">
+    <!-- Banner: the name, what it is, and the way to it. The facts wait beside
+         the write-up, where they are read. -->
+    <header class="field-ink relative" style="view-transition-name:field">
+      <div class="wrap pb-16 pt-10 lg:pb-24 lg:pt-14">
         <Breadcrumb to="/work" label="All work" />
 
-        <div class="grid gap-10 lg:grid-cols-12 lg:gap-8">
-          <div class="lg:col-span-7">
-            <p class:list={['flex w-fit flex-wrap items-center gap-x-3 gap-y-1.5', onPaper]} data-reveal>
-              <span class="meta">
-                {d.kind}
-              </span>
-              <span class="text-line-strong" aria-hidden="true">·</span>
-              <span class="font-mono text-2xs tracking-wide text-subtle">{d.period}</span>
-              <span class="text-line-strong" aria-hidden="true">·</span>
-              <span class:list={['meta inline-flex items-center gap-1.5', tone(d.status)]}>
-                {
-                  isLive && (
-                    <span class="relative flex size-1.5">
-                      <span class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-60" />
-                      <span class="relative inline-flex size-1.5 rounded-full bg-jade" />
-                    </span>
-                  )
-                }
-                {d.status}
-              </span>
-            </p>
-
-            <!-- Outranks the footer's "Reach out." at every width. -->
+        <div class="grid gap-10 lg:grid-cols-12 lg:items-end lg:gap-8">
+          <div class="lg:col-span-8">
             <h1
-              class="display-hero mt-6 text-[clamp(2.75rem,7.6vw,6rem)]"
+              class="display-xl text-display"
               data-reveal
               style={`--reveal-delay:60ms;view-transition-name:project-${project.id}`}
             >
-              <span class={onPaper}>{d.title}</span>
+              {d.title}
             </h1>
 
-            <p
-              class="mt-6 max-w-2xl text-[1.0625rem] leading-relaxed text-muted"
-              data-reveal
-              style="--reveal-delay:120ms"
-            >
-              <span class={onPaper}>{d.blurb}</span>
+            <p class="lead mt-8 text-muted" data-reveal style="--reveal-delay:120ms">
+              {d.blurb}
             </p>
 
-            <div class="mt-9 flex flex-wrap gap-3" data-reveal style="--reveal-delay:180ms">
-              {
-                links.map((l) => (
-                  <a href={l.href} target="_blank" rel="noopener noreferrer" class:list={['btn', l.cls]}>
-                    <Icon name={l.icon} class="size-4" aria-hidden="true" />
-                    {l.label}
-                  </a>
-                ))
-              }
-              {
-                !d.repo && d.repoPrivate && (
-                  <span class:list={['inline-flex items-center gap-2 meta', onPaper]}>
-                    <Icon name="lucide:lock" class="size-3.5" aria-hidden="true" />
-                    Private source
-                  </span>
-                )
-              }
-            </div>
+            {
+              links.length > 0 && (
+                <div class="mt-10 flex flex-wrap gap-3" data-reveal style="--reveal-delay:180ms">
+                  {links.map((l) => (
+                    <a href={l.href} target="_blank" rel="noopener noreferrer" class:list={['btn', l.cls]}>
+                      <Icon name={l.icon} class="size-4" aria-hidden="true" />
+                      {l.label}
+                    </a>
+                  ))}
+                </div>
+              )
+            }
           </div>
 
-          <!-- A div: an aside inside main is not a top-level landmark. -->
-          <div class="lg:col-span-4 lg:col-start-9" data-reveal style="--reveal-delay:240ms">
-            <div class="card rounded-lg p-6">
-              <dl class="space-y-4 text-sm">
-                <div>
-                  <dt class={eyebrow}>Role</dt>
-                  <dd class="mt-1.5 leading-snug text-fg">{d.role}</dd>
-                </div>
-                {
-                  d.stats.length > 0 && (
-                    <>
-                      <div class="rule" />
-                      {d.stats.map((s) => (
-                        <div class="flex justify-between gap-4">
-                          <dt class="text-subtle">{s.label}</dt>
-                          <dd class="text-right text-fg">{s.value}</dd>
-                        </div>
-                      ))}
-                    </>
-                  )
-                }
-                {
-                  [
-                    { title: 'Stack', items: d.stack },
-                    { title: 'Tags', items: d.tags },
-                  ].map(
-                    ({ title, items }) =>
-                      items.length > 0 && (
-                        <>
-                          <div class="rule" />
-                          <div>
-                            <dt class={eyebrow}>{title}</dt>
-                            <dd>
-                              <Chips items={items} class="mt-3" />
-                            </dd>
-                          </div>
-                        </>
-                      ),
-                  )
-                }
-              </dl>
+          <!-- Kind, period and status: three ruled lines, no separator glyphs. -->
+          <dl class="ledger text-[0.9375rem] lg:col-span-3 lg:col-start-10" data-reveal style="--reveal-delay:240ms">
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="sr-only">Kind</dt>
+              <dd class="text-fg">{d.kind}</dd>
             </div>
-          </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="sr-only">Period</dt>
+              <dd class="tabular-nums text-fg">{d.period}</dd>
+            </div>
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="sr-only">Status</dt>
+              <dd class={tone(d.status)}>{d.status}</dd>
+            </div>
+          </dl>
         </div>
       </div>
     </header>
 
-    <!-- Between the facts and the write-up: by here the reader knows what the
-         thing is and has not yet been asked to read about it. -->
-    <div class="wrap pt-10 lg:pt-16">
-      <div data-reveal>
-        <PreviewFrame {project} eager sizes="(min-width: 1280px) 1120px, 90vw" />
-      </div>
-    </div>
+    <!-- The product, at the width of the page: the reader sees the thing
+         before being asked to read about it. -->
+    {
+      !phone && (
+        <section class="wrap pt-12 lg:pt-16" aria-label={`${d.title}, running`}>
+          <div data-reveal>
+            <PreviewFrame {project} eager sizes={WRAP_SIZES} />
+          </div>
+        </section>
+      )
+    }
 
-    <div class="wrap py-10 lg:py-20">
-      <div class="grid lg:grid-cols-12">
-        <div class="prose lg:col-span-7">
+    <!-- A phone capture is held beside the write-up instead: alone across the
+         page it would stand in a band of nothing. -->
+    <section class="wrap sec">
+      <div class="grid gap-14 lg:grid-cols-12 lg:gap-8">
+        {
+          phone && (
+            <figure class="lg:col-span-3">
+              <div class="lg:sticky lg:top-28" data-reveal>
+                <PreviewFrame {project} eager />
+              </div>
+            </figure>
+          )
+        }
+        <div class:list={['prose prose-lg', phone ? 'lg:col-span-6' : 'lg:col-span-7']}>
           <Content />
         </div>
+
+        <!-- The facts, held beside the write-up. A div: an aside inside main
+             is not a top-level landmark. -->
+        <div class:list={[phone ? 'lg:col-span-3' : 'lg:col-span-4 lg:col-start-9']}>
+          <dl class="ledger text-[0.9375rem] lg:sticky lg:top-28">
+            <div class="flex justify-between gap-4 py-3">
+              <dt class="text-subtle">Role</dt>
+              <dd class="text-right text-fg">{d.role}</dd>
+            </div>
+            {
+              d.stats.map((s) => (
+                <div class="flex justify-between gap-4 py-3">
+                  <dt class="text-subtle">{s.label}</dt>
+                  <dd class="text-right text-fg">{s.value}</dd>
+                </div>
+              ))
+            }
+            {
+              [
+                { title: 'Stack', items: d.stack },
+                { title: 'Tags', items: d.tags },
+              ].map(
+                ({ title, items }) =>
+                  items.length > 0 && (
+                    <div class="py-4">
+                      <dt class="text-subtle">{title}</dt>
+                      <dd>
+                        <Chips items={items} class="mt-3" />
+                      </dd>
+                    </div>
+                  ),
+              )
+            }
+          </dl>
+        </div>
       </div>
-    </div>
+    </section>
 
     <PrevNext
       base="/work"

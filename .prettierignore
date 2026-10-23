@@ -4,5 +4,5 @@ dist/
 node_modules/
 package-lock.json
 
-# Prose is authored by hand — let the line breaks be intentional.
+# Prose is authored by hand, so let the line breaks be intentional.
 src/content/

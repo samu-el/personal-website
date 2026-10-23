@@ -64,7 +64,7 @@ const row = (n) => 150 + n * 110;
     text(
       col(0),
       row(4) + 70,
-      'Build-time secrets (Spotify, GitHub token) are read through process.env in CI only —\nAstro inlines nothing into client JS except PUBLIC_*. The Worker holds the refresh token\nas an encrypted Worker secret. The page only ever sees trimmed JSON.',
+      'Build-time secrets (Spotify, GitHub token) are read through process.env in CI only:\nAstro inlines nothing into client JS except PUBLIC_*. The Worker holds the refresh token\nas an encrypted Worker secret. The page only ever sees trimmed JSON.',
       { size: 14, color: p.MUTED },
     ),
   );
@@ -114,7 +114,7 @@ const row = (n) => 150 + n * 110;
     text(
       col(0),
       row(3) + 40,
-      'loading  skeleton, set before first paint, aria-busy, link inert\nready    content swapped in; bars clear themselves (textContent)\nempty    no Worker, no track, or a failed request — card removed',
+      'loading  skeleton, set before first paint, aria-busy, link inert\nready    content swapped in; bars clear themselves (textContent)\nempty    no Worker, no track, or a failed request: card removed',
       { size: 14, color: p.MUTED },
     ),
     text(col(2) + 40, row(3) + 10, 'Poll cadence', { size: 18 }),
@@ -218,7 +218,7 @@ const row = (n) => 150 + n * 110;
     text(
       col(0),
       row(2) + 50,
-      'draft      hidden in production, visible while developing\naiWritten  never rendered, in any environment, ever — the site publishes\n           only Samuel’s own words, and the build enforces it rather than\n           trusting anyone to remember\nhidden     a project kept out of the showcase; still listed under “Also public”',
+      'draft      hidden in production, visible while developing\naiWritten  never rendered, in any environment, ever: the site publishes\n           only Samuel’s own words, and the build enforces it rather than\n           trusting anyone to remember\nhidden     a project kept out of the showcase; still listed under “Also public”',
       { size: 14, color: p.MUTED },
     ),
     text(col(0), row(4) + 10, 'Writing disappears cleanly', { size: 18 }),
@@ -268,7 +268,7 @@ const row = (n) => 150 + n * 110;
     text(
       col(0),
       row(4) + 50,
-      'static      read out of dist/, no browser: one h1, no broken internal link, no\n            image without alt, no link without a name, the SEO block, the feeds\ninteract    what only exists under a pointer, a key or a scroll — the entrance,\n            the header, the now-playing skeleton, a hidden tab, reduced motion\nverify      what a browser is actually for: overflow at three viewports, an\n            error-free console, the theme surviving a navigation, the reveal\nschedule    the poll cadence, to the millisecond, as a pure function\nworker      every debug reason string, token reuse, 429 handling, last-good',
+      'static      read out of dist/, no browser: one h1, no broken internal link, no\n            image without alt, no link without a name, the SEO block, the feeds\ninteract    what only exists under a pointer, a key or a scroll: the entrance,\n            the header, the now-playing skeleton, a hidden tab, reduced motion\nverify      what a browser is actually for: overflow at three viewports, an\n            error-free console, the theme surviving a navigation, the reveal\nschedule    the poll cadence, to the millisecond, as a pure function\nworker      every debug reason string, token reuse, 429 handling, last-good',
       { size: 14, color: p.MUTED },
     ),
   );

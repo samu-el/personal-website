@@ -7,7 +7,7 @@ records where each claim came from and flags the ones only you can confirm. Read
 list before you share the URL.
 
 The site is positioned as **a software engineer selling engineering skills**. Your formal title
-at Mereb (CTO, co-founder) appears nowhere — that was deliberate, per your instruction. Mereb
+at Mereb (CTO, co-founder) appears nowhere. That was deliberate, per your instruction. Mereb
 appears only as your current employer in the timeline. If you ever want the title back, it goes
 in `src/lib/site.ts` (`role`) and `src/data/experience.ts` (the first entry's `title`).
 
@@ -15,15 +15,15 @@ in `src/lib/site.ts` (`role`) and `src/data/experience.ts` (the first entry's `t
 
 ## Verified from public sources
 
-| Fact                                              | Source                                                                                                  |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| Samuel Mussie, at Mereb Technologies since ~2020  | [LinkedIn](https://www.linkedin.com/in/samu-el/), company listings                                      |
-| Based in Addis Ababa, Ethiopia                    | LinkedIn                                                                                                |
-| Attended Addis Ababa University                   | LinkedIn                                                                                                |
-| Mereb serves European/US clients from Addis Ababa | mereb.tech                                                                                              |
-| Email `me@smr.et`                                 | Your own domain, via Cloudflare Email Routing                                                           |
-| Every project entry, repo link and live demo URL  | [github.com/samu-el](https://github.com/samu-el) — names, descriptions, languages, deploy URLs all real |
-| Eight languages, 30+ repos, first commit 2016     | Your public repository list and account age                                                             |
+| Fact                                              | Source                                                                                                 |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Samuel Mussie, at Mereb Technologies since ~2020  | [LinkedIn](https://www.linkedin.com/in/samu-el/), company listings                                     |
+| Based in Addis Ababa, Ethiopia                    | LinkedIn                                                                                               |
+| Attended Addis Ababa University                   | LinkedIn                                                                                               |
+| Mereb serves European/US clients from Addis Ababa | mereb.tech                                                                                             |
+| Email `me@smr.et`                                 | Your own domain, via Cloudflare Email Routing                                                          |
+| Every project entry, repo link and live demo URL  | [github.com/samu-el](https://github.com/samu-el): names, descriptions, languages, deploy URLs all real |
+| Eight languages, 30+ repos, first commit 2016     | Your public repository list and account age                                                            |
 
 Project pages are built on your actual repositories: `check-exam-results-TBot`, `telemed`,
 `rag-chatboat-backend` + `rag-chatbot-fe`, `short.et-mono`, `fantasy-pl` + `fantasy-pl-mobile`,
@@ -34,7 +34,7 @@ set. Descriptions, languages and periods come from the repos themselves.
 
 ## Needs your confirmation
 
-The site has been stripped to verifiable facts — role, stack, timeline, links — with the voice
+The site has been stripped to verifiable facts (role, stack, timeline, links), with the voice
 removed so you can write your own. What remains that still needs checking:
 
 1. **Degree and dates at Addis Ababa University.** Listed as "Undergraduate studies" with no
@@ -47,9 +47,9 @@ removed so you can write your own. What remains that still needs checking:
    story Mereb tells publicly. If you had named employers then, list them instead.
 4. **What you do at Mereb.** The timeline lists data modelling, service boundaries, front ends,
    mobile, retrieval pipelines, deploys and on-call. Plausible for your role but not publicly
-   documented — confirm or trim.
+   documented. Confirm or trim.
 5. **The stack page.** Some entries are inferred rather than evidenced: Terraform, Linear,
-   Redis, MongoDB, Cloudflare, FastAPI, pgvector. Delete anything you do not actually use — a
+   Redis, MongoDB, Cloudflare, FastAPI, pgvector. Delete anything you do not actually use. A
    stack page listing a tool you cannot discuss is a liability in an interview.
 6. **The client-work entry** (`src/content/projects/client-saas-platform.md`). Anonymised and
    `hidden: true`, so it does not render or appear in the sitemap. The stack is inferred from the
@@ -59,7 +59,7 @@ removed so you can write your own. What remains that still needs checking:
    contract/full-time wording and "CV and references on request" were removed at your request.
    If you are not looking, change the hero eyebrow ("Available for work") and the footer.
 8. **The About bio is a placeholder.** Three short factual paragraphs plus Languages, Education
-   and Code headings. It is accurate but deliberately flat — no opinions, no anecdotes, no claims
+   and Code headings. It is accurate but deliberately flat: no opinions, no anecdotes, no claims
    about how you think. **This is the piece to rewrite in your own voice**, in
    `src/pages/about.astro`.
 
@@ -70,7 +70,7 @@ removed so you can write your own. What remains that still needs checking:
   write-up (which also removes the two technical claims about it I could not verify). What is
   left states facts and stops.
 - **A higher-resolution photograph.** The one you sent is 72×72, which is enough for the 32px
-  header avatar and the 62px mark on the social card — both now use it (`src/assets/avatar.jpg`).
+  header avatar and the 62px mark on the social card. Both now use it (`src/assets/avatar.jpg`).
   It is _not_ enough for an About-page portrait or the app icons, which need 512px. Send a larger
   file and replace that one asset; the header and card pick it up automatically.
 - **The favicon and app icons are still the "SM" monogram** (`public/favicon.svg`,
@@ -78,7 +78,7 @@ removed so you can write your own. What remains that still needs checking:
   can switch the 180/192/512px app icons to the photo and leave the favicon as the monogram.
 - **No phone number, address or rates.**
 - **No testimonials or client names.**
-- **No X/Twitter link** — no account I could confirm was yours. Add it to `src/lib/site.ts`.
+- **No X/Twitter link.** No account I could confirm was yours. Add it to `src/lib/site.ts`.
 - **Nine project files deleted.** They rendered nowhere once the enumerated list came off
   `/work`, and their bodies were invented prose in a public repo. Git history has them if you
   want any back.

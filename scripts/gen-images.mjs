@@ -51,7 +51,7 @@ await sharp(out('og.raw.png'))
 await rm(out('og.raw.png'));
 console.log(`✓ public/og.png requantised (${(statSync(out('og.png')).size / 1024).toFixed(0)} KB)`);
 
-// App icons — rendered once at 512 and downscaled, so the glyph stays crisp.
+// App icons, rendered once at 512 and downscaled, so the glyph stays crisp.
 await shoot('icon.html', 512, 512, out('icon-512.png'));
 await sharp(out('icon-512.png')).resize(192, 192).png({ compressionLevel: 9 }).toFile(out('icon-192.png'));
 console.log('✓ public/icon-192.png (192×192)');

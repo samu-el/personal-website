@@ -10,110 +10,85 @@ const writing = await hasWriting();
 const items = await visibleNav();
 ---
 
-<footer id="site-footer" class="mt-8 border-t border-line bg-sunken lg:mt-12">
-  <div class="wrap py-12 lg:py-20">
-    <!-- Call to action: the one line, at the size it deserves. -->
-    <div class="grid gap-8 lg:grid-cols-12 lg:items-end lg:gap-8">
-      <div class="lg:col-span-8">
-        <p class="eyebrow">Contact</p>
-        <h2 class="display-hero mt-5 text-[clamp(2.4rem,6.4vw,5rem)]">Reach out.</h2>
-      </div>
-      <div class="flex flex-wrap gap-3 lg:col-span-4 lg:justify-end">
-        <a href={`mailto:${site.email}`} class="btn btn-primary">
-          <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
+<footer id="site-footer" class="border-t border-line bg-sunken">
+  <div class="wrap pb-10 pt-20 lg:pb-12 lg:pt-28">
+    <!-- A statement close: the one line, then the address itself as the action. -->
+    <div class="grid gap-10 lg:grid-cols-12 lg:items-end lg:gap-8">
+      <div class="lg:col-span-7">
+        <h2 class="display-xl text-display-s">Reach out.</h2>
+        <a
+          href={`mailto:${site.email}`}
+          class="link display mt-6 inline-block text-[clamp(1.75rem,3.2vw,2.75rem)] lg:mt-8"
+        >
           {site.email}
         </a>
-        <a href={href('/contact')} class="btn btn-ghost">More ways to reach me</a>
+      </div>
+      <div class="flex flex-wrap gap-3 lg:col-span-5 lg:justify-end">
+        <a href={href('/contact')} class="btn btn-ghost">
+          <Icon name="lucide:mail" class="size-4" aria-hidden="true" />
+          Contact
+        </a>
       </div>
     </div>
 
-    <!-- Link columns, ruled. -->
+    <!-- Link lists, ruled. No headings: page names and network names say
+         what they are. Navs, so each list is still named for a screen reader. -->
     <div
-      class="mt-12 grid grid-cols-2 gap-x-6 gap-y-10 border-t border-line pt-10 lg:mt-16 lg:grid-cols-12 lg:gap-8 lg:pt-12"
+      class="mt-16 grid grid-cols-2 gap-x-6 gap-y-10 border-t border-line pt-10 lg:mt-20 lg:grid-cols-12 lg:gap-8 lg:pt-12"
     >
-      <!-- Columns end on the twelfth, flush with the buttons above them. -->
-      <div class="lg:col-span-3 lg:col-start-6">
-        <h3 class="meta">Pages</h3>
-        <ul class="mt-5 space-y-2.5">
+      <nav aria-label="Pages" class="lg:col-span-4">
+        <ul class="grid gap-x-8 gap-y-3 sm:grid-cols-2">
           {
             items.map((item) => (
               <li>
-                <a
-                  href={href(item.href)}
-                  class="hit inline-flex items-baseline gap-2.5 text-sm text-muted transition-colors hover:text-fg"
-                >
-                  <span class="font-mono text-2xs text-subtle">{item.index}</span>
+                <a href={href(item.href)} class="hit text-[0.9375rem] text-muted transition-colors hover:text-fg">
                   {item.label}
                 </a>
               </li>
             ))
           }
         </ul>
-      </div>
-
-      <div class="lg:col-span-2">
-        <h3 class="meta">Elsewhere</h3>
-        <ul class="mt-5 space-y-2.5">
+      </nav>
+      <nav aria-label="Elsewhere" class="lg:col-span-3 lg:col-start-6">
+        <ul class="space-y-3">
           {
             socials.map((s) => (
               <li>
                 <a
                   href={s.href}
-                  class="hit group inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+                  class="hit group inline-flex items-center gap-2.5 text-[0.9375rem] text-muted transition-colors hover:text-fg"
                   rel={s.href.startsWith('http') ? 'noopener noreferrer me' : undefined}
                   target={s.href.startsWith('http') ? '_blank' : undefined}
                 >
-                  <Icon name={s.icon} class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
+                  <Icon name={s.icon} class="size-4 shrink-0" aria-hidden="true" />
                   {s.label}
                 </a>
               </li>
             ))
           }
-        </ul>
-      </div>
-
-      <div class="lg:col-span-2">
-        <h3 class="meta">This site</h3>
-        <ul class="mt-5 space-y-2.5">
           {
             writing && (
               <li>
                 <a
                   href={href('/rss.xml')}
-                  class="hit inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
+                  class="hit inline-flex items-center gap-2.5 text-[0.9375rem] text-muted transition-colors hover:text-fg"
                 >
-                  <Icon name="lucide:rss" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
-                  RSS feed
+                  <Icon name="lucide:rss" class="size-4 shrink-0" aria-hidden="true" />
+                  RSS
                 </a>
               </li>
             )
           }
-          <li>
-            <a
-              href={href('/stack')}
-              class="hit inline-flex items-center gap-2 text-sm text-muted transition-colors hover:text-fg"
-            >
-              <Icon name="lucide:layers" class="size-3.5 shrink-0 opacity-70" aria-hidden="true" />
-              Built with
-            </a>
-          </li>
         </ul>
+      </nav>
+      <!-- Where he is, and the time there: two lines, no separator glyph. -->
+      <div class="col-span-2 space-y-3 text-[0.9375rem] lg:col-span-3 lg:col-start-10 lg:text-right">
+        <p class="text-fg">{site.location}</p>
+        <p class="tabular-nums text-muted"><time id="local-time" datetime="">EAT</time></p>
       </div>
     </div>
 
-    <div class="rule mt-10 lg:mt-14"></div>
-
-    <div
-      class="mt-6 flex flex-col gap-3 font-mono text-2xs tracking-wide text-subtle sm:flex-row sm:items-center sm:justify-between"
-    >
-      <p>© {year} {site.name}. All rights reserved.</p>
-      <p class="flex items-center gap-2">
-        <span class="inline-block size-1.5 rounded-full bg-jade" aria-hidden="true"></span>
-        <span>{site.location}</span>
-        <span aria-hidden="true" class="text-line-strong">/</span>
-        <span><time id="local-time" datetime="">EAT</time></span>
-      </p>
-    </div>
+    <p class="meta mt-16 lg:mt-20">© {year} {site.name}</p>
   </div>
 </footer>
 

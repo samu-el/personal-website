@@ -1,15 +1,33 @@
+/* Hallmark · shape: Index-first (/), Long Document (/about, /work/[id], /writing/[id]), Catalogue (/work, /stack), Index (/now, /contact, /404) · genre: editorial · theme: brand · redesign: full · job: hire
+ * paper: rgb(247 245 241) · accent: rgb(161 92 0), rgb(233 162 59) on ink · display: Instrument Serif · body: Geist · hero: Stage (/), Banner (inner pages), Corridor (/404) · nav: edge-aligned bar, avatar wordmark left, four links, quiet search, Now, theme and contact on the right · footer: statement (Reach out. over the address, the page and network links, the place and its clock, a one-line colophon) · signature: the owner's live products, captured running, set large from the first screen
+ * axes: light/high-contrast-serif/warm · posture: committed (the ink field carries every hero; gold is the signal and the one ticker band) · contrast: pass · fold: pass · imagery: screenshots 4 (npm run shots, the repo's capture of the live sites) · v2.0.0 */
+/* Hallmark · pre-emit critique: P4 H5 E4 S5 R4 V4 · weakest: P, a portfolio is an argument only through its work; led every page with the work running rather than adding claims */
+/* Hallmark · waive 44c · Banner posture on every inner page (/about, /work, /stack, /now, /contact, /writing, /404), the first section shown above the fold · the stamp's hero field takes one posture, and Stage is the home page's */
+/* Hallmark · waive 78 · /about and /work/[id] are Long Documents whose write-up heads sit inline in their prose · the section heads on those pages (Timeline, the project's own name) are at their full sizes */
+/* Hallmark · waive 71 · the flagged h3s sit in figcaptions under their screenshots · each project name is the caption of the capture above it, so it belongs close to that picture */
+/* Hallmark · dropped onPaper, the vertical running head, the watermark numerals, the nav index numbers, the Now and timeline pulse dots, "All rights reserved." · the paper strip only hid grid lines that are gone; the rest were decoration (66, 63, 54) */
+/* Hallmark · dropped lucide:arrow-left · the back links' arrow icon, glued to its label (63); the label carries the direction */
+/* Hallmark · reworded "Get in touch. me@smr.et" to "Get in touch." · 38i named the italic address inside the head; the address now stands under it at the lead size */
+/* Hallmark · reworded "Software engineer in Addis Ababa, Ethiopia. Ten years building web and mobile products: …" to "Software engineer in Addis Ababa, building web and mobile products since 2016." · 58 names a hero line over twelve words */
+/* Hallmark · waive 49b · the wrapping link is a bare URL in the owner's markdown on /work/jeopardy, at 320px only · it is the repository's own address and cannot shorten */
+/* Hallmark · dismissed 77 · the inner pages are not landing strips; each is the one list, write-up or contact block its content makes */
+/* Hallmark · dismissed 28a · the lazy images are album art and film posters below the banner on /now, never the LCP */
+/* Hallmark · answered F20 · the stack group with five tools keeps its true count, the owner's list */
+/* Hallmark · dismissed 49 · the flagged label is a code comment inside the theme toggle, whose visible label is an icon */
+/* Hallmark · dismissed F2 · the three dots in index.astro are a spread operator, not prose */
+/* Hallmark · dismissed kept · 00:51 is the footer clock, and the image names are srcset hashes of the captures, which all remain */
 /**
  * The stylesheet, in the order the cascade reads it.
  *
  * Split by concern rather than kept as one file: layer blocks were appended
  * at the end as features landed, so `components` and `utilities` each ended
  * up declared in several places hundreds of lines apart. Import order here is
- * the old source order, so the cascade is unchanged — the built stylesheet is
+ * the old source order, so the cascade is unchanged: the built stylesheet is
  * byte for byte what it was before the split.
  */
 @import 'tailwindcss';
 
-/* Self-hosted fonts — see fonts.css. No third-party request, no
+/* Self-hosted fonts, see fonts.css. No third-party request, no
    render-blocking stylesheet from someone else's CDN. */
 @import './fonts.css';
 

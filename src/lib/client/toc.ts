@@ -7,7 +7,7 @@ const BAND_TOP = 0.15;
  * Lights the contents entry for the section being read: the last heading that
  * has reached the band just below the header. Measured from positions on every
  * scroll frame rather than from intersection events, which only fire as a
- * heading crosses the band — scrolling back up out of a section leaves the
+ * heading crosses the band: scrolling back up out of a section leaves the
  * previous heading above the band and never reports it.
  */
 export function tableOfContents() {

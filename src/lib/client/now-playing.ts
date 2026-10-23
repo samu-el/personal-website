@@ -30,7 +30,7 @@ interface Payload {
 
 /** Bound on the staleness correction, so a badly set clock cannot peg the bar. */
 const MAX_AGE_MS = 60000;
-/** How long a good answer outlives failed reads — the Worker's own last-good window. */
+/** How long a good answer outlives failed reads: the Worker's own last-good window. */
 const KEEP_MS = 10 * 60000;
 /** A request that has not answered by now is abandoned and counted as a failure. */
 const TIMEOUT_MS = 10000;
@@ -124,7 +124,8 @@ export function nowPlaying() {
   function renderProgress() {
     if (!total || !el.bar || !el.elapsed) return;
     const ms = Math.min(base + (Date.now() - baseAt), total);
-    el.bar.style.width = `${((ms / total) * 100).toFixed(2)}%`;
+    // Scaled, not sized: width is a layout property and would re-lay the card each tick.
+    el.bar.style.transform = `scaleX(${(ms / total).toFixed(4)})`;
     el.elapsed.textContent = clock(ms);
     // Ran off the end: the next poll knows what replaced it, and carrying on
     // would only be wrong faster.
@@ -140,7 +141,7 @@ export function nowPlaying() {
   }
 
   function paint(data: Payload) {
-    /* An older deployed Worker sends no state, so infer it — otherwise the
+    /* An older deployed Worker sends no state, so infer it. Otherwise the
        card reads "Paused" over a playing track while the two are out of step. */
     const reported: State = data.state ?? (data.playing ? 'playing' : 'paused');
     // A remembered answer is not live, whatever it says: nobody knows the
@@ -173,7 +174,7 @@ export function nowPlaying() {
     // at the same moment.
     el.art.style.opacity = '0';
     el.art.src = art;
-    el.art.alt = album ? `${album} — album art` : '';
+    el.art.alt = album ? `${album}, album art` : '';
     el.art.onload = () => {
       el.art!.style.opacity = '1';
       if (el.sleeve) el.sleeve.dataset.art = 'ready';
@@ -207,7 +208,7 @@ export function nowPlaying() {
     el.progress!.hidden = false;
     renderProgress();
     if (jump) {
-      // Commit the new width with no transition before handing it back, or
+      // Commit the new scale with no transition before handing it back, or
       // both land in one style pass and the bar animates the jump anyway.
       void el.bar!.offsetWidth;
       el.bar!.style.transition = '';
@@ -243,7 +244,7 @@ export function nowPlaying() {
       clearTimeout(limit);
       if (inflight === ctrl) inflight = null;
     }
-    // Retired while out — the tab was hidden — so its answer is out of date.
+    // Retired while out (the tab was hidden), so its answer is out of date.
     if (id !== seq) return;
     strikes = data ? 0 : strikes + 1;
     schedule(

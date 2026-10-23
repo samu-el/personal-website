@@ -2,7 +2,7 @@ import { getCollection, type CollectionEntry } from 'astro:content';
 import { nav, type NavItem } from '@/lib/site';
 
 /**
- * Astro warns on every read of an empty collection — six warnings a build
+ * Astro warns on every read of an empty collection: six warnings a build
  * here, enough to train someone to ignore build output. Counting the files
  * through Vite's glob skips the read when there is nothing to read.
  */
@@ -21,7 +21,7 @@ export async function publishedPosts(): Promise<CollectionEntry<'posts'>[]> {
   return posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 }
 
-/** True when the Writing section should exist at all — nav, feed, sitemap and all. */
+/** True when the Writing section should exist at all: nav, feed, sitemap and all. */
 export async function hasWriting(): Promise<boolean> {
   return (await publishedPosts()).length > 0;
 }
@@ -35,10 +35,4 @@ export async function visibleNav(): Promise<NavItem[]> {
   return nav
     .filter((i) => writing || i.href !== '/writing')
     .map((item, i) => ({ ...item, index: String(i + 1).padStart(2, '0') }));
-}
-
-/** Eyebrow index for a page, e.g. "03" for /work. Empty if it is not in the nav. */
-export async function navIndex(path: string): Promise<string> {
-  const items = await visibleNav();
-  return items.find((i) => i.href === path)?.index ?? '';
 }

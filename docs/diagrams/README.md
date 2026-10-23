@@ -1,7 +1,7 @@
 # Diagrams
 
 Seven scenes, each written twice: an `.excalidraw` file to edit and an `.svg` to
-look at. Both are generated — `scenes.mjs` is the source of truth.
+look at. Both are generated; `scenes.mjs` is the source of truth.
 
 | Scene               | Level | Shows                                                                     |
 | ------------------- | ----- | ------------------------------------------------------------------------- |
@@ -20,7 +20,7 @@ GitHub. Nothing to install.
 
 ## Editing them
 
-Small moves — nudging a box, adding a note — are easiest at
+Small moves (nudging a box, adding a note) are easiest at
 [excalidraw.com](https://excalidraw.com):
 
 1. **File → Open** and pick the `.excalidraw` file.
@@ -44,7 +44,7 @@ The `.excalidraw` scene is the editable original and keeps the bindings. The
 `.svg` is what anyone reading the documentation actually sees, and it means a
 diagram going stale is visible in the diff rather than hidden inside JSON.
 
-The `.excalidraw` files are written minified — one line each. They are machine
+The `.excalidraw` files are written minified, one line each. They are machine
 output handed to an editor, not something anyone reads as text, and
 pretty-printing the six of them cost 7,667 lines of committed whitespace and
 turned every regeneration into a thousand-line diff. The `.svg` is the
@@ -53,7 +53,7 @@ reviewable artifact.
 ## The Excalidraw scene format
 
 `build.mjs` writes this format directly rather than driving an editor, so what
-follows is what it has to get right — the subset these scenes use.
+follows is what it has to get right: the subset these scenes use.
 [`docs/excalidraw.md`](../excalidraw.md) covers the tool itself: the element
 model behind this format, the component API, and how its collaboration is
 encrypted. Excalidraw's own documentation is at
@@ -72,7 +72,7 @@ encrypted. Excalidraw's own documentation is at
 }
 ```
 
-`elements` is a flat array — there is no tree. Nesting is expressed by ids
+`elements` is a flat array; there is no tree. Nesting is expressed by ids
 pointing at each other, which is the one thing about the format that shapes the
 generator's design.
 
@@ -87,28 +87,28 @@ The editor rejects a scene that omits them, so `base()` in `build.mjs` supplies
 the lot and each helper overrides only what differs. Two are worth knowing:
 
 - **`seed`** drives the hand-drawn jitter. The same seed redraws the same wobble,
-  which is why these are counted rather than randomised — a regenerated scene is
+  which is why these are counted rather than randomised: a regenerated scene is
   then byte-identical when nothing about it changed.
 - **`roughness`** is 0 (architect), 1 (artist) or 2 (cartoonist). These use 1.
 
 ### The three element types these scenes use
 
-**`rectangle`** — `x`, `y`, `width`, `height`, plus `roundness: { type: 3 }`
+**`rectangle`**: `x`, `y`, `width`, `height`, plus `roundness: { type: 3 }`
 for rounded corners. `roundness: null` is a hard corner.
 
-**`text`** — carries both `text` and `originalText`, plus `fontSize`,
+**`text`**: carries both `text` and `originalText`, plus `fontSize`,
 `fontFamily` (1 hand-drawn, 2 normal, 3 monospace), `textAlign`,
 `verticalAlign` and `lineHeight`. A text element is either standalone, with
 `containerId: null` and `autoResize: true`, or bound inside a shape, with
 `containerId` set to that shape's id and `autoResize: false` so the editor
-keeps it inside. `width` and `height` must be supplied either way — the format
+keeps it inside. `width` and `height` must be supplied either way: the format
 stores measured geometry rather than computing it, so `build.mjs` estimates
 advance width at 0.58 em per character for the hand-drawn face.
 
-**`arrow`** — `x`, `y` are the start point and `points` is an array of
+**`arrow`**: `x`, `y` are the start point and `points` is an array of
 `[dx, dy]` offsets _from_ that origin, always beginning `[0, 0]`. `startBinding`
 and `endBinding` each hold `{ elementId, focus, gap }`, and the bound shapes
-must list the arrow back in their own `boundElements` — the binding is stored on
+must list the arrow back in their own `boundElements`. The binding is stored on
 both sides, and an arrow bound on one side only stops following when the shape
 is dragged.
 

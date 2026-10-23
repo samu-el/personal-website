@@ -1,6 +1,5 @@
 ---
 import Layout from '@/layouts/Layout.astro';
-import { navIndex } from '@/lib/posts';
 import PostCard from '@/components/PostCard.astro';
 import { publishedPosts } from '@/lib/posts';
 import { href } from '@/lib/paths';
@@ -13,45 +12,35 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
 const title = 'Writing';
 const description =
   'Essays by Samuel Mussie on hiring senior engineers, running distributed teams, shipping RAG systems, and why African-language AI is an unfunded problem rather than a hard one.';
-
-const index = await navIndex('/writing');
 ---
 
 <Layout {title} {description} path="/writing" noindex={posts.length === 0}>
-  <PageHeader {index} label="Writing">
-    Things I had to figure out
-    <em class="block italic text-accent">and could not find written down.</em>
-    <Fragment slot="aside">
-      Hiring, handovers, and what breaks when AI features meet real users. No cadence, no newsletter — I publish when I
-      have something I would defend in an argument.
-      <div class="mt-5">
-        <a href={href('/rss.xml')} class="btn btn-ghost !px-4 !py-2 !text-[0.8125rem]">
-          <Icon name="lucide:rss" class="size-3.5" aria-hidden="true" />
-          Subscribe via RSS
-        </a>
-      </div>
-    </Fragment>
-    {
-      tags.length > 0 && (
-        <ul
-          slot="after"
-          class="relative mt-12 flex flex-wrap items-center gap-2"
-          aria-label="Topics"
-          data-reveal
-          style="--reveal-delay:220ms"
-        >
-          <li class="mr-1 meta">Topics</li>
-          {tags.map((t) => (
-            <li class="chip">{t}</li>
-          ))}
-        </ul>
-      )
-    }
+  <PageHeader>
+    Writing.
+    <div slot="after" class="relative mt-10 flex flex-wrap items-center gap-2" data-reveal style="--reveal-delay:120ms">
+      {
+        posts.length > 0 && (
+          <a href={href('/rss.xml')} class="btn btn-ghost mr-2">
+            <Icon name="lucide:rss" class="size-3.5" aria-hidden="true" />
+            RSS
+          </a>
+        )
+      }
+      {
+        tags.length > 0 && (
+          <ul class="flex flex-wrap gap-2" aria-label="Topics">
+            {tags.map((t) => (
+              <li class="chip">{t}</li>
+            ))}
+          </ul>
+        )
+      }
+    </div>
   </PageHeader>
 
   {
     posts.length > 0 ? (
-      <div class="wrap py-10 lg:py-20">
+      <div class="wrap sec-follow">
         <div class="grid lg:grid-cols-12">
           <div class="lg:col-span-10">
             {posts.map((post, i) => (
@@ -61,8 +50,8 @@ const index = await navIndex('/writing');
         </div>
       </div>
     ) : (
-      <div class="wrap py-10 lg:py-14">
-        <p class="text-muted">Nothing published yet. The drafts are worse than nothing.</p>
+      <div class="wrap sec-follow">
+        <p class="lead text-muted">Nothing published yet.</p>
       </div>
     )
   }

@@ -42,13 +42,13 @@ a browser store, not the encrypted on-device app.
 
 ## Stack
 
-- **App** — React Native and Expo with Expo Router, in TypeScript. Zustand for state, Lingui for
+- **App**: React Native and Expo with Expo Router, in TypeScript. Zustand for state, Lingui for
   i18n, decimal.js for money.
-- **Storage** — SQLite through op-sqlite with SQLCipher, and Drizzle ORM for schema and migrations.
-- **Native modules** — alert capture (an SMS receiver and notification listener on Android;
+- **Storage**: SQLite through op-sqlite with SQLCipher, and Drizzle ORM for schema and migrations.
+- **Native modules**: alert capture (an SMS receiver and notification listener on Android;
   Shortcuts and the share sheet on iOS) and receipt OCR (ML Kit on Android, Vision on iOS), written
   as Expo modules in Kotlin and Swift.
-- **Parsing** — rule packs for CBE, telebirr and Dashen, built from real alerts. Every message that
+- **Parsing**: rule packs for CBE, telebirr and Dashen, built from real alerts. Every message that
   ever needed a rule fixed stays in the test suite.
 
 ## Links

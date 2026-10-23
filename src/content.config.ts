@@ -9,7 +9,7 @@ const projects = defineCollection({
       title: z.string(),
       /** One-line description used on cards and in meta tags. */
       blurb: z.string(),
-      /** Free-form period label, e.g. "2025" or "2023 — present". */
+      /** Free-form period label, e.g. "2025" or "2023–present". */
       period: z.string(),
       /** Sort key: higher floats to the top. */
       weight: z.number().default(0),

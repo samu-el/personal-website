@@ -5,7 +5,7 @@
   "compatibility_date": "2026-09-01",
 
   // Also publish a *.workers.dev URL. That makes the Worker testable on its
-  // own, separately from whether the zone route below is intercepting —
+  // own, separately from whether the zone route below is intercepting:
   // which is the thing that usually goes wrong first.
   "workers_dev": true,
 

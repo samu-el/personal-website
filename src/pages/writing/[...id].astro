@@ -82,40 +82,26 @@ const eyebrow = 'meta';
   tags={d.tags}
 >
   <article>
-    <header class="relative overflow-hidden border-b border-line">
-      <div class="pointer-events-none absolute inset-0 grid-lines opacity-60" aria-hidden="true"></div>
-      <div class="wrap relative py-10 lg:py-20">
+    <header class="field-ink relative" style="view-transition-name:field">
+      <div class="wrap pb-16 pt-10 lg:pb-24 lg:pt-14">
         <Breadcrumb to="/writing" label="All writing" />
 
         <div class="grid lg:grid-cols-12">
           <div class="lg:col-span-8">
-            <p class="flex flex-wrap items-center gap-x-3 gap-y-1.5 meta" data-reveal>
-              <time datetime={d.pubDate.toISOString()}>{formatDate(d.pubDate)}</time>
-              <span class="text-line-strong" aria-hidden="true">·</span>
-              <span>{minutes} min read</span>
-              {
-                d.updatedDate && (
-                  <>
-                    <span class="text-line-strong" aria-hidden="true">
-                      ·
-                    </span>
-                    <span>Updated {formatDate(d.updatedDate)}</span>
-                  </>
-                )
-              }
-            </p>
-
-            <h1 class="display mt-6 text-[clamp(2.2rem,5.6vw,3.9rem)]" data-reveal style="--reveal-delay:60ms">
+            <h1 class="display-xl text-display-s" data-reveal style="--reveal-delay:60ms">
               {d.title}
             </h1>
 
-            <p
-              class="mt-6 max-w-2xl text-[1.0625rem] leading-relaxed text-muted"
-              data-reveal
-              style="--reveal-delay:120ms"
-            >
+            <p class="lead mt-8 text-muted" data-reveal style="--reveal-delay:120ms">
               {d.description}
             </p>
+
+            <!-- Date, length and any update: separate items, no separator glyphs. -->
+            <ul class="meta mt-8 flex flex-wrap gap-x-6 gap-y-1.5" data-reveal style="--reveal-delay:150ms">
+              <li><time datetime={d.pubDate.toISOString()}>{formatDate(d.pubDate)}</time></li>
+              <li>{minutes} min read</li>
+              {d.updatedDate && <li>Updated {formatDate(d.updatedDate)}</li>}
+            </ul>
 
             <div data-reveal style="--reveal-delay:160ms">
               <Chips items={d.tags} label="Tags" />
@@ -125,9 +111,9 @@ const eyebrow = 'meta';
       </div>
     </header>
 
-    <div class="wrap py-10 lg:py-20">
+    <div class="wrap sec">
       <div class="grid gap-10 lg:grid-cols-12 lg:gap-10">
-        <div class="prose lg:col-span-7">
+        <div class="prose prose-lg lg:col-span-7">
           <Content />
         </div>
 
@@ -147,7 +133,7 @@ const eyebrow = 'meta';
                           class="toc-link flex gap-3 text-[0.875rem] leading-snug text-muted transition-colors hover:text-fg"
                           data-toc={h.slug}
                         >
-                          <span class="font-mono text-2xs text-subtle">{String(i + 1).padStart(2, '0')}</span>
+                          <span class="toc-num tabular-nums text-subtle">{i + 1}</span>
                           <span>{h.text}</span>
                         </a>
                       </li>
@@ -157,28 +143,24 @@ const eyebrow = 'meta';
               )
             }
 
-            <div class="card rounded-lg p-6">
-              <h2 class={eyebrow}>Written by</h2>
-              <p class="mt-4 text-[0.9375rem] font-medium tracking-tight">{site.name}</p>
-              <p class="mt-1 text-[0.8125rem] leading-snug text-subtle">
-                {site.role}, {site.company} · {site.location}
-              </p>
-              <div class="rule my-5"></div>
-              <div class="flex flex-wrap gap-2">
-                {
-                  share.map((s) => (
-                    <a
-                      href={s.href}
-                      target={s.external ? '_blank' : undefined}
-                      rel={s.external ? 'noopener noreferrer' : undefined}
-                      class="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 meta text-muted transition-colors hover:border-accent hover:text-accent"
-                    >
-                      <Icon name={s.icon} class="size-3" aria-hidden="true" />
-                      {s.label}
-                    </a>
-                  ))
-                }
-              </div>
+            {
+              /* The site is one author's, so no byline card: just the two things a
+                reader can do with a post. */
+            }
+            <div class="flex flex-wrap gap-2">
+              {
+                share.map((s) => (
+                  <a
+                    href={s.href}
+                    target={s.external ? '_blank' : undefined}
+                    rel={s.external ? 'noopener noreferrer' : undefined}
+                    class="inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 meta text-muted transition-colors hover:border-accent hover:text-accent"
+                  >
+                    <Icon name={s.icon} class="size-3" aria-hidden="true" />
+                    {s.label}
+                  </a>
+                ))
+              }
             </div>
 
             {
@@ -214,7 +196,7 @@ const eyebrow = 'meta';
 
 <style>
   .toc-link.is-current,
-  .toc-link.is-current .font-mono {
+  .toc-link.is-current .toc-num {
     color: var(--color-accent);
   }
 </style>

@@ -87,7 +87,61 @@ for (const [width, height, tag] of [
   await close();
 }
 
-// 4. The reveal fires — nothing in view is left hidden.
+// 3b. Captures follow the theme: each frame shows the capture for the applied
+// theme (a stored choice beats the OS), the other is never fetched, and the
+// toggle swaps them. src/lib/previews.ts.
+{
+  const frames = (page) =>
+    page.evaluate(() => {
+      const urls = (i) =>
+        (i.srcset || i.src).split(',').map((c) => new URL(c.trim().split(' ')[0], location.href).href);
+      const pairs = [...document.querySelectorAll('#main .shot-light')].map((light) => {
+        const dark = light.parentElement.querySelector('.shot-dark');
+        const shown = getComputedStyle(light).display !== 'none' ? light : dark;
+        return { shown: shown === dark ? 'dark' : 'light', hidden: urls(shown === dark ? light : dark) };
+      });
+      return { dark: document.documentElement.classList.contains('dark'), pairs };
+    });
+  for (const [scheme, stored] of [
+    ['light', null],
+    ['dark', null],
+    ['light', 'dark'],
+    ['dark', 'light'],
+  ]) {
+    const tag = `[${scheme} OS${stored ? `, ${stored} chosen` : ''}]`;
+    const fetched = [];
+    const { page, close } = await visit(browser, '/', {
+      ...DESKTOP,
+      colorScheme: scheme,
+      init: stored ? `try { localStorage.setItem('theme', '${stored}') } catch {}` : undefined,
+    });
+    page.on('request', (r) => fetched.push(r.url()));
+    await page.reload({ waitUntil: 'networkidle' });
+    const want = stored ?? scheme;
+    const { dark, pairs } = await frames(page);
+    flag(dark !== (want === 'dark'), `${tag} theme applied wrongly`);
+    flag(!pairs.length, `${tag} no light and dark capture pair on the home page`);
+    flag(
+      pairs.some((p) => p.shown !== want),
+      `${tag} a frame shows the wrong capture: ${JSON.stringify(pairs.map((p) => p.shown))}`,
+    );
+    const other = fetched.filter((u) => pairs.some((p) => p.hidden.includes(u)));
+    flag(other.length, `${tag} fetched the other theme's captures: ${other.join(', ')}`);
+    await close();
+  }
+  const { page, close } = await visit(browser, '/', { ...DESKTOP, colorScheme: 'light' });
+  await page.click('#theme-toggle'); // system -> light
+  await page.click('#theme-toggle'); // light -> dark
+  await page.waitForTimeout(300);
+  const after = await frames(page);
+  flag(
+    after.pairs.some((p) => p.shown !== 'dark'),
+    'toggling to dark left a light capture showing',
+  );
+  await close();
+}
+
+// 4. The reveal fires: nothing in view is left hidden.
 {
   const { page, close } = await visit(browser, '/', { viewport: { width: 1440, height: 900 }, wait: 'load' });
   for (const frac of [0.3, 0.55, 0.8]) {

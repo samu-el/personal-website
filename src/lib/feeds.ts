@@ -1,6 +1,6 @@
 /**
  * Build-time feeds: GitHub activity, Letterboxd diary, Spotify history. Each
- * is fetched once per build and each is allowed to fail — a personal site is
+ * is fetched once per build and each is allowed to fail: a personal site is
  * not worth a red deploy, and nothing is cached to disk because a stale
  * "recently pushed" list is worse than none. docs/architecture.md, "Content".
  */
@@ -152,7 +152,7 @@ async function fetchFilms(): Promise<Film[] | null> {
 /**
  * The <title> bakes the rating in as star glyphs; `letterboxd:memberRating` is
  * a number, so read the namespaced fields. Only a watched date means a diary
- * entry — lists and reviews come through the same feed.
+ * entry; lists and reviews come through the same feed.
  */
 export function parseLetterboxd(xml: string): Film[] {
   const field = (item: string, tag: string) =>
@@ -188,7 +188,7 @@ function decodeEntities(s: string): string {
 }
 
 /**
- * Three secrets, build-time only — Astro inlines nothing into client JS but
+ * Three secrets, build-time only. Astro inlines nothing into client JS but
  * `PUBLIC_*`. All absent is a fresh clone; some absent is a misconfiguration,
  * so that warns. The refresh token expires after 180 days.
  */
@@ -199,7 +199,7 @@ async function fetchTracks(): Promise<Track[] | null> {
   const present = [id, secret, refresh].filter(Boolean).length;
   if (present === 0) return null;
   if (present < 3) {
-    console.warn('[feeds] Spotify partially configured — need client id, secret and refresh token');
+    console.warn('[feeds] Spotify partially configured: need client id, secret and refresh token');
     return null;
   }
 

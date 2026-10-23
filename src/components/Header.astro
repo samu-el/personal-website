@@ -36,7 +36,7 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
     <a
       href={href('/')}
       class="group flex items-center gap-2.5 -ml-1 rounded-full px-1 py-1"
-      aria-label={`${site.name} — home`}
+      aria-label={`${site.name}, home`}
     >
       <Image
         src={avatar}
@@ -46,14 +46,9 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
         loading="eager"
         class="wordmark-avatar size-8 shrink-0 rounded-full object-cover ring-1 ring-line-strong group-hover:ring-accent"
       />
-      <span class="flex flex-col leading-none">
-        <span class="display whitespace-nowrap text-[1.2rem] tracking-tight max-[22.5rem]:text-[1.1rem]"
-          >{site.name}</span
-        >
-        <span class="wordmark-sub hidden whitespace-nowrap font-mono text-2xs tracking-wider text-subtle lg:block"
-          >{site.role} · {site.locationShort}</span
-        >
-      </span>
+      <span class="display whitespace-nowrap text-[1.2rem] leading-none tracking-tight max-[22.5rem]:text-[1.1rem]"
+        >{site.name}</span
+      >
     </a>
 
     <!-- Desktop nav -->
@@ -89,44 +84,34 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
         type="button"
         id="cmdk-open"
         data-cmdk-open
-        class="hidden h-9 items-center gap-2 rounded-full border border-line pl-3 pr-2 text-subtle transition-colors hover:border-line-strong hover:text-fg md:inline-flex"
+        class="hidden size-11 place-items-center rounded-full border border-line text-muted transition-colors hover:border-line-strong hover:text-fg md:grid"
         aria-label="Search and jump to a page"
+        aria-keyshortcuts="Control+K Meta+K"
       >
         <Icon name="lucide:search" class="size-3.5" aria-hidden="true" />
-        <kbd class="rounded border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-2xs"> ⌘K </kbd>
       </button>
       {
         now && (
           <a
             href={href(now.href)}
             aria-current={nowActive ? 'page' : undefined}
-            title="What I have pushed and watched lately"
             class:list={[
-              'meta inline-flex h-9 items-center pointer-coarse:h-11 gap-2 rounded-full border pl-2.5 pr-3 transition-colors',
-              nowActive ? 'border-jade/60 text-fg' : 'border-line text-subtle hover:border-line-strong hover:text-fg',
+              'inline-flex h-11 items-center rounded-full border px-4 text-sm transition-colors',
+              nowActive ? 'border-accent text-fg' : 'border-line text-muted hover:border-line-strong hover:text-fg',
             ]}
           >
-            <span class="relative flex size-1.5" aria-hidden="true">
-              <span class="absolute inline-flex size-full animate-ping rounded-full bg-jade opacity-70" />
-              <span class="relative inline-flex size-1.5 rounded-full bg-jade" />
-            </span>
             {now.label}
           </a>
         )
       }
       <ThemeToggle />
-      <a
-        href={href('/contact')}
-        class="btn btn-primary hidden whitespace-nowrap !px-4 !py-2 !text-[0.8125rem] lg:inline-flex"
-      >
-        Get in touch
-      </a>
+      <a href={href('/contact')} class="btn btn-ghost hidden lg:inline-flex"> Get in touch </a>
 
       <!-- Mobile menu trigger -->
       <button
         type="button"
         id="menu-toggle"
-        class="grid size-9 place-items-center rounded-full border border-line text-muted pointer-coarse:size-11 transition-colors hover:border-line-strong hover:text-fg md:hidden"
+        class="grid size-11 place-items-center rounded-full border border-line text-muted transition-colors hover:border-line-strong hover:text-fg md:hidden"
         aria-label="Open menu"
         aria-expanded="false"
         aria-controls="mobile-menu"
@@ -159,11 +144,10 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
               aria-current={active ? 'page' : undefined}
               style={`--i:${i}`}
               class:list={[
-                'menu-row flex items-baseline gap-3 border-b border-line py-3.5 text-lg tracking-tight transition-colors last:border-b-0',
+                'menu-row display flex items-baseline border-b border-line py-3 text-[1.75rem] transition-colors last:border-b-0',
                 active ? 'text-accent' : 'text-fg',
               ]}
             >
-              <span class="font-mono text-2xs text-subtle">{item.index}</span>
               {item.label}
             </a>
           );
@@ -174,9 +158,9 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
         type="button"
         data-cmdk-open
         style={`--i:${items.length}`}
-        class="menu-row hidden w-full items-center gap-3 border-b border-line py-3.5 text-left text-lg tracking-tight text-fg transition-colors [.js_&]:flex"
+        class="menu-row display hidden w-full items-center gap-3 border-b border-line py-3 text-left text-[1.75rem] text-fg transition-colors [.js_&]:flex"
       >
-        <Icon name="lucide:search" class="size-3.5 text-subtle" aria-hidden="true" />
+        <Icon name="lucide:search" class="size-5 text-subtle" aria-hidden="true" />
         Search
       </button>
       <a href={`mailto:${site.email}`} style={`--i:${items.length + 1}`} class="menu-row btn btn-primary my-4 w-full"
@@ -199,21 +183,6 @@ const nowActive = now ? isActive(current, href(now.href)) : false;
   }
   #site-header[data-scrolled] .wordmark-avatar {
     scale: 0.86;
-  }
-  /* max-height rather than display, so it animates. */
-  .wordmark-sub {
-    margin-top: 0.25rem;
-    max-height: 1.5em;
-    overflow: hidden;
-    transition:
-      max-height var(--t-3) var(--ease-out-quint),
-      margin-top var(--t-3) var(--ease-out-quint),
-      opacity var(--t-2) var(--ease-out-quint);
-  }
-  #site-header[data-scrolled] .wordmark-sub {
-    max-height: 0;
-    margin-top: 0;
-    opacity: 0;
   }
 
   .menu-bar-top,

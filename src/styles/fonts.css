@@ -10,7 +10,7 @@
  * docs/architecture.md.
  */
 
-/* ── Geist Variable — body and UI ──────────────────────────────────── */
+/* ── Geist Variable: body and UI ───────────────────────────────────── */
 @font-face {
   font-family: 'Geist Variable';
   font-style: normal;
@@ -32,7 +32,7 @@
     U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* ── Geist Mono Variable — labels, metadata, code ──────────────────── */
+/* ── Geist Mono Variable: labels, metadata, code ───────────────────── */
 @font-face {
   font-family: 'Geist Mono Variable';
   font-style: normal;
@@ -44,7 +44,7 @@
     U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
-/* ── Instrument Serif — display headings ───────────────────────────── */
+/* ── Instrument Serif: display headings ────────────────────────────── */
 @font-face {
   font-family: 'Instrument Serif';
   font-style: normal;

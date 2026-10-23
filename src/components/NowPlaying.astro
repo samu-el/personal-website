@@ -3,10 +3,9 @@
  * Live "currently listening" card, filled in the browser from the Worker in
  * worker/. Playing with a live bar, paused where it stopped, or the last track
  * that finished; no track at all leaves the card hidden. It holds its shape as
- * a skeleton, shown before the first paint, until the first answer — why that
+ * a skeleton, shown before the first paint, until the first answer. Why that
  * costs no layout shift is in docs/architecture.md, "Now playing".
  */
-import { Icon } from 'astro-icon/components';
 import { href } from '@/lib/paths';
 
 /** Same-origin by default; PUBLIC_NOW_PLAYING_URL puts it on its own host. */
@@ -14,7 +13,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
 ---
 
 <section id="now-playing" hidden data-state="loading" data-endpoint={endpoint} aria-busy="true" class="scroll-mt-24">
-  <div class="wrap py-10 lg:py-16">
+  <div class="wrap pt-16 lg:pt-24">
     <a
       id="np-link"
       href="https://open.spotify.com/"
@@ -22,19 +21,11 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       rel="noopener noreferrer"
       aria-hidden="true"
       tabindex="-1"
-      class="group relative block overflow-hidden rounded-xl border border-line bg-surface p-5 transition-colors hover:border-line-strong sm:p-7"
+      class="group relative block overflow-hidden rounded-xl border border-line bg-surface p-6 transition-colors hover:border-line-strong sm:p-8"
     >
-      <!-- Warmth behind the sleeve, so the card is not a flat rectangle. -->
-      <div
-        class="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100"
-        style="background:radial-gradient(circle,rgb(var(--c-accent)/0.35),transparent 70%)"
-        aria-hidden="true"
-      >
-      </div>
-
       <div class="relative flex items-center gap-5 sm:gap-7">
         <div class="min-w-0 flex-1">
-          <p class="flex items-center gap-2.5 whitespace-nowrap meta sm:tracking-[0.14em]">
+          <p class="meta flex items-center gap-2.5 whitespace-nowrap">
             <span id="np-eq" class="eq" aria-hidden="true">
               <span></span><span></span><span></span><span></span>
             </span>
@@ -47,30 +38,27 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
           <p id="np-artist" class="mt-2 text-[0.9375rem] text-muted sm:text-base">
             <span class="sk sk-artist"></span>
           </p>
+          <!-- Where the link goes, for a screen reader; the green card says it to the eye. -->
+          <span class="sr-only">on Spotify</span>
 
           <!-- Starts shown and empty so the skeleton reserves the row; the
                script hides it when the track reports no duration. -->
           <div id="np-progress" class="mt-5 max-w-md">
             <div class="h-[3px] overflow-hidden rounded-full bg-line" aria-hidden="true">
-              <!-- Width set each second; the linear transition smooths the steps. -->
+              <!-- Scale set each second; the linear transition smooths the steps. -->
               <div
                 id="np-bar"
-                class="h-full rounded-full bg-jade transition-[width] duration-1000 ease-linear motion-reduce:transition-none"
-                style="width:0%"
+                class="h-full origin-left rounded-full bg-jade transition-transform duration-1000 ease-linear motion-reduce:transition-none"
+                style="transform:scaleX(0)"
               >
               </div>
             </div>
             <!-- The times carry this to a screen reader; the bar is decoration. -->
-            <p class="mt-2 flex justify-between font-mono text-2xs tabular-nums text-subtle">
+            <p class="meta mt-2 flex justify-between tabular-nums">
               <span id="np-elapsed"><span class="sk sk-time"></span></span>
               <span id="np-duration"><span class="sk sk-time"></span></span>
             </p>
           </div>
-
-          <p class="mt-4 flex items-center gap-2 meta">
-            <Icon name="simple-icons:spotify" class="size-3.5 text-jade" aria-hidden="true" />
-            Spotify
-          </p>
         </div>
 
         <!-- Fixed box so the card does not reflow when the art loads. -->
@@ -95,7 +83,6 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       </div>
     </a>
   </div>
-  <div class="rule"></div>
 </section>
 
 <!-- Before the first paint, so the skeleton is already holding the card's
@@ -110,7 +97,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
     try {
       empty = localStorage.getItem('np-empty') === '1';
     } catch {
-      /* storage blocked — reserve the card */
+      /* storage blocked: reserve the card */
     }
     if (card && !empty) card.hidden = false;
   })();
@@ -189,11 +176,11 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
 
   /* Four bars on four durations, so it reads as a level meter rather than
      four things blinking in step. rem, not em: at 0.85em of an 11px label the
-     bars animated over six pixels — technically moving, practically not. */
+     bars animated over six pixels, technically moving, practically not. */
   .eq {
     display: inline-flex;
     align-items: flex-end;
-    gap: 2.5px;
+    gap: var(--space-3xs);
     height: 0.9rem;
   }
   .eq > span {

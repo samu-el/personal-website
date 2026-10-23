@@ -2,7 +2,7 @@
  * Reads a content collection's front matter without a build, for the two
  * things that run outside Astro: the screenshot script and the smoke suite.
  *
- * A line matcher rather than a YAML parser — every field either script needs
+ * A line matcher rather than a YAML parser: every field either script needs
  * is a plain scalar or a boolean, and pulling in a parser to read six of them
  * is more to keep working than it saves.
  */

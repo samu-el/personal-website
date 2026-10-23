@@ -36,7 +36,7 @@ export function mobileMenu() {
   scrim?.addEventListener('click', () => setOpen(false));
   /* The palette entry inside the panel. Capture phase, so the panel is shut
      and focus is back on the trigger before the palette notes where to
-     return focus — the row itself is about to be hidden. */
+     return focus: the row itself is about to be hidden. */
   for (const entry of $$('[data-cmdk-open]', menu)) {
     entry.addEventListener(
       'click',

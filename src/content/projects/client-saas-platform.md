@@ -1,6 +1,6 @@
 ---
 title: 'Procurement Intelligence Platform'
-blurb: 'Client work on a European B2B SaaS product: data model, services and front end. Anonymised — no client name or links.'
+blurb: 'Client work on a European B2B SaaS product: data model, services and front end. Anonymised: no client name or links.'
 period: 'Ongoing'
 weight: 50
 kind: 'Client work'

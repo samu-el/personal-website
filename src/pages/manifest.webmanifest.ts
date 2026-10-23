@@ -21,7 +21,7 @@ const bg = `#${darkBg
 export const GET: APIRoute = () => {
   const manifest = {
     id: href('/'),
-    name: 'Samuel Mussie — Software Engineer',
+    name: 'Samuel Mussie · Software Engineer',
     short_name: 'Samuel Mussie',
     description: 'Personal site of Samuel Mussie, a software engineer in Addis Ababa, Ethiopia.',
     start_url: href('/'),

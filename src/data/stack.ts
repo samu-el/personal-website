@@ -1,21 +1,17 @@
 export type StackItem = { name: string; note?: string; icon?: string };
 export type StackGroup = {
   title: string;
-  index: string;
-  blurb: string;
   items: StackItem[];
 };
 
 /**
- * Tools and languages, grouped. Notes are factual — what a thing is used for,
+ * Tools and languages, grouped. Notes are factual: what a thing is used for,
  * not an opinion about it. See PROFILE.md: some entries are inferred rather
  * than evidenced and should be deleted if unused.
  */
 export const stack: StackGroup[] = [
   {
     title: 'Languages',
-    index: '01',
-    blurb: 'Languages used in production work.',
     items: [
       { name: 'TypeScript', note: 'primary', icon: 'simple-icons:typescript' },
       { name: 'Python', note: 'services, data, AI', icon: 'simple-icons:python' },
@@ -29,8 +25,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'Front end',
-    index: '02',
-    blurb: 'Web and mobile clients.',
     items: [
       { name: 'React', icon: 'simple-icons:react' },
       { name: 'Next.js', icon: 'simple-icons:nextdotjs' },
@@ -42,8 +36,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'Back end & data',
-    index: '03',
-    blurb: 'Services, storage and packaging.',
     items: [
       { name: 'FastAPI', note: 'Python services', icon: 'simple-icons:fastapi' },
       { name: 'Node.js', icon: 'simple-icons:nodedotjs' },
@@ -55,8 +47,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'AI',
-    index: '04',
-    blurb: 'Retrieval-augmented features in production.',
     items: [
       { name: 'RAG pipelines', note: 'chunking, retrieval, citations', icon: 'lucide:search-code' },
       { name: 'Vector search', note: 'pgvector', icon: 'lucide:git-compare' },
@@ -66,8 +56,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'Infrastructure',
-    index: '05',
-    blurb: 'Hosting, CI and operations.',
     items: [
       { name: 'AWS', icon: 'simple-icons:amazonwebservices' },
       { name: 'GitHub Actions', note: 'CI/CD', icon: 'simple-icons:githubactions' },
@@ -79,8 +67,6 @@ export const stack: StackGroup[] = [
   },
   {
     title: 'Tooling',
-    index: '06',
-    blurb: 'Day-to-day.',
     items: [
       { name: 'Git', icon: 'simple-icons:git' },
       { name: 'Linear', icon: 'simple-icons:linear' },
