@@ -1,0 +1,5 @@
+{
+  "hooks": {
+    "Stop": [{ "hooks": [{ "type": "command", "command": "node .agentlint/hooks/agentlint-gate.mjs stop" }] }]
+  }
+}
