@@ -1,10 +1,11 @@
 ---
 /**
  * A screenshot of a project actually running, shared by the home page, the
- * /work rows and each detail page. Assets are matched by project id, so
- * dropping a file in is all it takes (`npm run shots` refreshes them) and a
- * missing one degrades to the fallback below. docs/architecture.md,
- * "Screenshots".
+ * /work rows and each detail page, in the site's current theme. Assets are
+ * matched by project id (`<id>.webp`, plus `<id>-dark.webp` for a product
+ * with both looks), so dropping files in is all it takes (`npm run shots`
+ * refreshes them) and a missing one degrades to the fallback below.
+ * docs/architecture.md, "Screenshots".
  *
  * The capture is the picture: no drawn browser bar or phone bezel around it,
  * only the theme's radius and an inset outline. A project with a live site
@@ -12,29 +13,26 @@
  */
 import type { CollectionEntry } from 'astro:content';
 import { Image } from 'astro:assets';
-import { byId as pickAsset } from '@/lib/assets';
+import { previewsFor } from '@/lib/previews';
 
 interface Props {
   project: CollectionEntry<'projects'>;
-  /** The first frame on a page should not be lazy, and is fetched first. */
+  /** The first frame on a page is fetched first. With a light and dark pair,
+   *  the page also hands Layout its `previewPreloads()`. */
   eager?: boolean;
-  /** How wide the frame renders; defaults to the /work row's layout. */
+  /** How wide a desktop frame renders (src/lib/previews.ts). */
   sizes?: string;
   /** Crops a desktop capture to another ratio, from the top. */
   aspect?: string;
   class?: string;
 }
 
-const previews = import.meta.glob<{ default: ImageMetadata }>('/src/assets/previews/*.{png,jpg,jpeg,webp,avif}', {
-  eager: true,
-});
-
-const { project, eager = false, sizes: sizesProp, aspect: aspectProp, class: className } = Astro.props;
+const { project, eager = false, sizes, aspect: aspectProp, class: className } = Astro.props;
 const { title, demo, device } = project.data;
 
-const preview = pickAsset(previews, project.id);
+const previews = previewsFor(project, sizes);
 const phone = device === 'phone';
-const sizes = sizesProp ?? (phone ? '19rem' : '(min-width: 1024px) 58vw, 100vw');
+const alt = `${title}, running`;
 
 /** Hostname only. A full URL is noise at this type size. */
 const host = demo ? new URL(demo).host : null;
@@ -62,12 +60,34 @@ const aspect = aspectProp ?? (phone ? 'aspect-[440/936]' : 'aspect-[16/10]');
     data-alt={`${title}, its main screen`}
   >
     {
-      preview ? (
+      previews?.dark ? (
+        /* Light and dark captures: components.css shows the one matching the
+           root element's theme class and sets the other to display:none, which
+           a lazy image never fetches. Both are lazy for that reason; an eager
+           frame's early fetch is the preload the theme script picks
+           (src/lib/previews.ts). */
+        <>
+          <Image
+            {...previews.light}
+            {alt}
+            loading="lazy"
+            fetchpriority={eager ? 'high' : undefined}
+            decoding="async"
+            class="shot-light size-full object-cover object-top"
+          />
+          <Image
+            {...previews.dark}
+            {alt}
+            loading="lazy"
+            fetchpriority={eager ? 'high' : undefined}
+            decoding="async"
+            class="shot-dark size-full object-cover object-top"
+          />
+        </>
+      ) : previews ? (
         <Image
-          src={preview}
-          alt={`${title}, running`}
-          widths={phone ? [320, 480, 880] : [640, 960, 1280, 1600]}
-          {sizes}
+          {...previews.light}
+          {alt}
           loading={eager ? 'eager' : 'lazy'}
           fetchpriority={eager ? 'high' : undefined}
           decoding="async"

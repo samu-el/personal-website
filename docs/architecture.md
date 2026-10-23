@@ -291,8 +291,9 @@ be.
 
 Assets are matched to content by **id**, not named in frontmatter:
 `lib/assets.ts` finds `<id>.<ext>` at the end of an `import.meta.glob` key.
-Dropping `src/assets/previews/jeopardy.webp` in is all it takes, and a missing
-file degrades to a fallback instead of failing the build. That helper is
+Dropping `src/assets/previews/jeopardy.webp` in is all it takes (plus
+`jeopardy-dark.webp` for a product with a dark look), and a missing file
+degrades to a fallback instead of failing the build. That helper is
 written without a regex on purpose: the obvious version breaks
 prettier-plugin-astro's tokenizer, which then reports dozens of phantom errors.
 
@@ -362,24 +363,66 @@ no text to overwrite it and waits for the image's `load` event instead.
 
 ## 8. Screenshots
 
-`scripts/shots.mjs` captures each project's live site into
-`src/assets/previews/<id>.webp`. It is run deliberately rather than at build
-time, because it needs a Chromium and reach to the sites themselves;
-`previews.yml` runs it on a GitHub runner and pushes to a `previews/auto`
-branch for review rather than committing to the deploy branch.
+`scripts/shots.mjs` captures each project into `src/assets/previews`, once per
+site theme: `<id>.webp` is the light capture and `<id>-dark.webp` the dark one.
+It is run deliberately rather than at build time, because it needs a Chromium
+and reach to the sites themselves; `previews.yml` runs it on a GitHub runner and
+pushes to a `previews/auto` branch for review rather than committing to the
+deploy branch.
+
+Both captures come from one page in one state. The page is loaded with the
+emulated `prefers-color-scheme` set to light and photographed, then the scheme
+is switched to dark and it is photographed again, so the pair differs in
+nothing but colour. An app that reads the scheme only at launch (Monee's web
+build) is reloaded after the switch, which keeps whatever state it holds in
+storage. Two identical pictures fail the run rather than ship one image under
+two names.
+
+`SHOTS_ORIGIN=http://localhost:<port> npm run shots <id>` points one project
+at a local run of its build, for a redesign that is not deployed yet.
 
 A project may ship `scripts/seeds/<id>.mjs` to change how it is captured:
 
-- **`image`**: a published screenshot to use instead of photographing a page.
-  Monee ships its own app screenshots, which is a better source than anything
-  the script could do: the product's own picture of itself, no account needed,
-  and it updates here whenever they replace it.
 - **`prepare(page, project)`**: runs before navigation, to reach a state worth
   photographing. An empty first-run screen is a true picture of nothing.
+  fantasy.et signs in through its own guest mode; Monee is handed a demo
+  ledger (`monee-ledger.json`, rebased so its latest day is today).
 - **`path`**: where to land, if not the site root.
+- **`themes`**: the looks the product has, when that is not both. LYVID and
+  Jeopardy are dark by design (`['dark']`): one capture, written as `<id>.webp`
+  and shown in both site themes, and a stale `<id>-dark.webp` is removed.
+- **`localOnly`**: why the live site cannot be captured. A full run skips the
+  project with that reason; only a `SHOTS_ORIGIN` run takes it. Monee's live
+  `/app` is behind a sign-in, so it is captured from a local export of the
+  offline edition, which has no account server.
 
-The browser is launched on first use, so a project sourced from a published
-image needs no Chromium installed at all.
+### Showing the one that matches the theme
+
+`src/lib/previews.ts` finds a project's captures by id and `PreviewFrame`
+renders them. A product with one capture is one ordinary `<img>`. A product
+with a pair gets both, each `loading="lazy"`, and `components.css` hides the
+one for the other theme (`.dark .shot-light`, `:root:not(.dark) .shot-dark`).
+That is keyed on the class the head script in `Layout.astro` sets before first
+paint, so the right picture is the first one painted, the manual toggle and the
+command palette swap it with no script of their own, and the frame's fixed
+aspect box means a swap never moves the layout. A lazy image that is
+`display: none` is never fetched, so each frame downloads one capture, not two.
+
+Lazy costs the first frame on a page its early discovery: the preload scanner
+does not fetch lazy images. So a page led by a pair (the home hero, `/work`,
+each detail page) passes `previewPreloads()` to `Layout`, and `BaseHead` writes
+one `<link rel="preload" as="image" imagesrcset>` per theme with
+`media="not all"`, which nothing fetches. The head script copies out the one for
+the theme it has just resolved, so the LCP image starts downloading from the
+head, in the right theme, once. Both the preload and `<Image>` are built from
+the same `previewsFor()` options, so their URLs cannot drift. A `<picture>`
+with a `prefers-color-scheme` source was the obvious alternative and follows
+only the OS: a reader who chose the other theme would get the wrong capture,
+or both.
+
+Toggling shows a capture that was never fetched. The toggle fetches the other
+theme's captures near the screen when the pointer reaches it or it takes focus,
+so the switch rarely shows an empty frame.
 
 `PreviewFrame` shows a capture as it is: the theme's radius and an inset
 outline, no drawn browser bar or phone bezel, and no tilt or zoom under the

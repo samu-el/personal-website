@@ -2,6 +2,7 @@
 import { site } from '@/lib/site';
 import { href } from '@/lib/paths';
 import { hasWriting } from '@/lib/posts';
+import type { PreviewPreload } from '@/lib/previews';
 import '@/styles/global.css';
 
 /**
@@ -29,6 +30,8 @@ interface Props {
   modifiedTime?: Date;
   tags?: string[];
   noindex?: boolean;
+  /** The page's first capture, one per theme (src/lib/previews.ts). */
+  preload?: PreviewPreload[];
 }
 
 const {
@@ -41,6 +44,7 @@ const {
   modifiedTime,
   tags = [],
   noindex = false,
+  preload = [],
 } = Astro.props;
 
 const hasFeed = await hasWriting();
@@ -102,6 +106,21 @@ const personSchema = {
 <meta name="theme-color" content="#f7f5f1" media="(prefers-color-scheme: light)" />
 
 {preloadFonts.map((src) => <link rel="preload" href={src} as="font" type="font/woff2" crossorigin="anonymous" />)}
+
+<!-- Inert until the theme script in Layout.astro copies out the one for the theme it resolves. -->
+{
+  preload.map((p) => (
+    <link
+      rel="preload"
+      as="image"
+      imagesrcset={p.srcset}
+      imagesizes={p.sizes}
+      fetchpriority="high"
+      media="not all"
+      data-theme-preload={p.theme}
+    />
+  ))
+}
 
 <link rel="icon" href={href('/favicon.svg')} type="image/svg+xml" />
 <link rel="apple-touch-icon" href={href('/apple-touch-icon.png')} />

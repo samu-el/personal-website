@@ -98,6 +98,19 @@ import { Icon } from 'astro-icon/components';
     apply(next);
   });
 
+  /* A capture for the other theme is display:none and so never fetched. Once
+     the toggle is about to be used, fetch the ones near the screen, so the
+     switch shows them at once instead of an empty frame. */
+  function warm() {
+    for (const img of $$<HTMLImageElement>('.shot-light, .shot-dark')) {
+      if (img.loading !== 'lazy' || getComputedStyle(img).display !== 'none') continue;
+      const box = img.parentElement?.getBoundingClientRect();
+      if (box && box.bottom > -innerHeight && box.top < 2 * innerHeight) img.loading = 'eager';
+    }
+  }
+  btn?.addEventListener('pointerenter', warm, { once: true });
+  btn?.addEventListener('focus', warm, { once: true });
+
   // Keep `system` honest when the OS preference changes mid-session.
   dark.addEventListener('change', () => {
     if (current() === 'system') apply('system', false);

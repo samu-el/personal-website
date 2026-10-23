@@ -14,6 +14,7 @@ import { Icon } from 'astro-icon/components';
 import { href } from '@/lib/paths';
 import { tone } from '@/lib/status';
 import PreviewFrame from '@/components/PreviewFrame.astro';
+import { WRAP_SIZES } from '@/lib/previews';
 
 interface Props {
   project: CollectionEntry<'projects'>;
@@ -84,7 +85,7 @@ const detail = href(`/work/${project.id}`);
 
   <div class:list={['mt-10 grid gap-10 lg:grid-cols-12 lg:gap-8', phone ? 'lg:items-center' : '']}>
     <div class:list={[phone ? 'lg:col-span-4' : 'lg:col-span-12']}>
-      <PreviewFrame {project} eager={index === 0} sizes={phone ? '19rem' : '(min-width: 1440px) 1312px, 92vw'} />
+      <PreviewFrame {project} eager={index === 0} sizes={WRAP_SIZES} />
     </div>
 
     <div

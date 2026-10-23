@@ -6,6 +6,7 @@ import Breadcrumb from '@/components/Breadcrumb.astro';
 import Chips from '@/components/Chips.astro';
 import PrevNext from '@/components/PrevNext.astro';
 import PreviewFrame from '@/components/PreviewFrame.astro';
+import { previewPreloads, previewsFor, WRAP_SIZES } from '@/lib/previews';
 import { Icon } from 'astro-icon/components';
 import { tone } from '@/lib/status';
 
@@ -30,6 +31,7 @@ const { project, prev, next } = Astro.props as Props;
 const { Content } = await render(project);
 const d = project.data;
 const phone = d.device === 'phone';
+const preload = await previewPreloads(previewsFor(project, WRAP_SIZES));
 
 /* Built by spreading rather than filtering a cast: a generic type argument
    anywhere in frontmatter stops Astro finding `interface Props`. */
@@ -39,7 +41,7 @@ const links = [
 ];
 ---
 
-<Layout title={d.title} description={d.blurb} path={`/work/${project.id}`} type="article" tags={d.tags}>
+<Layout title={d.title} description={d.blurb} path={`/work/${project.id}`} type="article" tags={d.tags} {preload}>
   <article>
     <!-- Banner: the name, what it is, and the way to it. The facts wait beside
          the write-up, where they are read. -->
@@ -100,7 +102,7 @@ const links = [
       !phone && (
         <section class="wrap pt-12 lg:pt-16" aria-label={`${d.title}, running`}>
           <div data-reveal>
-            <PreviewFrame {project} eager sizes="(min-width: 1440px) 1312px, 92vw" />
+            <PreviewFrame {project} eager sizes={WRAP_SIZES} />
           </div>
         </section>
       )

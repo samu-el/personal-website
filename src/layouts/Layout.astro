@@ -5,6 +5,7 @@ import Footer from '@/components/Footer.astro';
 import CommandPalette from '@/components/CommandPalette.astro';
 import EasterEggs from '@/components/EasterEggs.astro';
 import { site } from '@/lib/site';
+import type { PreviewPreload } from '@/lib/previews';
 
 interface Props {
   title: string;
@@ -16,6 +17,8 @@ interface Props {
   modifiedTime?: Date;
   tags?: string[];
   noindex?: boolean;
+  /** From previewPreloads(), for a page led by a light and dark capture pair. */
+  preload?: PreviewPreload[];
   /** Drops the footer CTA. Used on the contact page, where it would repeat. */
   bareFooter?: boolean;
 }
@@ -41,6 +44,15 @@ const { bareFooter = false, ...head } = Astro.props;
         document.documentElement.classList.toggle('dark', isDark);
         document.documentElement.dataset.theme = pref;
         document.documentElement.classList.add('js');
+        // The page's first capture, in this theme only: BaseHead left one
+        // inert preload per theme, and a copy without the media query fetches.
+        const theme = isDark ? 'dark' : 'light';
+        for (const link of document.querySelectorAll('link[data-theme-preload]')) {
+          if (link.dataset.themePreload !== theme) continue;
+          const live = link.cloneNode();
+          live.removeAttribute('media');
+          link.after(live);
+        }
         // The browser chrome follows a chosen theme. Each tag keeps its own
         // colour in data-tint, so the toggle can hand back to `system`.
         const metas = [...document.querySelectorAll('meta[name="theme-color"]')];

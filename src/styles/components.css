@@ -249,6 +249,13 @@
     position: relative;
     z-index: var(--z-base);
   }
+  /* A product with both looks ships both captures. Only the theme's own is
+     displayed, keyed on the class the head script sets before first paint,
+     and a lazy image that is display:none is never fetched. */
+  .dark .shot-light,
+  :root:not(.dark) .shot-dark {
+    display: none;
+  }
   .shot-phone {
     border-radius: 1.5rem;
   }
