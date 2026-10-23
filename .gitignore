@@ -31,3 +31,9 @@ playwright-report/
 
 # Transient image-generation intermediate
 public/og.raw.png
+
+# agentlint ephemeral selector cache
+.agentlint/.cache/
+.agentlint/*.lock
+.agentlint/*.lock.*.stale
+.agentlint/*.tmp

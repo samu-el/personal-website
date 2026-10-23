@@ -19,6 +19,8 @@
     "test:static": "node tests/static.mjs",
     "test": "npm run check && npm run test:unit && npm run build:fast && npm run test:static && node tests/verify.mjs && node tests/interact.mjs",
     "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
+    "lint:agent": "agentlint rules test && agentlint check --all",
+    "agentlint": "agentlint",
     "verify:interact": "node tests/interact.mjs"
   },
   "dependencies": {
@@ -38,6 +40,7 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
+    "@aurelienbbn/agentlint": "0.9.1",
     "playwright": "^1.62.1",
     "prettier": "^3.9.6",
     "prettier-plugin-astro": "^0.14.1",

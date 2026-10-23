@@ -21,7 +21,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          # agentlint needs 22.19 or later.
+          node-version: '>=22.19 <23'
           cache: npm
 
       - run: npm ci
@@ -41,6 +42,11 @@ jobs:
 
       - name: Check formatting
         run: npx prettier --check .
+
+      # The AGENTS.md rules agentlint can read (.agentlint/config.ts). The
+      # Astro, Markdown and CSS half runs in the unit tests above.
+      - name: Agent rules
+        run: npm run lint:agent
 
       # Markup, SEO, feeds and the showcase invariants are properties of the
       # built HTML, so they are read straight out of dist/ before a browser is
