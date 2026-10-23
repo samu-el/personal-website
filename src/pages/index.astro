@@ -57,10 +57,9 @@ const marquee = [
   'Terraform',
 ];
 
-/** The facts, a ruled row under the figures on the same four columns. */
+/** The facts the hero line does not already say (role and city are in it),
+ *  a ruled row under the figures, each across two of their columns. */
 const currently: [string, string][] = [
-  ['Role', 'Software Engineer'],
-  ['Based in', 'Addis Ababa, Ethiopia'],
   ['Focus', 'Full-stack web and mobile: TypeScript, Python, React, PostgreSQL.'],
   ['Timezone', 'EAT / GMT+3'],
 ];
@@ -104,10 +103,7 @@ const currently: [string, string][] = [
         </p>
 
         <div class="hero-enter mt-10 flex flex-wrap gap-3" style="--enter:380ms">
-          <a href={href('/work')} class="btn btn-primary">
-            Work
-            <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
-          </a>
+          <a href={href('/work')} class="btn btn-primary"> Work </a>
           <a href={href('/about')} class="btn btn-ghost">About</a>
         </div>
 
@@ -217,17 +213,13 @@ const currently: [string, string][] = [
         ))
       }
     </dl>
-    <dl class="grid grid-cols-2 border-b-2 border-fg lg:grid-cols-4 lg:divide-x lg:divide-line">
+    <dl class="grid border-b-2 border-fg sm:grid-cols-2 sm:divide-x sm:divide-line">
       {
         currently.map(([term, value], i) => (
           <div
             class:list={[
               'py-6 lg:py-8',
-              i > 0 && 'lg:pl-8',
-              i < 3 && 'lg:pr-8',
-              i % 2 === 1 && 'border-l border-line pl-6 lg:border-l-0 lg:pl-8',
-              i % 2 === 0 && 'pr-6',
-              i >= 2 && 'border-t border-line lg:border-t-0',
+              i === 0 ? 'sm:pr-6 lg:pr-8' : 'border-t border-line sm:border-t-0 sm:pl-6 lg:pl-8',
             ]}
           >
             <dt class="meta">{term}</dt>
@@ -253,11 +245,8 @@ const currently: [string, string][] = [
           />
         ))
       }
-      <div class="lg:col-span-4 lg:self-end lg:pb-16">
-        <a href={href('/work')} class="btn btn-ghost">
-          All work
-          <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
-        </a>
+      <div class="order-last lg:order-none lg:col-span-4 lg:self-end lg:pb-16">
+        <a href={href('/work')} class="btn btn-ghost"> All work </a>
       </div>
       {
         rest.map((p, i) => (
@@ -285,7 +274,6 @@ const currently: [string, string][] = [
         <div class="mt-10 flex flex-wrap gap-3">
           <a href={href('/writing')} class="btn btn-ghost">
             All writing
-            <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
           </a>
           <a href={href('/rss.xml')} class="btn btn-ghost">
             <Icon name="lucide:rss" class="size-4" aria-hidden="true" />

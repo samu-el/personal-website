@@ -3,9 +3,10 @@
  * axes: light/high-contrast-serif/warm · posture: committed (the ink field carries every hero; gold is the signal and the one ticker band) · contrast: pass · fold: pass · imagery: screenshots 4 (npm run shots, the repo's capture of the live sites) · v2.0.0 */
 /* Hallmark · pre-emit critique: P4 H5 E4 S5 R4 V4 · weakest: P, a portfolio is an argument only through its work; led every page with the work running rather than adding claims */
 /* Hallmark · waive 44c · Banner posture on every inner page (/about, /work, /stack, /now, /contact, /writing, /404), the first section shown above the fold · the stamp's hero field takes one posture, and Stage is the home page's */
-/* Hallmark · waive 78 · /about is a Long Document whose Languages, Education and Code heads sit inline in its prose · the timeline head on that page is at the section size */
+/* Hallmark · waive 78 · /about and /work/[id] are Long Documents whose write-up heads sit inline in their prose · the section heads on those pages (Timeline, the project's own name) are at their full sizes */
 /* Hallmark · waive 71 · the flagged h3s sit in figcaptions under their screenshots · each project name is the caption of the capture above it, so it belongs close to that picture */
 /* Hallmark · dropped onPaper, the vertical running head, the watermark numerals, the nav index numbers, the Now and timeline pulse dots, "All rights reserved." · the paper strip only hid grid lines that are gone; the rest were decoration (66, 63, 54) */
+/* Hallmark · dropped lucide:arrow-left · the back links' arrow icon, glued to its label (63); the label carries the direction */
 /* Hallmark · reworded "Get in touch. me@smr.et" to "Get in touch." · 38i named the italic address inside the head; the address now stands under it at the lead size */
 /* Hallmark · reworded "Software engineer in Addis Ababa, Ethiopia. Ten years building web and mobile products: …" to "Software engineer in Addis Ababa, building web and mobile products since 2016." · 58 names a hero line over twelve words */
 /* Hallmark · waive 49b · the wrapping link is a bare URL in the owner's markdown on /work/jeopardy, at 320px only · it is the repository's own address and cannot shorten */
@@ -14,7 +15,7 @@
 /* Hallmark · answered F20 · the stack group with five tools keeps its true count, the owner's list */
 /* Hallmark · dismissed 49 · the flagged label is a code comment inside the theme toggle, whose visible label is an icon */
 /* Hallmark · dismissed F2 · the three dots in index.astro are a spread operator, not prose */
-/* Hallmark · dismissed kept · 00:51 is the footer clock, and the two image names are srcset widths of captures that all remain */
+/* Hallmark · dismissed kept · 00:51 is the footer clock, and the image names are srcset hashes of the captures, which all remain */
 /**
  * The stylesheet, in the order the cascade reads it.
  *

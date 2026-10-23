@@ -20,11 +20,7 @@ const items = await visibleNav();
               <li class:list={[i % 2 === 0 ? 'sm:border-r sm:pr-6' : 'sm:pl-6']}>
                 <a href={href(item.href)} class="group flex items-baseline gap-3 py-4 transition-colors">
                   <span class="display text-title transition-colors group-hover:text-accent">{item.label}</span>
-                  <Icon
-                    name="lucide:arrow-right"
-                    class="ml-auto size-3.5 self-center text-subtle transition-transform duration-300 group-hover:translate-x-1 group-hover:text-accent"
-                    aria-hidden="true"
-                  />
+                  <Icon name="lucide:arrow-right" class="ml-auto size-4 self-center text-subtle" aria-hidden="true" />
                 </a>
               </li>
             ))

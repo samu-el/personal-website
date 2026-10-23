@@ -10,10 +10,10 @@ const description = 'Contact Samuel Mussie, software engineer in Addis Ababa, Et
 
 /** Each row is one email with its subject filled in; the heading is the whole label. */
 const routes = [
-  { heading: 'Project work', icon: 'lucide:package-check', subject: 'Project enquiry' },
-  { heading: 'Roles', icon: 'lucide:briefcase', subject: 'Role enquiry' },
-  { heading: 'AI features', icon: 'lucide:sparkles', subject: 'AI feature' },
-  { heading: 'Anything else', icon: 'lucide:message-square-quote', subject: '' },
+  { heading: 'Project work', subject: 'Project enquiry' },
+  { heading: 'Roles', subject: 'Role enquiry' },
+  { heading: 'AI features', subject: 'AI feature' },
+  { heading: 'Anything else', subject: '' },
 ].map((r) => ({
   ...r,
   href: `mailto:${site.email}${r.subject ? `?subject=${encodeURIComponent(r.subject)}` : ''}`,
@@ -49,18 +49,10 @@ const routes = [
           <li class="ledger-row" data-reveal style={`--reveal-delay:${i * 70}ms`}>
             <a
               href={r.href}
-              class="group grid grid-cols-[2.5rem_1fr_auto] items-baseline gap-4 py-8 transition-colors sm:grid-cols-12 sm:gap-6 lg:py-12"
+              class="group grid grid-cols-[1fr_auto] items-baseline gap-4 py-8 transition-colors sm:gap-6 lg:py-12"
             >
-              <span class="numeral text-[1.75rem] text-subtle sm:col-span-1">{String(i + 1).padStart(2, '0')}</span>
-              <h2 class="display text-section transition-colors group-hover:text-accent sm:col-span-9">{r.heading}</h2>
-              <span class="flex items-center gap-2 self-center text-subtle sm:col-span-2 sm:justify-end">
-                <Icon name={r.icon} class="size-4" aria-hidden="true" />
-                <Icon
-                  name="lucide:arrow-right"
-                  class="size-4 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-accent"
-                  aria-hidden="true"
-                />
-              </span>
+              <h2 class="display text-section transition-colors group-hover:text-accent">{r.heading}</h2>
+              <Icon name="lucide:arrow-right" class="size-5 self-center text-subtle" aria-hidden="true" />
             </a>
           </li>
         ))
