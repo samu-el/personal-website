@@ -126,17 +126,6 @@ its root as well as on `/now-playing.json`.
 
 Then read the table in the next section to tell which side answered.
 
-## Deploying from GitHub Actions
-
-`.github/workflows/worker.yml` typechecks, tests and deploys the Worker on every
-push to `master` that touches `worker/`, or by hand from the Actions tab. It
-uploads the three Spotify secrets from the repository secrets the site build
-already uses. Add two more repository secrets once:
-
-- `CLOUDFLARE_API_TOKEN`: a token with Workers Scripts: Edit on the account and
-  Workers Routes: Edit on the `smr.et` zone.
-- `CLOUDFLARE_ACCOUNT_ID`: the account the `smr.et` zone belongs to.
-
 ## Deploying with Wrangler
 
 The refresh token needs the **`user-read-currently-playing`** scope. The one
