@@ -8,19 +8,27 @@ const items = await visibleNav();
 ---
 
 <Layout title="Not found" description="That page does not exist." path="/404" noindex>
-  <section class="field-ink relative">
-    <div class="wrap grid gap-12 py-16 lg:grid-cols-12 lg:items-end lg:gap-8 lg:py-28">
-      <h1 class="display-xl text-[clamp(4rem,11vw,10rem)] lg:col-span-6">Not found.</h1>
+  <section class="field-ink relative flex overflow-hidden lg:min-h-[70dvh] lg:items-center">
+    <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-50" aria-hidden="true"></div>
+    <div class="wrap relative py-10 lg:py-20">
+      <h1 class="display-hero text-[clamp(3.5rem,14vw,9rem)]">
+        Not <em class="block italic text-accent">found.</em>
+      </h1>
 
       <!-- Every page that does exist: the way on is the answer to the error. -->
-      <nav aria-label="All pages" class="lg:col-span-5 lg:col-start-8">
+      <nav aria-label="All pages" class="mt-10 max-w-2xl lg:mt-14">
         <ul class="ledger sm:grid sm:grid-cols-2">
           {
             items.map((item, i) => (
               <li class:list={[i % 2 === 0 ? 'sm:border-r sm:pr-6' : 'sm:pl-6']}>
                 <a href={href(item.href)} class="group flex items-baseline gap-3 py-4 transition-colors">
-                  <span class="display text-title transition-colors group-hover:text-accent">{item.label}</span>
-                  <Icon name="lucide:arrow-right" class="ml-auto size-4 self-center text-subtle" aria-hidden="true" />
+                  <span class="font-mono text-2xs text-subtle">{item.index}</span>
+                  <span class="text-[0.9375rem] transition-colors group-hover:text-accent">{item.label}</span>
+                  <Icon
+                    name="lucide:arrow-right"
+                    class="ml-auto size-3.5 self-center text-subtle transition-transform duration-300 group-hover:translate-x-1 group-hover:text-accent"
+                    aria-hidden="true"
+                  />
                 </a>
               </li>
             ))

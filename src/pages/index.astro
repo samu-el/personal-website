@@ -4,6 +4,7 @@ import Layout from '@/layouts/Layout.astro';
 import Section from '@/components/Section.astro';
 import ProjectFigure from '@/components/ProjectFigure.astro';
 import PostCard from '@/components/PostCard.astro';
+import Ledger from '@/components/Ledger.astro';
 import { site } from '@/lib/site';
 import { publishedPosts } from '@/lib/posts';
 import { href } from '@/lib/paths';
@@ -12,7 +13,6 @@ import { githubActivity } from '@/lib/feeds';
 import { services } from '@/data/stack';
 import { Icon } from 'astro-icon/components';
 import SocialLinks from '@/components/SocialLinks.astro';
-import { previewPreloads, previewsFor } from '@/lib/previews';
 
 const isPublished = (d: { draft?: boolean }) => import.meta.env.DEV || !d.draft;
 
@@ -20,18 +20,12 @@ const projects = (await getCollection('projects', ({ data }) => isPublished(data
   .filter((p) => p.data.featured && !p.data.hidden)
   .sort((a, b) => b.data.weight - a.data.weight);
 
-/** The heaviest desktop capture leads the hero; the rest make the work
- *  section: the next wide one beside the phone, whose height it can meet,
- *  then the remaining wide ones. */
+/** Two equal columns split on the centre line. The lead screenshot sits
+ *  beside the phone, whose height it can meet; the rest pair up by shape, so
+ *  no row puts a portrait frame beside a 16:10 one with half a column empty. */
 const wide = projects.filter((p) => p.data.device !== 'phone');
 const tall = projects.filter((p) => p.data.device === 'phone');
-const [lead, ...restWide] = wide;
-const pairs = [restWide[0], tall[0]].filter(Boolean);
-const rest = [...restWide.slice(1), ...tall.slice(1)];
-
-/** The hero's capture is the page's LCP. */
-const heroSizes = '(min-width: 1024px) 52vw, 100vw';
-const preload = lead ? await previewPreloads(previewsFor(lead, heroSizes)) : [];
+const ordered = [...wide.slice(0, 1), ...tall.slice(0, 1), ...wide.slice(1), ...tall.slice(1)];
 
 const posts = (await publishedPosts()).slice(0, 3);
 
@@ -62,69 +56,82 @@ const marquee = [
   'Terraform',
 ];
 
-/** The facts the hero line does not already say (role and city are in it),
- *  a ruled row under the figures, each across two of their columns. */
+/** The hero's fact table: role, place, focus, timezone, as a ruled ledger. */
 const currently: [string, string][] = [
+  ['Role', 'Software Engineer'],
+  ['Based in', 'Addis Ababa, Ethiopia'],
   ['Focus', 'Full-stack web and mobile: TypeScript, Python, React, PostgreSQL.'],
   ['Timezone', 'EAT / GMT+3'],
 ];
 ---
 
-<Layout title={site.title} description={site.description} path="/" type="profile" {preload}>
-  <!-- ── Hero: an ink field, edge to edge (Stage) ───────────────────── -->
-  <!-- The name, one sentence and the two actions on five columns; the lead
-       product, captured running, on seven. -->
-  <section class="field-ink hero-stage relative" style="view-transition-name:field">
-    <div class="wrap grid items-center gap-y-12 py-14 lg:grid-cols-[5fr_7fr] lg:gap-x-20 lg:py-16">
-      <div class="min-w-0">
-        <h1 class="display-xl text-[clamp(4rem,8.4vw,8.5rem)] text-accent">
-          <span class="hero-words">
-            {
-              line1.map((w, i) => (
-                <Fragment>
-                  <span class="w" style={`--i:${i}`}>
-                    {w}
-                  </span>{' '}
-                </Fragment>
-              ))
-            }
-            <span class="block">
-              {
-                line2.map((w, i) => (
-                  <Fragment>
-                    <span class="w" style={`--i:${line1.length + i}`}>
-                      {w}
-                    </span>
-                    {i < line2.length - 1 && ' '}
-                  </Fragment>
-                ))
-              }
-            </span>
-          </span>
-        </h1>
+<Layout title={site.title} description={site.description} path="/" type="profile">
+  <!-- ── Hero: an ink field, edge to edge ─────────────────────────── -->
+  <!-- The field runs edge to edge; its content keeps to .wrap, so the name,
+       lede and buttons share an edge with the logo and every section below. -->
+  <section class="field-ink relative overflow-hidden" style="view-transition-name:field">
+    <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true"></div>
 
-        <p class="hero-enter lead mt-8 text-muted lg:mt-10" style="--enter:300ms">
-          Software engineer in Addis Ababa, building web and mobile products since 2016.
-        </p>
+    <div class="wrap relative pb-14 pt-10 lg:pb-24 lg:pt-20">
+      <h1 class="display-hero hero-words text-[clamp(3rem,10.2vw,10rem)]">
+        {
+          line1.map((w, i) => (
+            <Fragment>
+              <span class:list={['w', i === 0 && 'text-accent']} style={`--i:${i}`}>
+                {w}
+              </span>{' '}
+            </Fragment>
+          ))
+        }
+        <em class="block italic text-accent">
+          {
+            line2.map((w, i) => (
+              <Fragment>
+                <span class="w" style={`--i:${line1.length + i}`}>
+                  {w}
+                </span>
+                {i < line2.length - 1 && ' '}
+              </Fragment>
+            ))
+          }
+        </em>
+      </h1>
 
-        <div class="hero-enter mt-10 flex flex-wrap gap-3" style="--enter:380ms">
-          <a href={href('/work')} class="btn btn-primary"> Work </a>
-          <a href={href('/about')} class="btn btn-ghost">About</a>
+      <div class="mt-14 grid gap-10 lg:mt-24 lg:grid-cols-12 lg:gap-8">
+        <!-- Intro -->
+        <div class="lg:col-span-7">
+          <p
+            class="hero-enter max-w-2xl text-[1.125rem] leading-[1.6] text-muted lg:text-[1.5rem] lg:leading-[1.45]"
+            style="--enter:470ms"
+          >
+            Software engineer in Addis Ababa, Ethiopia. Ten years building web and mobile products: Python and
+            TypeScript services, React and Next.js front ends, Flutter and native iOS, and retrieval-augmented AI
+            features.
+          </p>
+
+          <div class="hero-enter mt-10 flex flex-wrap items-center gap-x-8 gap-y-5" style="--enter:570ms">
+            <div class="flex flex-wrap gap-3">
+              <a href={href('/work')} class="btn btn-primary">
+                Work
+                <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
+              </a>
+              <a href={href('/about')} class="btn btn-ghost">About</a>
+            </div>
+
+            <SocialLinks
+              variant="compact"
+              class="flex flex-wrap gap-x-6 gap-y-3"
+              rowClass="hit inline-flex items-center gap-2 meta transition-colors hover:text-fg"
+            />
+          </div>
         </div>
 
-        <SocialLinks
-          variant="compact"
-          class="hero-enter mt-10 flex flex-wrap gap-x-6 gap-y-3"
-          rowClass="hit inline-flex items-center gap-2 text-[0.9375rem] text-muted transition-colors hover:text-fg"
-          iconClass="size-4"
-        />
+        <!-- The facts as a ruled table; its terms are its labels. A div, not an
+             aside: a complementary landmark inside main is not top-level. -->
+        <div class="hero-enter lg:col-span-4 lg:col-start-9" style="--enter:670ms">
+          <Ledger rows={currently} align="columns" class="text-sm lg:mt-1.5" />
+        </div>
       </div>
-
-      {
-        lead && (
-          <ProjectFigure project={lead} eager aspect="aspect-[4/3]" sizes={heroSizes} class="hero-enter min-w-0" />
-        )
-      }
     </div>
   </section>
 
@@ -134,9 +141,9 @@ const currently: [string, string][] = [
       <ul class="flex shrink-0 animate-marquee items-center gap-10 pr-10 lg:gap-14 lg:pr-14">
         {
           [...marquee, ...marquee].map((m) => (
-            <li class="display flex items-center gap-10 whitespace-nowrap text-[clamp(1.5rem,2.6vw,2.25rem)] lg:gap-14">
+            <li class="display flex items-center gap-10 whitespace-nowrap text-[clamp(1.5rem,2.6vw,2.25rem)] italic lg:gap-14">
               {m}
-              <span class="text-[0.5em] opacity-60">◆</span>
+              <span class="text-[0.5em] not-italic opacity-60">◆</span>
             </li>
           ))
         }
@@ -149,46 +156,21 @@ const currently: [string, string][] = [
          (WCAG 2.2.2). Nothing moves under reduced motion, so it is not shown. -->
     <button
       type="button"
-      class="marquee-toggle hit absolute right-3 top-1/2 z-10 grid size-10 -translate-y-1/2 place-items-center rounded-full border border-line-strong bg-bg text-fg transition-colors hover:bg-surface motion-reduce:hidden lg:right-5"
+      class="marquee-toggle hit absolute right-3 top-1/2 z-10 grid size-8 -translate-y-1/2 place-items-center rounded-full border border-line-strong bg-bg text-fg transition-colors hover:bg-surface motion-reduce:hidden lg:right-5"
       aria-pressed="false"
       aria-label="Pause the stack ticker"
       data-marquee-toggle
     >
-      <Icon name="lucide:pause" class="marquee-pause size-4" aria-hidden="true" />
-      <Icon name="lucide:play" class="marquee-play size-4" aria-hidden="true" />
+      <Icon name="lucide:pause" class="marquee-pause size-3.5" aria-hidden="true" />
+      <Icon name="lucide:play" class="marquee-play size-3.5" aria-hidden="true" />
     </button>
   </div>
 
-  <!-- ── Services ─────────────────────────────────────────────────── -->
-  <Section title="Types of work." id="services" split divider={false} gap="m">
-    <ol class="ledger">
-      {
-        services.map((s, i) => (
-          <li
-            class="ledger-row group grid gap-3 py-8 sm:grid-cols-8 sm:items-baseline sm:gap-6 lg:py-10"
-            data-reveal
-            style={`--reveal-delay:${i * 60}ms`}
-          >
-            <h3 class="display text-title sm:col-span-4">{s.title}</h3>
-            <p class="text-base leading-relaxed text-muted sm:col-span-3">{s.body}</p>
-            <Icon
-              name={s.icon}
-              class="hidden size-6 justify-self-end text-subtle transition-colors group-hover:text-accent sm:col-span-1 sm:block"
-              aria-hidden="true"
-            />
-          </li>
-        ))
-      }
-    </ol>
-  </Section>
-
-  <!-- ── Figures and facts ───────────────────────────────────────── -->
-  <!-- Four figures as one ruled row, bounded by heavy rules, with the four
-       facts under them on the same columns. The label says what each is. -->
-  <div class="wrap pb-[var(--section-gap-s)]">
-    <dl
-      class="grid grid-cols-2 border-b border-t-2 border-b-line border-t-fg lg:grid-cols-4 lg:divide-x lg:divide-line"
-    >
+  <!-- ── Metrics ──────────────────────────────────────────────────── -->
+  <!-- Four figures as one ruled row, bounded by heavy rules. Big enough to be
+       read from across the room; the label says what each counts. -->
+  <div class="wrap py-6 lg:py-10">
+    <dl class="grid grid-cols-2 border-y-2 border-fg lg:grid-cols-4 lg:divide-x lg:divide-line">
       {
         liveMetrics.map((m, i) => (
           <div
@@ -202,69 +184,71 @@ const currently: [string, string][] = [
               i >= 2 && 'border-t border-line lg:border-t-0',
             ]}
             data-reveal
-            style={`--reveal-delay:${i * 60}ms`}
+            style={`--reveal-delay:${i * 70}ms`}
           >
             <dt class="meta">{m.label}</dt>
-            <dd class="numeral mt-5 text-[clamp(3rem,6.4vw,6rem)] text-fg" data-count>
+            <dd class="numeral mt-5 text-[clamp(3rem,7.4vw,6rem)] text-fg" data-count>
               {m.value}
             </dd>
           </div>
         ))
       }
     </dl>
-    <dl class="grid border-b-2 border-fg sm:grid-cols-2 sm:divide-x sm:divide-line">
-      {
-        currently.map(([term, value], i) => (
-          <div
-            class:list={[
-              'py-6 lg:py-8',
-              i === 0 ? 'sm:pr-6 lg:pr-8' : 'border-t border-line sm:border-t-0 sm:pl-6 lg:pl-8',
-            ]}
-          >
-            <dt class="meta">{term}</dt>
-            <dd class="mt-2 text-[0.9375rem] leading-snug text-fg">{value}</dd>
-          </div>
-        ))
-      }
-    </dl>
   </div>
 
+  <!-- ── Services ─────────────────────────────────────────────────── -->
+  <Section index="01" title="Types of work." id="services">
+    <ol class="ledger">
+      {
+        services.map((s, i) => (
+          <li
+            class="ledger-row group grid gap-3 py-8 sm:grid-cols-12 sm:items-baseline sm:gap-6 lg:py-11"
+            data-reveal
+            style={`--reveal-delay:${i * 70}ms`}
+          >
+            <span class="row-index numeral text-[1.5rem] text-subtle sm:col-span-1">
+              {String(i + 1).padStart(2, '0')}
+            </span>
+            <h3 class="row-title display text-[clamp(1.75rem,3.8vw,2.9rem)] sm:col-span-6 lg:col-span-5">{s.title}</h3>
+            <p class="text-[0.9375rem] leading-relaxed text-muted sm:col-span-4 lg:col-span-5 lg:text-base">{s.body}</p>
+            <Icon
+              name={s.icon}
+              class="hidden size-5 justify-self-end text-subtle transition-colors duration-300 group-hover:text-accent sm:col-span-1 sm:block"
+              aria-hidden="true"
+            />
+          </li>
+        ))
+      }
+    </ol>
+  </Section>
+
   <!-- ── Selected work ────────────────────────────────────────────── -->
-  <Section title="Selected work." id="work" gap="m">
-    {/* All lazy: below the fold here, unlike the hero's capture. */}
-    <div class="grid gap-x-8 gap-y-16 lg:grid-cols-12 lg:items-center">
+  <Section index="02" title="Selected work." id="work">
+    {/* All lazy: below the fold here, unlike on /work where the first is the LCP. */}
+    <div class="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-x-12 lg:gap-y-16">
       {
-        pairs.map((p, i) => (
+        ordered.map((p, i) => (
           <ProjectFigure
             project={p}
-            delay={i * 60}
-            sizes={p.data.device === 'phone' ? '19rem' : '(min-width: 1024px) 60vw, 100vw'}
-            class={p.data.device === 'phone' ? 'lg:col-span-4' : 'lg:col-span-8'}
+            delay={i * 80}
             captionClass={p.data.device === 'phone' ? 'mx-auto max-w-[19rem]' : ''}
           />
         ))
       }
-      <div class="order-last lg:order-none lg:col-span-4 lg:self-end lg:pb-16">
-        <a href={href('/work')} class="btn btn-ghost"> All work </a>
-      </div>
-      {
-        rest.map((p, i) => (
-          <ProjectFigure
-            project={p}
-            delay={i * 60}
-            sizes={p.data.device === 'phone' ? '19rem' : '(min-width: 1024px) 60vw, 100vw'}
-            class={p.data.device === 'phone' ? 'lg:col-span-4' : 'lg:col-span-8'}
-            captionClass={p.data.device === 'phone' ? 'mx-auto max-w-[19rem]' : ''}
-          />
-        ))
-      }
+    </div>
+
+    <div class="mt-12 lg:mt-16">
+      <a href={href('/work')} class="btn btn-ghost">
+        All work
+        <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
+      </a>
     </div>
   </Section>
 
   <!-- ── Writing (only when there is something published) ──────────── -->
   {
     posts.length > 0 && (
-      <Section title="Writing." id="writing">
+      <Section index="03" title="Writing." id="writing">
         <div>
           {posts.map((post, i) => (
             <PostCard post={post} index={i} />
@@ -273,6 +257,7 @@ const currently: [string, string][] = [
         <div class="mt-10 flex flex-wrap gap-3">
           <a href={href('/writing')} class="btn btn-ghost">
             All writing
+            <Icon name="lucide:arrow-right" class="size-4" aria-hidden="true" />
           </a>
           <a href={href('/rss.xml')} class="btn btn-ghost">
             <Icon name="lucide:rss" class="size-4" aria-hidden="true" />

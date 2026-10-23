@@ -137,10 +137,8 @@ imported by `global.css` in source order, plus `fonts`.
 - **Colour** is two token sets, light on `:root` and dark on `.dark`, exposed to Tailwind as
   semantic utilities (`bg-bg`, `text-muted`, `border-line`, `text-accent`). Nothing in a
   component references a raw hex value, so a palette change is a single edit.
-- **Type** is Instrument Serif for display and Geist for body, UI, labels and metadata (sentence
-  case, untracked); Geist Mono is kept for code only. Self-hosted, latin subsets only.
-- **The locked system** is [`design.md`](design.md): tokens, roles, controls and motion, read
-  first by any Hallmark run. `.hallmark/` holds that tool's records.
+- **Type** is three families: Instrument Serif for display, Geist for body and UI, Geist Mono
+  for labels and metadata. Self-hosted, latin subsets only, ~112 KB total.
 - **Theme** is three-state: system → light → dark, cycled by the header toggle, resolved by an
   inline script before first paint so there is no flash.
 - **Motion** is gated three ways and every duration comes from one scale.

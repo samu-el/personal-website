@@ -8,6 +8,7 @@
  */
 import Layout from '@/layouts/Layout.astro';
 import { site } from '@/lib/site';
+import { navIndex } from '@/lib/posts';
 import { githubActivity, recentFilms, recentTracks } from '@/lib/feeds';
 import { Icon } from 'astro-icon/components';
 import FeedSection from '@/components/FeedSection.astro';
@@ -15,6 +16,7 @@ import NowPlaying from '@/components/NowPlaying.astro';
 import PageHeader from '@/components/PageHeader.astro';
 import Thumb from '@/components/Thumb.astro';
 
+const index = await navIndex('/now');
 const [github, films, tracks] = await Promise.all([githubActivity(), recentFilms(), recentTracks()]);
 
 /** "3 days ago": coarse on purpose, so a stale build cannot look precise. */
@@ -29,11 +31,8 @@ function ago(iso: string): string {
   return `${years} ${years === 1 ? 'year' : 'years'} ago`;
 }
 
-/** Letterboxd stores ratings as decimals; whole stars, then a half where there is one. */
-const stars = (rating: number) => [
-  ...Array.from({ length: Math.floor(rating) }, () => 'lucide:star'),
-  ...(rating % 1 ? ['lucide:star-half'] : []),
-];
+/** Half-star ratings render as glyphs; Letterboxd stores them as decimals. */
+const stars = (rating: number) => '★'.repeat(Math.floor(rating)) + (rating % 1 ? '½' : '');
 
 /** Rows arrive in sequence, but only the first handful are worth staggering. */
 const stagger = (i: number) => `--reveal-delay:${Math.min(i, 6) * 60}ms`;
@@ -43,8 +42,8 @@ const stamp = `${meta} shrink-0 tabular-nums`;
 const outbound = { target: '_blank', rel: 'noopener noreferrer' };
 ---
 
-<Layout title="Now" description={`Recent public repository activity and recent films, from ${site.name}.`} path="/now">
-  <PageHeader>Lately.</PageHeader>
+<Layout title="Now" description={`Recent public repository activity and recent films · ${site.name}.`} path="/now">
+  <PageHeader {index} compact>Lately.</PageHeader>
 
   <NowPlaying />
 
@@ -116,7 +115,7 @@ const outbound = { target: '_blank', rel: 'noopener noreferrer' };
           slot="aside"
           href="https://letterboxd.com/rocin4nte/"
           {...outbound}
-          class:list={[meta, 'hit flex items-center gap-2 transition-colors hover:text-accent']}
+          class:list={[meta, 'hit flex items-center gap-1.5 transition-colors hover:text-accent']}
         >
           <Icon name="simple-icons:letterboxd" class="size-3.5" aria-hidden="true" />
           Letterboxd
@@ -127,19 +126,15 @@ const outbound = { target: '_blank', rel: 'noopener noreferrer' };
             <a href={film.url} {...outbound} class="group flex items-center gap-4 py-3">
               <Thumb src={film.poster} width={60} height={90} class="h-[3.375rem] w-9" />
               <span class="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-4 gap-y-1.5">
-                <span class="display text-title text-fg transition-colors group-hover:text-accent">{film.title}</span>
-                {film.year && <span class="meta tabular-nums">{film.year}</span>}
+                <span class="text-[1.0625rem] tracking-tight text-fg transition-colors group-hover:text-accent">
+                  {film.title}
+                </span>
+                {film.year && <span class="font-mono text-2xs tracking-wide text-subtle">{film.year}</span>}
                 {film.rewatch && <span class="chip">Rewatch</span>}
                 <span class="ml-auto flex items-center gap-4">
                   {film.rating !== null && (
-                    <span
-                      class="flex items-center gap-0.5 text-accent"
-                      role="img"
-                      aria-label={`${film.rating} out of 5`}
-                    >
-                      {stars(film.rating).map((icon) => (
-                        <Icon is:inline name={icon} class="size-4 [&_path]:fill-current" aria-hidden="true" />
-                      ))}
+                    <span class="text-sm text-accent" aria-label={`${film.rating} out of 5`}>
+                      {stars(film.rating)}
                     </span>
                   )}
                   <span class={stamp}>{ago(film.watchedAt)}</span>

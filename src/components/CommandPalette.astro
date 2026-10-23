@@ -127,8 +127,8 @@ const goto: Record<string, string> = {
     max-height: none;
   }
   .cmdk::backdrop {
-    /* A solid veil from the tokens: the page is set aside, not frosted. */
-    background-color: var(--color-scrim);
+    background-color: rgb(0 0 0 / 0.45);
+    backdrop-filter: blur(3px);
   }
   .cmdk[open] {
     animation: cmdk-in 0.22s var(--ease-out-quint) both;
@@ -152,8 +152,10 @@ const goto: Record<string, string> = {
      stamps its scope attribute onto markup present at build time. */
   :global(.cmdk-group) {
     padding: 0.75rem 0.75rem 0.35rem;
-    font-size: var(--text-label);
-    font-weight: 500;
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
     color: var(--color-subtle);
   }
 

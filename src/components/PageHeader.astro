@@ -1,19 +1,35 @@
 ---
 /**
- * The banner every inner page opens with: an ink field the width of the
- * viewport and the headline in paper, set at the display size. Nothing else:
- * no eyebrow, no subtitle. The headline names the page; what belongs up here
- * (the contact buttons, the address) goes in `after`.
+ * The header block every inner page opens with: an ink field the width of the
+ * viewport, the page's index set huge in gold behind it, and the headline in
+ * paper. Nothing else: no eyebrow, no subtitle. The headline names the page;
+ * an action that belongs up here (the contact buttons) goes in `after`.
  *
- * One component so the pages cannot drift from each other, and so the field
- * and the reveal timings are decided once. Banner posture: the first section
- * shows above the fold.
+ * One component so the pages cannot drift from each other, and so the field,
+ * the watermark and the reveal timings are decided once.
  */
+interface Props {
+  /** Two-digit index from the nav, e.g. "02". The watermark; decoration only. */
+  index?: string;
+  /** Tighter vertical rhythm for pages whose body starts with a big element. */
+  compact?: boolean;
+}
+
+const { index, compact = false } = Astro.props;
 ---
 
-<section class="field-ink relative" style="view-transition-name:field">
-  <div class="wrap pb-14 pt-14 lg:pb-20 lg:pt-24">
-    <h1 class="display-xl max-w-[16ch] text-display" data-reveal>
+<section class="field-ink relative overflow-hidden" style="view-transition-name:field">
+  <div class="pointer-events-none absolute inset-0 grid-lines-12 opacity-60" aria-hidden="true"></div>
+  <div class:list={['wrap relative', compact ? 'py-12 lg:py-20' : 'py-14 lg:py-32']}>
+    {
+      index && (
+        <span class="rail-index rail-index--gold" aria-hidden="true">
+          {index}
+        </span>
+      )
+    }
+
+    <h1 class="display-hero relative text-[clamp(3rem,8.6vw,7rem)] lg:max-w-[66%]" data-reveal>
       <slot />
     </h1>
 

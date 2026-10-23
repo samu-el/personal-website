@@ -36,3 +36,9 @@ export async function visibleNav(): Promise<NavItem[]> {
     .filter((i) => writing || i.href !== '/writing')
     .map((item, i) => ({ ...item, index: String(i + 1).padStart(2, '0') }));
 }
+
+/** Eyebrow index for a page, e.g. "03" for /work. Empty if it is not in the nav. */
+export async function navIndex(path: string): Promise<string> {
+  const items = await visibleNav();
+  return items.find((i) => i.href === path)?.index ?? '';
+}

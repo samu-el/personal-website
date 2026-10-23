@@ -1,8 +1,7 @@
 /* ── Scroll-reveal (progressive; content is visible without JS) ──── */
 @layer utilities {
-  /* Visible by default; JS adds .reveal-pending only to what it observes. */
-  /* Scoped to .js as well as the class the observer adds: content is never
-     hidden at rest by CSS alone. */
+  /* Visible by default; JS adds .reveal-pending only to what it observes.
+     Scoped to .js as well, so content is never hidden at rest by CSS alone. */
   .js [data-reveal].reveal-pending {
     opacity: 0;
     transform: translate3d(0, 14px, 0);
@@ -20,6 +19,16 @@
       opacity: 1;
       transform: none;
     }
+  }
+
+  .grid-lines {
+    background-image: linear-gradient(to right, var(--color-line) 1px, transparent 1px);
+    background-size: 25% 100%;
+  }
+  /* Twelve columns, for the pages built on them. */
+  .grid-lines-12 {
+    background-image: linear-gradient(to right, var(--color-line) 1px, transparent 1px);
+    background-size: calc(100% / 12) 100%;
   }
 
   .mask-fade-r {
@@ -72,6 +81,11 @@
 
 /* ── Micro-interactions ─────────────────────────────────────────── */
 @layer components {
+  /* Cards settle upward rather than only gaining a shadow. */
+  .card:hover {
+    transform: translateY(-2px);
+  }
+
   /* Arrows lead the eye out of the button they sit in. */
   .btn [data-icon],
   .btn svg {
@@ -147,12 +161,70 @@
   .ledger-row:focus-within::after {
     transform: scaleX(1);
   }
+  .ledger-row .row-index {
+    transition: color var(--t-1) var(--ease-out-quint);
+  }
+  .ledger-row .row-title {
+    transition: transform var(--t-3) var(--ease-out-quint);
+  }
+  .ledger-row:hover .row-title,
+  .ledger-row:focus-within .row-title {
+    transform: translateX(0.5rem);
+  }
 
   /* The text around the headline, timed to follow the last word in. */
   .js .hero-enter {
     opacity: 0;
     animation: fade-up 0.62s var(--ease-out-quint) forwards;
     animation-delay: var(--enter, 560ms);
+  }
+
+  /* Watermarks drift slower than the page, so they read as a layer behind it.
+     Gated on motion itself: a scroll timeline ignores the global duration
+     clamp. Kept within the margin components.css leaves each numeral, and
+     off the header's, which its clipping field would crop. */
+  @media (prefers-reduced-motion: no-preference) {
+    @supports (animation-timeline: view()) {
+      .rail-index:not(.rail-index--gold) {
+        /* Longhands: the minifier folds the shorthand and Chromium drops it. */
+        animation-name: drift;
+        animation-duration: auto;
+        animation-timing-function: linear;
+        animation-fill-mode: both;
+        animation-timeline: view();
+      }
+    }
+  }
+  @keyframes drift {
+    from {
+      translate: 0 0.75rem;
+    }
+    to {
+      translate: 0 -0.75rem;
+    }
+  }
+
+  /* Lift and tilt in one transform so they cannot fight, from variables the
+     pointer script sets. Outranks .card:hover, which wins otherwise. */
+  .card.frame-card,
+  .card.frame-card:hover {
+    transform: perspective(1200px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) translateY(var(--lift, 0px));
+    /* From variables, so the state below shortens them without restating. */
+    transition:
+      transform var(--tilt-t, var(--t-3)) var(--tilt-e, var(--ease-out-quint)),
+      border-color var(--t-2) var(--ease-out-quint),
+      box-shadow var(--t-2) var(--ease-out-quint);
+    will-change: transform;
+  }
+  /* While tracking, the tilt is a reading rather than a destination: 420ms of
+     easing lagged the hand by half a second. The long ease returns to settle. */
+  .card.frame-card[data-tracking] {
+    --tilt-t: 90ms;
+    --tilt-e: linear;
+  }
+  .group\/frame:hover .frame-card,
+  .group\/row:hover .frame-card {
+    --lift: -4px;
   }
 
   /* Leans by `translate`, not `transform`, so the :active press still lands. */
@@ -186,6 +258,10 @@
 /* Hover states that have to beat a utility on the same element: utilities are
    the last layer, so a components-layer rule loses however specific it is. */
 @layer utilities {
+  .ledger-row:hover .row-index,
+  .ledger-row:focus-within .row-index {
+    color: var(--color-accent);
+  }
   /* The ticker pauses under the pointer, so a word can actually be read, and
      by its toggle, which a keyboard or a thumb can reach. Not on focus: the
      toggle is the only focusable thing here, and pressing play while focused

@@ -1,5 +1,6 @@
 ---
 import Layout from '@/layouts/Layout.astro';
+import { navIndex } from '@/lib/posts';
 import PostCard from '@/components/PostCard.astro';
 import { publishedPosts } from '@/lib/posts';
 import { href } from '@/lib/paths';
@@ -12,15 +13,17 @@ const tags = [...new Set(posts.flatMap((p) => p.data.tags))].sort();
 const title = 'Writing';
 const description =
   'Essays by Samuel Mussie on hiring senior engineers, running distributed teams, shipping RAG systems, and why African-language AI is an unfunded problem rather than a hard one.';
+
+const index = await navIndex('/writing');
 ---
 
 <Layout {title} {description} path="/writing" noindex={posts.length === 0}>
-  <PageHeader>
-    Writing.
+  <PageHeader {index}>
+    Writing<em class="italic text-accent">.</em>
     <div slot="after" class="relative mt-10 flex flex-wrap items-center gap-2" data-reveal style="--reveal-delay:120ms">
       {
         posts.length > 0 && (
-          <a href={href('/rss.xml')} class="btn btn-ghost mr-2">
+          <a href={href('/rss.xml')} class="btn btn-ghost mr-2 !px-4 !py-2 !text-[0.8125rem]">
             <Icon name="lucide:rss" class="size-3.5" aria-hidden="true" />
             RSS
           </a>
@@ -40,7 +43,7 @@ const description =
 
   {
     posts.length > 0 ? (
-      <div class="wrap sec-follow">
+      <div class="wrap py-10 lg:py-20">
         <div class="grid lg:grid-cols-12">
           <div class="lg:col-span-10">
             {posts.map((post, i) => (
@@ -50,8 +53,8 @@ const description =
         </div>
       </div>
     ) : (
-      <div class="wrap sec-follow">
-        <p class="lead text-muted">Nothing published yet.</p>
+      <div class="wrap py-10 lg:py-14">
+        <p class="text-muted">Nothing published yet.</p>
       </div>
     )
   }
