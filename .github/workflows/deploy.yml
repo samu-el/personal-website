@@ -3,6 +3,22 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [master, main]
+    # Files the site does not read. A push that touches only these has
+    # nothing new to publish.
+    paths-ignore:
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'PROFILE.md'
+      - 'design.md'
+      - 'docs/**'
+      - '.hallmark/**'
+      - '.claude/**'
+      - '.agentlint/**'
+      - 'tests/**'
+      - 'worker/**'
+      - 'LICENSE'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/previews.yml'
   # The Now page reads GitHub and Letterboxd at build time; a daily rebuild
   # keeps both current without a push. 05:00 UTC is 08:00 in Addis Ababa.
   schedule:
@@ -21,8 +37,14 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  # One job, not build then deploy: Actions bills each job rounded up to a
+  # whole minute, and the two together ran in about 40 s.
+  deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 6
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -65,12 +87,5 @@ jobs:
         with:
           path: dist
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
       - id: deployment
         uses: actions/deploy-pages@v4

@@ -4,9 +4,15 @@ name: CI
 # twice. Deploys (deploy.yml) build the site again on master, so nothing is lost there either.
 on:
   pull_request:
+    # Named files, not '**.md': the project pages in src/content/ are Markdown
+    # and are built into the site.
     paths-ignore:
-      - '**.md'
+      - 'README.md'
+      - 'AGENTS.md'
+      - 'PROFILE.md'
+      - 'design.md'
       - 'docs/**'
+      - '.hallmark/**'
       - 'LICENSE'
 
 concurrency:
@@ -16,6 +22,9 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
+    # A normal run takes under two minutes. The cap stops a stuck step from
+    # billing a quarter of an hour.
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@v4
 
@@ -54,10 +63,12 @@ jobs:
       - name: Static checks over the built site
         run: npm run test:static
 
-      - name: Install Chromium for the smoke suite
-        run: npx playwright install --with-deps chromium
-
+      # No Chromium download: the runner image ships Google Chrome, and the
+      # harness launches whatever CHROMIUM_PATH names. The download plus its
+      # apt dependencies took 30 s on a good day and 13 min on a bad one.
       - name: Browser checks over the built site
+        env:
+          CHROMIUM_PATH: /usr/bin/google-chrome
         run: |
           npx astro preview --port 4321 &
           npx wait-on http://localhost:4321/ --timeout 60000
@@ -66,4 +77,6 @@ jobs:
       # Same server: the interaction suite drives the pointer, the keyboard
       # and the scroll, which no static check can stand in for.
       - name: Interaction test the built site
+        env:
+          CHROMIUM_PATH: /usr/bin/google-chrome
         run: npm run verify:interact
