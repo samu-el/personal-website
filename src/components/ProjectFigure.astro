@@ -1,36 +1,33 @@
 ---
 import type { CollectionEntry } from 'astro:content';
+import { Icon } from 'astro-icon/components';
 import PreviewFrame from '@/components/PreviewFrame.astro';
 import { href } from '@/lib/paths';
 
-/** A screenshot captioned by its title alone, as the home page shows it.
+/** A framed screenshot captioned by its title alone, as the home page shows it.
  *  Kind and status are on the project's own page. */
 interface Props {
   project: CollectionEntry<'projects'>;
   delay?: number;
   eager?: boolean;
-  sizes?: string;
-  aspect?: string;
   captionClass?: string;
-  class?: string;
 }
-const {
-  project,
-  delay = 0,
-  eager = false,
-  sizes,
-  aspect,
-  captionClass = '',
-  class: className = '',
-} = Astro.props as Props;
+const { project, delay = 0, eager = false, captionClass = '' } = Astro.props as Props;
 const d = project.data;
 ---
 
-<figure data-reveal style={`--reveal-delay:${delay}ms`} class={className}>
-  <PreviewFrame {project} {eager} {sizes} {aspect} />
-  <figcaption class:list={['mt-5', captionClass]}>
-    <h3 class="display text-title" style={`view-transition-name:project-${project.id}`}>
-      <a href={href(`/work/${project.id}`)} class="link">{d.title}</a>
+<figure data-reveal style={`--reveal-delay:${delay}ms`}>
+  <PreviewFrame {project} {eager} />
+  <figcaption class:list={['mt-4', captionClass]}>
+    <h3 class="display text-[1.5rem]" style={`view-transition-name:project-${project.id}`}>
+      <a href={href(`/work/${project.id}`)} class="group/link">
+        <span class="link">{d.title}</span>
+        <Icon
+          name="lucide:arrow-right"
+          class="ml-0.5 inline-block size-[0.7em] -translate-y-px text-subtle transition-transform duration-300 group-hover/link:translate-x-1 group-hover/link:text-accent"
+          aria-hidden="true"
+        />
+      </a>
     </h3>
   </figcaption>
 </figure>

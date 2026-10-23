@@ -1,4 +1,5 @@
 ---
+import { Icon } from 'astro-icon/components';
 import { href } from '@/lib/paths';
 
 /** The one way back out of a detail page. */
@@ -10,8 +11,13 @@ const { to, label } = Astro.props as Props;
 ---
 
 <nav aria-label="Breadcrumb" class="mb-6 lg:mb-10">
-  <!-- The label carries the direction; .hit for a thumb. -->
-  <a href={href(to)} class="hit meta transition-colors hover:text-fg">
+  <!-- On paper, so a header's column rules pass under it; .hit for a thumb. -->
+  <a href={href(to)} class="hit group inline-flex items-center gap-2 bg-bg meta transition-colors hover:text-fg">
+    <Icon
+      name="lucide:arrow-left"
+      class="size-3 transition-transform duration-300 group-hover:-translate-x-0.5"
+      aria-hidden="true"
+    />
     {label}
   </a>
 </nav>

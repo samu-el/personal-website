@@ -16,9 +16,6 @@
     -webkit-text-size-adjust: 100%;
     scroll-behavior: smooth;
     scrollbar-gutter: stable;
-    scrollbar-width: thin;
-    scrollbar-color: var(--color-subtle) var(--color-bg);
-    caret-color: var(--color-accent);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -69,7 +66,6 @@
     text-wrap: balance;
     overflow-wrap: break-word;
     min-width: 0;
-    font-synthesis: none;
   }
 
   p {
@@ -82,7 +78,7 @@
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-focus);
+    outline: 2px solid var(--color-accent);
     outline-offset: 3px;
     border-radius: 2px;
   }

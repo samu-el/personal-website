@@ -27,7 +27,7 @@ const { bareFooter = false, ...head } = Astro.props;
 ---
 
 <!doctype html>
-<html lang="en" class="scroll-pt-24 overflow-x-clip" data-email={site.email}>
+<html lang="en" class="scroll-pt-24" data-email={site.email}>
   <head>
     <BaseHead {...head} />
     <script is:inline>
@@ -62,7 +62,7 @@ const { bareFooter = false, ...head } = Astro.props;
       })();
     </script>
   </head>
-  <body class="min-h-dvh overflow-x-clip antialiased">
+  <body class="min-h-dvh antialiased">
     <Header />
     <main id="main">
       <slot />

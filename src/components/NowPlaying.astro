@@ -13,7 +13,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
 ---
 
 <section id="now-playing" hidden data-state="loading" data-endpoint={endpoint} aria-busy="true" class="scroll-mt-24">
-  <div class="wrap pt-16 lg:pt-24">
+  <div class="wrap py-10 lg:py-16">
     <a
       id="np-link"
       href="https://open.spotify.com/"
@@ -21,11 +21,19 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       rel="noopener noreferrer"
       aria-hidden="true"
       tabindex="-1"
-      class="group relative block overflow-hidden rounded-xl border border-line bg-surface p-6 transition-colors hover:border-line-strong sm:p-8"
+      class="group relative block overflow-hidden rounded-xl border border-line bg-surface p-5 transition-colors hover:border-line-strong sm:p-7"
     >
+      <!-- Warmth behind the sleeve, so the card is not a flat rectangle. -->
+      <div
+        class="pointer-events-none absolute -right-16 -top-16 size-64 rounded-full opacity-0 blur-3xl transition-opacity duration-700 group-hover:opacity-100"
+        style="background:radial-gradient(circle,rgb(var(--c-accent)/0.35),transparent 70%)"
+        aria-hidden="true"
+      >
+      </div>
+
       <div class="relative flex items-center gap-5 sm:gap-7">
         <div class="min-w-0 flex-1">
-          <p class="meta flex items-center gap-2.5 whitespace-nowrap">
+          <p class="flex items-center gap-2.5 whitespace-nowrap meta sm:tracking-[0.14em]">
             <span id="np-eq" class="eq" aria-hidden="true">
               <span></span><span></span><span></span><span></span>
             </span>
@@ -54,7 +62,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
               </div>
             </div>
             <!-- The times carry this to a screen reader; the bar is decoration. -->
-            <p class="meta mt-2 flex justify-between tabular-nums">
+            <p class="mt-2 flex justify-between font-mono text-2xs tabular-nums text-subtle">
               <span id="np-elapsed"><span class="sk sk-time"></span></span>
               <span id="np-duration"><span class="sk sk-time"></span></span>
             </p>
@@ -83,6 +91,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
       </div>
     </a>
   </div>
+  <div class="rule"></div>
 </section>
 
 <!-- Before the first paint, so the skeleton is already holding the card's
@@ -180,7 +189,7 @@ const endpoint = import.meta.env.PUBLIC_NOW_PLAYING_URL || href('/api/now-playin
   .eq {
     display: inline-flex;
     align-items: flex-end;
-    gap: var(--space-3xs);
+    gap: 2.5px;
     height: 0.9rem;
   }
   .eq > span {

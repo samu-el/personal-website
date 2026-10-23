@@ -25,7 +25,7 @@ const minutes = post.data.readingTime ?? readingTime(post.body);
       <span class="text-[0.9375rem] tracking-tight text-fg transition-colors group-hover:text-accent">
         {post.data.title}
       </span>
-      <span class="meta shrink-0 tabular-nums">
+      <span class="shrink-0 font-mono text-2xs tracking-wide text-subtle">
         {formatDate(post.data.pubDate, { day: undefined, month: 'short' })}
       </span>
     </a>
@@ -37,13 +37,13 @@ const minutes = post.data.readingTime ?? readingTime(post.body);
     >
       <a href={href(`/writing/${post.id}`)} class="grid gap-4 lg:grid-cols-12 lg:gap-8">
         <div class="lg:col-span-3">
-          <p class="meta tabular-nums">
+          <p class="flex items-center gap-2.5 meta">
             <time datetime={post.data.pubDate.toISOString()}>{formatDate(post.data.pubDate)}</time>
           </p>
-          <p class="meta mt-1">{minutes} min read</p>
+          <p class="mt-1.5 font-mono text-2xs tracking-wide text-subtle">{minutes} min read</p>
         </div>
         <div class="lg:col-span-9">
-          <h3 class="display text-title">
+          <h3 class="text-[clamp(1.25rem,2.4vw,1.6rem)] font-medium leading-snug tracking-tight">
             <span class="link">{post.data.title}</span>
             <Icon
               name="lucide:arrow-right"

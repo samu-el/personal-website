@@ -13,12 +13,12 @@ const { title, rule = true } = Astro.props as Props;
 
 <section class="scroll-mt-24">
   {rule && <div class="rule" />}
-  <div class="wrap sec">
+  <div class="wrap py-10 lg:py-20">
     <div class="flex flex-wrap items-baseline justify-between gap-4">
-      <h2 class="display text-section" data-reveal>{title}</h2>
+      <h2 class="meta" data-reveal>{title}</h2>
       <slot name="aside" />
     </div>
-    <ul class="mt-10 divide-y divide-line border-y border-line lg:mt-14">
+    <ul class="mt-6 divide-y divide-line border-y border-line">
       <slot />
     </ul>
     <slot name="after" />

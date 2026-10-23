@@ -4,8 +4,7 @@
 @layer components {
   .prose {
     font-size: 1.0625rem;
-    line-height: 1.7;
-    max-width: 60ch;
+    line-height: 1.75;
     color: var(--color-fg);
   }
   .prose > * + * {
@@ -17,7 +16,7 @@
   }
   .prose h2 {
     font-family: var(--font-display);
-    font-size: var(--text-title);
+    font-size: clamp(1.6rem, 3.2vw, 2.05rem);
     line-height: 1.1;
     letter-spacing: -0.015em;
     margin-top: 2.6em;
@@ -31,9 +30,11 @@
     margin-bottom: -0.5em;
   }
   .prose h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-subtle);
     margin-top: 2em;
   }
   .prose a {
@@ -82,8 +83,8 @@
     list-style: decimal;
   }
   .prose ol > li::marker {
-    font-variant-numeric: tabular-nums;
-    font-size: 0.9em;
+    font-family: var(--font-mono);
+    font-size: 0.85em;
     color: var(--color-subtle);
   }
   .prose ol > li + li {
@@ -143,10 +144,11 @@
     border-bottom: 1px solid var(--color-line);
   }
   .prose th {
-    font-size: var(--text-label);
-    font-weight: 600;
-    white-space: nowrap;
-    color: var(--color-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-2xs);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--color-subtle);
   }
 
   /* Shiki dual-theme wiring */
