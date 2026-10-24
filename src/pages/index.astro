@@ -20,9 +20,9 @@ const projects = (await getCollection('projects', ({ data }) => isPublished(data
   .filter((p) => p.data.featured && !p.data.hidden)
   .sort((a, b) => b.data.weight - a.data.weight);
 
-/** Two equal columns split on the centre line. The lead screenshot sits
- *  beside the phone, whose height it can meet; the rest pair up by shape, so
- *  no row puts a portrait frame beside a 16:10 one with half a column empty. */
+/** The lead screenshot sits beside the phone, eight columns to its four, so
+ *  the two frames stand about as tall and their captions share a line; the
+ *  rest pair up by shape in two equal columns. */
 const wide = projects.filter((p) => p.data.device !== 'phone');
 const tall = projects.filter((p) => p.data.device === 'phone');
 const ordered = [...wide.slice(0, 1), ...tall.slice(0, 1), ...wide.slice(1), ...tall.slice(1)];
@@ -137,7 +137,7 @@ const currently: [string, string][] = [
 
   <!-- ── Stack ticker: a gold band ─────────────────────────────────── -->
   <div class="marquee-band field-gold relative py-5 lg:py-6">
-    <div class="mask-fade-r flex overflow-hidden" aria-hidden="true">
+    <div class="mask-fade-r flex overflow-hidden" aria-hidden="true" data-audit-clip-ok>
       <ul class="flex shrink-0 animate-marquee items-center gap-10 pr-10 lg:gap-14 lg:pr-14">
         {
           [...marquee, ...marquee].map((m) => (
@@ -225,15 +225,21 @@ const currently: [string, string][] = [
   <!-- ── Selected work ────────────────────────────────────────────── -->
   <Section index="02" title="Selected work." id="work">
     {/* All lazy: below the fold here, unlike on /work where the first is the LCP. */}
-    <div class="grid gap-10 lg:grid-cols-2 lg:items-center lg:gap-x-12 lg:gap-y-16">
+    <div class="grid gap-10 lg:grid-cols-12 lg:items-end lg:gap-x-12 lg:gap-y-16">
       {
-        ordered.map((p, i) => (
-          <ProjectFigure
-            project={p}
-            delay={i * 80}
-            captionClass={p.data.device === 'phone' ? 'mx-auto max-w-[19rem]' : ''}
-          />
-        ))
+        ordered.map((p, i) => {
+          const phone = p.data.device === 'phone';
+          const lead = i === 0 && ordered[1]?.data.device === 'phone';
+          return (
+            <ProjectFigure
+              project={p}
+              delay={i * 80}
+              class={phone ? 'lg:col-span-4' : lead ? 'lg:col-span-8' : 'lg:col-span-6'}
+              frameClass={phone ? 'lg:max-w-[15rem]' : undefined}
+              captionClass={phone ? 'mx-auto max-w-[16rem] sm:max-w-[19rem] lg:max-w-[15rem]' : ''}
+            />
+          );
+        })
       }
     </div>
 

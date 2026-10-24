@@ -23,17 +23,18 @@ npm install
 npm run dev        # http://localhost:4321
 ```
 
-| Command              | What it does                                             |
-| -------------------- | -------------------------------------------------------- |
-| `npm run dev`        | Dev server with hot reload                               |
-| `npm run build`      | Typecheck, then build to `dist/`                         |
-| `npm run build:fast` | Build without the typecheck (what CI uses after `check`) |
-| `npm run check`      | `astro check`: types across `.astro`, `.ts`, content     |
-| `npm run preview`    | Serve the built `dist/` locally                          |
-| `npm run images`     | Regenerate `public/og.png` and the app icons             |
-| `npm run diagrams`   | Regenerate the architecture diagrams from `scenes.mjs`   |
-| `npm run shots`      | Re-capture the project screenshots                       |
-| `npm run test:unit`  | The Node suites: feed parsers and the poll cadence       |
+| Command                | What it does                                                |
+| ---------------------- | ----------------------------------------------------------- |
+| `npm run dev`          | Dev server with hot reload                                  |
+| `npm run build`        | Typecheck, then build to `dist/`                            |
+| `npm run build:fast`   | Build without the typecheck (what CI uses after `check`)    |
+| `npm run check`        | `astro check`: types across `.astro`, `.ts`, content        |
+| `npm run preview`      | Serve the built `dist/` locally                             |
+| `npm run images`       | Regenerate `public/og.png` and the app icons                |
+| `npm run diagrams`     | Regenerate the architecture diagrams from `scenes.mjs`      |
+| `npm run shots`        | Re-capture the project screenshots                          |
+| `npm run test:unit`    | The Node suites: feed parsers and the poll cadence          |
+| `npm run audit:layout` | Layout audit of every page at six viewports, light and dark |
 
 Node 22+ is expected (see `.github/workflows/`).
 

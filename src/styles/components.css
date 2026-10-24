@@ -98,14 +98,14 @@
     top: calc(1rem - 0.1em);
     right: calc(var(--wrap-pad, 0px) + 0.03em);
     bottom: auto;
-    font-size: clamp(7rem, 22vw, 16rem);
+    font-size: clamp(6rem, 18vw, 10rem);
     color: rgb(var(--c-accent) / 0.22);
   }
   @media (min-width: 64rem) {
     .rail-index--gold {
       top: calc(1.5rem - 0.1em);
       bottom: auto;
-      font-size: clamp(7rem, 22vw, 16rem);
+      font-size: clamp(6rem, 18vw, 10rem);
     }
   }
 

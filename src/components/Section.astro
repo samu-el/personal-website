@@ -20,7 +20,7 @@ const hasHeader = Boolean(title);
 
 <section id={id} class:list={['scroll-mt-24', className]}>
   {divider && <div class="rule-heavy" data-draw />}
-  <div class="wrap relative py-12 lg:py-28">
+  <div class="wrap relative py-12 lg:py-24">
     {
       hasHeader && (
         <header class="relative">
@@ -35,7 +35,7 @@ const hasHeader = Boolean(title);
         </header>
       )
     }
-    <div class:list={['relative', hasHeader && 'mt-10 lg:mt-20']}>
+    <div class:list={['relative', hasHeader && 'mt-10 lg:mt-16']}>
       <slot />
     </div>
   </div>

@@ -11,13 +11,17 @@ interface Props {
   delay?: number;
   eager?: boolean;
   captionClass?: string;
+  /** On the figure: its grid placement. */
+  class?: string;
+  /** On the frame: a phone's width where it shares a row. */
+  frameClass?: string;
 }
-const { project, delay = 0, eager = false, captionClass = '' } = Astro.props as Props;
+const { project, delay = 0, eager = false, captionClass = '', class: className, frameClass } = Astro.props as Props;
 const d = project.data;
 ---
 
-<figure data-reveal style={`--reveal-delay:${delay}ms`}>
-  <PreviewFrame {project} {eager} />
+<figure class={className} data-reveal style={`--reveal-delay:${delay}ms`}>
+  <PreviewFrame {project} {eager} class={frameClass} />
   <figcaption class:list={['mt-4', captionClass]}>
     <h3 class="display text-[1.5rem]" style={`view-transition-name:project-${project.id}`}>
       <a href={href(`/work/${project.id}`)} class="group/link">
