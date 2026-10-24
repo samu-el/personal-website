@@ -34,13 +34,13 @@ export const WRAP_SIZES = '(min-width: 1440px) 1312px, 92vw';
 /**
  * The captures for a project at the width its frame renders, or undefined
  * when there is none yet. `sizes` is for a desktop capture and defaults to the
- * /work row's layout; a phone frame is 19rem wherever it stands.
+ * /work row's layout; a phone frame is 16rem on a phone and 19rem from 640px up.
  */
 export function previewsFor(project: CollectionEntry<'projects'>, sizes?: string): Previews | undefined {
   const phone = project.data.device === 'phone';
   const base = {
     widths: phone ? [320, 480, 880] : [640, 960, 1280, 1600],
-    sizes: phone ? '19rem' : (sizes ?? '(min-width: 1024px) 58vw, 100vw'),
+    sizes: phone ? '(min-width: 640px) 19rem, 16rem' : (sizes ?? '(min-width: 1024px) 58vw, 100vw'),
   };
   const light = byId(files, project.id);
   if (!light) return undefined;

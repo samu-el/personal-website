@@ -501,6 +501,17 @@ things that were not quite duplicates. See §11: the mobile menu block and the
 feed-parser suite were both removed deliberately, and both are one `git show`
 away.
 
+### Layout audit
+
+`npm run audit:layout` (`scripts/layout-audit/`, ported from fantasy-pl) loads every page and its open
+states (command palette, mobile menu, now playing with a track and without) at 1440, 1280, 1024, 768, 390
+and 360 wide, light and dark, against a running preview (`BASE_URL`). It flags sideways scroll, content
+past the viewport or cut off by its clipping container, text spilling its box, overlapping controls,
+misaligned control rows and top-level blocks off the page's left edge. `--shots <dir>` saves a screenshot
+per page load for the look-over the checks cannot do. A marquee opts out with `data-audit-clip-ok`;
+`data-audit-ignore` skips a subtree. The analysis is pure and covered by `detect.test.mjs` in `test:unit`.
+It is not in CI: it takes a few minutes, and it is run before and after layout work.
+
 ---
 
 ## 10. Deployment

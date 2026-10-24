@@ -18,10 +18,11 @@
     "verify": "node tests/verify.mjs",
     "test:static": "node tests/static.mjs",
     "test": "npm run check && npm run test:unit && npm run build:fast && npm run test:static && node tests/verify.mjs && node tests/interact.mjs",
-    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs",
+    "test:unit": "node --experimental-strip-types --test tests/*.test.mjs scripts/layout-audit/*.test.mjs",
     "lint:agent": "agentlint rules test && agentlint check --all",
     "agentlint": "agentlint",
-    "verify:interact": "node tests/interact.mjs"
+    "verify:interact": "node tests/interact.mjs",
+    "audit:layout": "node scripts/layout-audit/run.mjs"
   },
   "dependencies": {
     "@astrojs/mdx": "^8.0.0",
